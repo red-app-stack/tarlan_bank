@@ -22,6 +22,22 @@ abstract interface class AuthRepository {
     required String phoneNumber,
   });
 
+  /// Google sign-in (registered Google accounts only). Creates the profile
+  /// doc on first sign-in; no phone number is available from Google.
+  Future<AuthUser> signInWithGoogle();
+
+  /// Firebase anonymous session for guests: main/menu + exchange rates +
+  /// notifications only. No Firestore private data (rules deny it).
+  Future<AuthUser> signInAnonymously();
+
+  /// Sends Firebase's verification email to the current user. Firebase
+  /// enforces its own server-side rate limit; the UI additionally throttles
+  /// resends to one per 60 seconds (EmailVerificationCooldownStore).
+  Future<void> sendEmailVerification();
+
+  /// Calls `reload()` and returns the refreshed `emailVerified` flag.
+  Future<bool> refreshEmailVerification();
+
   Future<void> logout();
 
   Future<void> deleteAccount();

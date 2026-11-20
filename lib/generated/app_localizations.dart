@@ -1,0 +1,720 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_kk.dart';
+import 'app_localizations_ru.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'generated/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('kk'),
+    Locale('ru'),
+  ];
+
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tarlan Bank'**
+  String get appName;
+
+  /// No description provided for @labelEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get labelEnglish;
+
+  /// No description provided for @labelRussian.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get labelRussian;
+
+  /// No description provided for @labelKazakh.
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakh'**
+  String get labelKazakh;
+
+  /// No description provided for @success.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get success;
+
+  /// No description provided for @error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get error;
+
+  /// No description provided for @errorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get errorGeneric;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get loading;
+
+  /// No description provided for @orDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orDivider;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginTitle;
+
+  /// No description provided for @registerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get registerTitle;
+
+  /// No description provided for @fullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullName;
+
+  /// No description provided for @fullNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your first and last name'**
+  String get fullNameInvalid;
+
+  /// No description provided for @phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phone;
+
+  /// No description provided for @phoneInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use format +7 701 234-56-78'**
+  String get phoneInvalid;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @emailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email'**
+  String get emailInvalid;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @passwordRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password'**
+  String get passwordRegister;
+
+  /// No description provided for @passwordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a password'**
+  String get passwordRequired;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat password'**
+  String get confirmPassword;
+
+  /// No description provided for @passwordsMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsMismatch;
+
+  /// No description provided for @passwordStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is strong enough'**
+  String get passwordStrong;
+
+  /// No description provided for @passwordMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordMinLength;
+
+  /// No description provided for @passwordDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs at least one digit'**
+  String get passwordDigit;
+
+  /// No description provided for @passwordLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs at least one letter'**
+  String get passwordLetter;
+
+  /// No description provided for @passwordSpecial.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a special character (!@#\$%^&* etc.)'**
+  String get passwordSpecial;
+
+  /// No description provided for @unexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected error. Please try again'**
+  String get unexpectedError;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get signUp;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? Sign in'**
+  String get haveAccount;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account? Register'**
+  String get noAccount;
+
+  /// No description provided for @signInGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get signInGoogle;
+
+  /// No description provided for @continueGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as guest'**
+  String get continueGuest;
+
+  /// No description provided for @guestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest: home, menu and exchange rates'**
+  String get guestHint;
+
+  /// No description provided for @signInRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to open a product'**
+  String get signInRequired;
+
+  /// No description provided for @verifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get verifyTitle;
+
+  /// No description provided for @verifyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a letter to {email}. Follow the link in the email, then tap “Check”.'**
+  String verifyBody(String email);
+
+  /// No description provided for @verifyCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get verifyCheck;
+
+  /// No description provided for @verifyResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get verifyResend;
+
+  /// No description provided for @verifyResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {seconds} s'**
+  String verifyResendIn(int seconds);
+
+  /// No description provided for @verifyNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not confirmed yet. Follow the link in the email'**
+  String get verifyNotConfirmed;
+
+  /// No description provided for @verifyLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get verifyLater;
+
+  /// No description provided for @verifySignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get verifySignOut;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get cards;
+
+  /// No description provided for @deposits.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposits'**
+  String get deposits;
+
+  /// No description provided for @credits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get credits;
+
+  /// No description provided for @installment.
+  ///
+  /// In en, this message translates to:
+  /// **'Installment'**
+  String get installment;
+
+  /// No description provided for @investments.
+  ///
+  /// In en, this message translates to:
+  /// **'Investments'**
+  String get investments;
+
+  /// No description provided for @exchangeRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates'**
+  String get exchangeRates;
+
+  /// No description provided for @menu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get menu;
+
+  /// No description provided for @menuGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu (guest)'**
+  String get menuGuest;
+
+  /// No description provided for @securitySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Security settings'**
+  String get securitySettings;
+
+  /// No description provided for @products.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get products;
+
+  /// No description provided for @bankSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get bankSection;
+
+  /// No description provided for @atm.
+  ///
+  /// In en, this message translates to:
+  /// **'ATMs'**
+  String get atm;
+
+  /// No description provided for @branches.
+  ///
+  /// In en, this message translates to:
+  /// **'Branches'**
+  String get branches;
+
+  /// No description provided for @callBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Call the bank'**
+  String get callBank;
+
+  /// No description provided for @supportTickets.
+  ///
+  /// In en, this message translates to:
+  /// **'My support requests'**
+  String get supportTickets;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get logout;
+
+  /// No description provided for @createCard.
+  ///
+  /// In en, this message translates to:
+  /// **'card'**
+  String get createCard;
+
+  /// No description provided for @createDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'deposit'**
+  String get createDeposit;
+
+  /// No description provided for @createCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'credit'**
+  String get createCredit;
+
+  /// No description provided for @createInstallment.
+  ///
+  /// In en, this message translates to:
+  /// **'installment'**
+  String get createInstallment;
+
+  /// No description provided for @currency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get currency;
+
+  /// No description provided for @interestRate.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate}%'**
+  String interestRate(String rate);
+
+  /// No description provided for @personalInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal details'**
+  String get personalInfo;
+
+  /// No description provided for @birthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get birthDate;
+
+  /// No description provided for @financialInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial details'**
+  String get financialInfo;
+
+  /// No description provided for @monthlyIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly income'**
+  String get monthlyIncome;
+
+  /// No description provided for @additionalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional income'**
+  String get additionalIncome;
+
+  /// No description provided for @documents.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get documents;
+
+  /// No description provided for @docType.
+  ///
+  /// In en, this message translates to:
+  /// **'Document type'**
+  String get docType;
+
+  /// No description provided for @docNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Document number'**
+  String get docNumber;
+
+  /// No description provided for @docExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until'**
+  String get docExpiry;
+
+  /// No description provided for @notUsCitizen.
+  ///
+  /// In en, this message translates to:
+  /// **'I am not a US citizen / taxpayer'**
+  String get notUsCitizen;
+
+  /// No description provided for @openProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {product}'**
+  String openProduct(String product);
+
+  /// No description provided for @productOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'{product} opened'**
+  String productOpened(String product);
+
+  /// No description provided for @failedOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to open {product}'**
+  String failedOpen(String product);
+
+  /// No description provided for @docTypeIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'ID card of Kazakhstan'**
+  String get docTypeIdentity;
+
+  /// No description provided for @docTypePassportKz.
+  ///
+  /// In en, this message translates to:
+  /// **'Passport of Kazakhstan'**
+  String get docTypePassportKz;
+
+  /// No description provided for @docTypeResidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Residence permit in Kazakhstan'**
+  String get docTypeResidence;
+
+  /// No description provided for @docTypeStatelessKz.
+  ///
+  /// In en, this message translates to:
+  /// **'Stateless person certificate (KZ)'**
+  String get docTypeStatelessKz;
+
+  /// No description provided for @docTypeForeignPassport.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign passport'**
+  String get docTypeForeignPassport;
+
+  /// No description provided for @docTypeStateless.
+  ///
+  /// In en, this message translates to:
+  /// **'Stateless person certificate'**
+  String get docTypeStateless;
+
+  /// No description provided for @docTypeForeignStateless.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign stateless person certificate'**
+  String get docTypeForeignStateless;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'kk', 'ru'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'kk':
+      return AppLocalizationsKk();
+    case 'ru':
+      return AppLocalizationsRu();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

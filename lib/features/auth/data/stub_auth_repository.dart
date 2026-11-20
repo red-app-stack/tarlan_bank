@@ -28,8 +28,10 @@ class StubAuthRepository implements AuthRepository {
   AuthUser? get currentUser => _user;
 
   @override
-  Future<AuthUser> login(
-      {required String email, required String password}) async {
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+  }) async {
     throw const AuthFailure('Auth backend not configured yet');
   }
 
@@ -42,6 +44,24 @@ class StubAuthRepository implements AuthRepository {
   }) async {
     throw const AuthFailure('Auth backend not configured yet');
   }
+
+  @override
+  Future<AuthUser> signInWithGoogle() async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
+  Future<AuthUser> signInAnonymously() async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
+  Future<void> sendEmailVerification() async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
+  Future<bool> refreshEmailVerification() async => false;
 
   @override
   Future<void> logout() async {}

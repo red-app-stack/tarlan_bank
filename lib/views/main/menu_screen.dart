@@ -1,162 +1,203 @@
-import 'package:tarlan_bank/controllers/auth_controller.dart';
-import 'package:tarlan_bank/services/auth_state_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
+
+import 'package:tarlan_bank/core/router/app_navigation.dart';
+import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+
 import '../shared/custom_card.dart';
 import '../shared/list_item.dart';
 import '../shared/shared_classes.dart';
 
-class MenuScreen extends StatelessWidget {
-  final AuthController _authController = Get.find<AuthController>();
-  final AuthStateService _authStateService = Get.find<AuthStateService>();
+/// Menu migrated to Riverpod: logout goes through AuthRepository and the
+/// guest check through currentUserProvider; no GetX controllers.
+class MenuScreen extends ConsumerWidget {
+  const MenuScreen({super.key});
 
-  MenuScreen({super.key});
-
-  final List<MenuSection> sections = [
-    MenuSection(items: [
-      MenuItem(
-        icon: 'assets/icons/ic_settings.svg',
-        title: 'Настройки безопасности',
-        routeArg: 'securitySettings',
-      )
-    ]),
+  List<MenuSection> _sections(AppLocalizations l) => [
     MenuSection(
-      title: 'Продукты',
       items: [
         MenuItem(
-            icon: 'assets/icons/ic_card.svg', title: 'Карты', routeArg: 'card'),
-        MenuItem(
-            icon: 'assets/icons/ic_deposit.svg',
-            title: 'Депозиты',
-            routeArg: 'deposit'),
-        MenuItem(
-            icon: 'assets/icons/ic_credit.svg',
-            title: 'Кредиты',
-            routeArg: 'credit'),
-        MenuItem(
-            icon: 'assets/icons/ic_installment.svg',
-            title: 'Рассрочка',
-            routeArg: 'transfer'),
-        MenuItem(
-            icon: 'assets/icons/ic_invest.svg',
-            title: 'Инвестиции',
-            routeArg: 'investments'),
+          icon: 'assets/icons/ic_settings.svg',
+          title: l.securitySettings,
+          routeArg: Routes.securitySettings,
+        ),
       ],
     ),
     MenuSection(
-      title: 'Банк',
+      title: l.products,
       items: [
-        MenuItem(icon: 'assets/icons/ic_atm.svg', title: 'Банкоматы'),
-        MenuItem(icon: 'assets/icons/ic_branch.svg', title: 'Отделения'),
-        MenuItem(icon: 'assets/icons/ic_phone.svg', title: 'Позвонить в Bank'),
         MenuItem(
-            icon: 'assets/icons/ic_support.svg',
-            title: 'Мои обращения в поддержку'),
+          icon: 'assets/icons/ic_card.svg',
+          title: l.cards,
+          routeArg: 'card',
+        ),
+        MenuItem(
+          icon: 'assets/icons/ic_deposit.svg',
+          title: l.deposits,
+          routeArg: 'deposit',
+        ),
+        MenuItem(
+          icon: 'assets/icons/ic_credit.svg',
+          title: l.credits,
+          routeArg: 'credit',
+        ),
+        MenuItem(
+          icon: 'assets/icons/ic_installment.svg',
+          title: l.installment,
+          routeArg: 'transfer',
+        ),
+        MenuItem(
+          icon: 'assets/icons/ic_invest.svg',
+          title: l.investments,
+          routeArg: Routes.investments,
+        ),
+      ],
+    ),
+    MenuSection(
+      title: l.bankSection,
+      items: [
+        MenuItem(icon: 'assets/icons/ic_atm.svg', title: l.atm),
+        MenuItem(icon: 'assets/icons/ic_branch.svg', title: l.branches),
+        MenuItem(icon: 'assets/icons/ic_phone.svg', title: l.callBank),
+        MenuItem(icon: 'assets/icons/ic_support.svg', title: l.supportTickets),
       ],
     ),
   ];
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
+    final l = AppLocalizations.of(context);
+    final sections = _sections(l);
+    final user = ref.watch(currentUserProvider);
+
+    Future<void> logout() async {
+      await ref.read(authRepositoryProvider).logout();
+      if (context.mounted) await navigateReset(context, Routes.login);
+    }
+
+    void handleItemClick(String? routeArg) {
+      switch (routeArg) {
+        case Routes.securitySettings:
+          navigateTo(context, Routes.securitySettings);
+        case Routes.investments:
+          navigateTo(context, Routes.investments);
+        case null:
+        case '':
+          navigateToMainTab(context, '/accounts');
+        default:
+          if (user == null || user.isAnonymous) {
+            navigateTo(context, Routes.login);
+          } else {
+            navigateTo(
+              context,
+              Routes.createAccount,
+              arguments: {'extra': routeArg},
+            );
+          }
+      }
+    }
 
     return Scaffold(
       body: SafeArea(
         bottom: false,
         top: false,
         child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(
-              horizontal: 24.0, vertical: 56 + kToolbarHeight),
+            horizontal: 24.0,
+            vertical: 56 + kToolbarHeight,
+          ),
           child: Column(
             spacing: 24,
             children: [
               CustomCard(
-                label: 'Меню',
-                padding: EdgeInsetsGeometry.all(18),
+                label: user != null && user.isAnonymous ? l.menuGuest : l.menu,
+                padding: const EdgeInsets.all(18),
               ),
-              ...sections.map((section) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomCard(
-                        label: section.title,
-                        labelStyle: theme.textTheme.titleLarge,
-                        padding: EdgeInsets.zero,
-                        topRowPadding:
-                            const EdgeInsets.only(left: 16, right: 16, top: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ...section.items.map((item) => ListItem.vertical(
-                                  svgPath: item.icon,
-                                  iconSize: 36,
-                                  title: item.title,
-                                  subtitle: item.description,
-                                  onTap: () => handleItemClick(item.routeArg),
-                                )),
-                          ],
-                        ),
+              ...sections.map(
+                (section) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomCard(
+                      label: section.title,
+                      labelStyle: theme.textTheme.titleLarge,
+                      padding: EdgeInsets.zero,
+                      topRowPadding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 16,
                       ),
-                    ],
-                  )),
-              _authStateService.isLoggedIn
-                  ? Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _authController.logout(),
-                        borderRadius: BorderRadius.circular(30),
-                        splashFactory: InkRipple.splashFactory,
-                        splashColor:
-                            theme.colorScheme.primary.withValues(alpha: 0.08),
-                        highlightColor:
-                            theme.colorScheme.primary.withValues(alpha: 0.04),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            children: [
-                              SvgPicture.asset(
-                                'assets/icons/ic_exit.svg',
-                                width: 36,
-                                height: 36,
-                                colorFilter: ColorFilter.mode(
-                                  theme.colorScheme.error,
-                                  BlendMode.srcIn,
-                                ),
-                              ),
-                              Text('Выход',
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                      color: theme.colorScheme.error)),
-                            ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...section.items.map(
+                            (item) => ListItem.vertical(
+                              svgPath: item.icon,
+                              iconSize: 36,
+                              title: item.title,
+                              subtitle: item.description,
+                              onTap: () => handleItemClick(item.routeArg),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    )
-                  : SizedBox(),
-              SizedBox(height: size.height * 0.02),
+                    ),
+                  ],
+                ),
+              ),
+              if (user == null)
+                ListItem.vertical(
+                  svgPath: 'assets/icons/ic_exit.svg',
+                  iconSize: 36,
+                  title: l.signIn,
+                  onTap: () => navigateTo(context, Routes.login),
+                )
+              else
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: logout,
+                    borderRadius: BorderRadius.circular(30),
+                    splashFactory: InkRipple.splashFactory,
+                    splashColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.08,
+                    ),
+                    highlightColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.04,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/ic_exit.svg',
+                            width: 36,
+                            height: 36,
+                            colorFilter: ColorFilter.mode(
+                              theme.colorScheme.error,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          Text(
+                            l.logout,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
-  }
-
-  bool shouldShowNotification(String icon) {
-    return false;
-  }
-
-  void handleItemClick(String? routeArg) {
-    switch (routeArg) {
-      case 'securitySettings':
-        Get.toNamed('/securitySettings');
-      case 'investments':
-        Get.toNamed('/investments');
-      case '':
-        Get.find<AuthStateService>().setTarget('/accounts');
-      case null:
-        Get.find<AuthStateService>().setTarget('/accounts');
-      default:
-        Get.toNamed('/createAccount', arguments: routeArg);
-    }
   }
 }

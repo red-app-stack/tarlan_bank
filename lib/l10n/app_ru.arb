@@ -1,0 +1,142 @@
+{
+  "@@locale": "ru",
+  "appName": "Tarlan Bank",
+  "labelEnglish": "Английский",
+  "labelRussian": "Русский",
+  "labelKazakh": "Казахский",
+  "success": "Успех",
+  "error": "Ошибка",
+  "errorGeneric": "Что-то пошло не так",
+  "cancel": "Отмена",
+  "confirm": "Подтвердить",
+  "retry": "Повторить",
+  "close": "Закрыть",
+  "later": "Позже",
+  "loading": "Загрузка…",
+  "orDivider": "или",
+  "back": "Назад",
+  "next": "Далее",
+  "done": "Готово",
+  "loginTitle": "Вход в аккаунт",
+  "registerTitle": "Создание аккаунта",
+  "fullName": "ФИО",
+  "fullNameInvalid": "Введите имя и фамилию",
+  "phone": "Телефон",
+  "phoneInvalid": "Введите номер в формате +7 701 234-56-78",
+  "email": "Email",
+  "emailInvalid": "Неверный email",
+  "password": "Пароль",
+  "passwordRegister": "Придумайте пароль",
+  "passwordRequired": "Введите пароль",
+  "confirmPassword": "Повторите пароль",
+  "passwordsMismatch": "Пароли не совпадают",
+  "passwordStrong": "Пароль подходит",
+  "passwordMinLength": "Минимум 8 символов",
+  "passwordDigit": "Нужна хотя бы одна цифра",
+  "passwordLetter": "Нужна хотя бы одна буква",
+  "passwordSpecial": "Нужен специальный символ (!@#$%^&* и др.)",
+  "unexpectedError": "Неожиданная ошибка. Попробуйте ещё раз",
+  "signIn": "Войти",
+  "signUp": "Создать аккаунт",
+  "haveAccount": "Уже есть аккаунт? Войти",
+  "noAccount": "Нет аккаунта? Зарегистрироваться",
+  "signInGoogle": "Войти через Google",
+  "continueGuest": "Продолжить как гость",
+  "guestHint": "Гость: главная, меню и курсы валют",
+  "signInRequired": "Войдите в аккаунт, чтобы открыть продукт",
+  "verifyTitle": "Подтверждение email",
+  "verifyBody": "Мы отправили письмо на {email}. Перейдите по ссылке в письме, затем нажмите «Проверить».",
+  "@verifyBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyCheck": "Проверить",
+  "verifyResend": "Отправить письмо ещё раз",
+  "verifyResendIn": "Отправить снова через {seconds} с",
+  "@verifyResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyNotConfirmed": "Письмо ещё не подтверждено. Перейдите по ссылке в почте",
+  "verifyLater": "Позже",
+  "verifySignOut": "Выйти",
+  "home": "Главная",
+  "cards": "Карты",
+  "deposits": "Депозиты",
+  "credits": "Кредиты",
+  "installment": "Рассрочка",
+  "investments": "Инвестиции",
+  "exchangeRates": "Курс валют",
+  "menu": "Меню",
+  "menuGuest": "Меню (гость)",
+  "securitySettings": "Настройки безопасности",
+  "products": "Продукты",
+  "bankSection": "Банк",
+  "atm": "Банкоматы",
+  "branches": "Отделения",
+  "callBank": "Позвонить в Bank",
+  "supportTickets": "Мои обращения в поддержку",
+  "logout": "Выход",
+  "createCard": "карту",
+  "createDeposit": "депозит",
+  "createCredit": "кредит",
+  "createInstallment": "рассрочку",
+  "currency": "Валюта",
+  "interestRate": "{rate}%",
+  "@interestRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "personalInfo": "Личные данные",
+  "birthDate": "Дата рождения",
+  "financialInfo": "Финансовая информация",
+  "monthlyIncome": "Ежемесячный доход",
+  "additionalIncome": "Дополнительный доход",
+  "documents": "Документы",
+  "docType": "Тип документа",
+  "docNumber": "Номер документа",
+  "docExpiry": "Действителен до",
+  "notUsCitizen": "Я не являюсь гражданином / налогоплательщиком США",
+  "openProduct": "Открыть {product}",
+  "@openProduct": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "productOpened": "{product} успешно открыт",
+  "@productOpened": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "failedOpen": "Не удалось открыть {product}",
+  "@failedOpen": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "docTypeIdentity": "Удостоверение личности РК",
+  "docTypePassportKz": "Паспорт гражданина РК",
+  "docTypeResidence": "Вид на жительство иностранца в РК",
+  "docTypeStatelessKz": "Удостоверение лица без гражданства, выданный РК",
+  "docTypeForeignPassport": "Паспорт гражданина иностранного государства",
+  "docTypeStateless": "Удостоверение лица без гражданства",
+  "docTypeForeignStateless": "Паспорт иностранца без гражданства",
+  "showPassword": "Показать пароль",
+  "hidePassword": "Скрыть пароль"
+}

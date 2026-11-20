@@ -1,0 +1,142 @@
+{
+  "@@locale": "kk",
+  "appName": "Tarlan Bank",
+  "labelEnglish": "Ағылшын",
+  "labelRussian": "Орыс",
+  "labelKazakh": "Қазақ",
+  "success": "Сәтті",
+  "error": "Қате",
+  "errorGeneric": "Бір нәрсе дұрыс болмады",
+  "cancel": "Болдырмау",
+  "confirm": "Растау",
+  "retry": "Қайталау",
+  "close": "Жабу",
+  "later": "Кейін",
+  "loading": "Жүктелуде…",
+  "orDivider": "немесе",
+  "back": "Артқа",
+  "next": "Кейінгі",
+  "done": "Дайын",
+  "loginTitle": "Жүйеге кіру",
+  "registerTitle": "Тіркелгі жасау",
+  "fullName": "Аты-жөні",
+  "fullNameInvalid": "Аты мен фамилияңызды енгізіңіз",
+  "phone": "Телефон",
+  "phoneInvalid": "+7 701 234-56-78 форматында енгізіңіз",
+  "email": "Email",
+  "emailInvalid": "Email дұрыс емес",
+  "password": "Құпия сөз",
+  "passwordRegister": "Құпия сөз ойлап табыңыз",
+  "passwordRequired": "Құпия сөзді енгізіңіз",
+  "confirmPassword": "Құпия сөзді қайталаңыз",
+  "passwordsMismatch": "Құпия сөздер сәйкес келмейді",
+  "passwordStrong": "Құпия сөз жарамды",
+  "passwordMinLength": "Кемінде 8 таңба",
+  "passwordDigit": "Кемінде бір сан керек",
+  "passwordLetter": "Кемінде бір әріп керек",
+  "passwordSpecial": "Арнайы таңба керек (!@#$%^&* т.б.)",
+  "unexpectedError": "Күтпеген қате. Қайталап көріңіз",
+  "signIn": "Кіру",
+  "signUp": "Тіркелгі жасау",
+  "haveAccount": "Тіркелгіңіз бар ма? Кіру",
+  "noAccount": "Тіркелгіңіз жоқ па? Тіркелу",
+  "signInGoogle": "Google арқылы кіру",
+  "continueGuest": "Қонақ ретінде жалғастыру",
+  "guestHint": "Қонақ: басты бет, мәзір және валюта бағамы",
+  "signInRequired": "Өнімді ашу үшін жүйеге кіріңіз",
+  "verifyTitle": "Email растау",
+  "verifyBody": "Біз {email} мекенжайына хат жібердік. Хаттағы сілтемеге өтіп, «Тексеру» батырмасын басыңыз.",
+  "@verifyBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyCheck": "Тексеру",
+  "verifyResend": "Хатты қайта жіберу",
+  "verifyResendIn": "{seconds} с ішінде қайта жіберу",
+  "@verifyResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyNotConfirmed": "Хат әлі расталмады. Поштадағы сілтемеге өтіңіз",
+  "verifyLater": "Кейін",
+  "verifySignOut": "Шығу",
+  "home": "Басты бет",
+  "cards": "Карточкалар",
+  "deposits": "Депозиттер",
+  "credits": "Несиелер",
+  "installment": "Бөліп төлеу",
+  "investments": "Инвестициялар",
+  "exchangeRates": "Валюта бағамы",
+  "menu": "Мәзір",
+  "menuGuest": "Мәзір (қонақ)",
+  "securitySettings": "Қауіпсіздік параметрлері",
+  "products": "Өнімдер",
+  "bankSection": "Банк",
+  "atm": "Банкоматтар",
+  "branches": "Бөлімшелер",
+  "callBank": "Банкке қоңырау шалу",
+  "supportTickets": "Қолдау қызметіне өтініштерім",
+  "logout": "Шығу",
+  "createCard": "карточканы",
+  "createDeposit": "депозитті",
+  "createCredit": "несиені",
+  "createInstallment": "бөліп төлеуді",
+  "currency": "Валюта",
+  "interestRate": "{rate}%",
+  "@interestRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "personalInfo": "Жеке деректер",
+  "birthDate": "Туған күні",
+  "financialInfo": "Қаржылық мәліметтер",
+  "monthlyIncome": "Айлық табыс",
+  "additionalIncome": "Қосымша табыс",
+  "documents": "Құжаттар",
+  "docType": "Құжат түрі",
+  "docNumber": "Құжат нөмірі",
+  "docExpiry": "Жарамдылық мерзімі",
+  "notUsCitizen": "Мен АҚШ азаматы / салық төлеушісі емеспін",
+  "openProduct": "{product} ашу",
+  "@openProduct": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "productOpened": "{product} сәтті ашылды",
+  "@productOpened": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "failedOpen": "{product} ашылмады",
+  "@failedOpen": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "docTypeIdentity": "ҚР жеке куәлігі",
+  "docTypePassportKz": "ҚР азаматының төлқұжаты",
+  "docTypeResidence": "ҚР-да тұруға рұқсат",
+  "docTypeStatelessKz": "ҚР берген азаматтығы жоқ адам куәлігі",
+  "docTypeForeignPassport": "Шет мемлекеттің төлқұжаты",
+  "docTypeStateless": "Азаматтығы жоқ адам куәлігі",
+  "docTypeForeignStateless": "Азаматтығы жоқ шет елдік төлқұжат",
+  "showPassword": "Құпия сөзді көрсету",
+  "hidePassword": "Құпия сөзді жасыру"
+}

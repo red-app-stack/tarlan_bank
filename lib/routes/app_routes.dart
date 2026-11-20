@@ -13,13 +13,19 @@ import 'package:tarlan_bank/views/transactions/transfer_history_screen.dart';
 import 'package:tarlan_bank/views/transactions/phone_transfer_screen.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
-import '../controllers/create_account_controller.dart';
+
 import '../views/transactions/convert_screen.dart';
 import '../views/transactions/qr_transfer_screen.dart';
 import '../views/other/security_settings_screen.dart';
 import '../views/transactions/self_transfer_screen.dart';
 import '../views/transactions/transaction_details_screen.dart';
 import '../views/main/main_screen.dart';
+
+String _createAccountType() {
+  final args = Get.arguments;
+  if (args is Map) return args['extra']?.toString() ?? 'card';
+  return args?.toString() ?? 'card';
+}
 
 class Routes {
   static const loading = '/loading';
@@ -153,8 +159,10 @@ class AppRoutes {
     ),
     GetPage(
       name: Routes.createAccount,
-      page: () => CreateAccountScreen(),
-      binds: [Bind.lazyPut(() => CreateAccountController())],
+      // No Bind.lazyPut: the screen is a Riverpod ConsumerStatefulWidget with
+      // local state; a route-pop could previously dispose the GetX controller
+      // and reopening the page crashed on Get.find().
+      page: () => CreateAccountScreen(accountType: _createAccountType()),
       customTransition: ZoomFadeTransition(),
       transitionDuration: Duration(milliseconds: 400),
       middlewares: [AuthMiddleware()],

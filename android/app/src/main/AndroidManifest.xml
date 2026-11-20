@@ -40,5 +40,9 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Google Sign-In (Android 11+ package visibility). -->
+        <intent>
+            <action android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"/>
+        </intent>
     </queries>
 </manifest>

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tarlan_bank/core/router/access_policy.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
@@ -31,8 +32,6 @@ import 'package:material_ui/material_ui.dart';
 /// The auth `redirect` is the real win here: declarative guarding driven by
 /// [currentUserProvider], replacing GetX `AuthMiddleware`.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  const publicRoutes = {Routes.login, Routes.codeEntering, Routes.loading};
-
   final notifier = _AuthListenable();
   ref.listen(authStateProvider, (previous, next) => notifier.notify());
 
@@ -42,16 +41,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final auth = ref.read(authStateProvider);
-      // Don't redirect while the auth stream is still resolving.
-      if (auth.isLoading) return null;
-
-      final loggedIn = auth.value != null;
-      final loc = state.matchedLocation;
-      final isPublic = publicRoutes.contains(loc);
-
-      if (!loggedIn && !isPublic) return Routes.login;
-      if (loggedIn && loc == Routes.login) return Routes.main;
-      return null;
+      return redirectFor(
+        level: accessLevel(auth),
+        location: state.matchedLocation,
+      );
     },
     routes: [
       GoRoute(
@@ -60,26 +53,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       GoRoute(
-          path: Routes.login, builder: (context, state) => const LoginPage()),
+        path: Routes.login,
+        builder: (context, state) => const LoginPage(),
+      ),
       GoRoute(
         path: Routes.codeEntering,
         builder: (context, state) => const CodeEnteringScreen(),
       ),
       GoRoute(
-          path: Routes.main, builder: (context, state) => const MainScreen()),
+        path: Routes.main,
+        builder: (context, state) => const MainScreen(),
+      ),
       GoRoute(
-          path: Routes.chatbot,
-          builder: (context, state) => const ChatBotScreen()),
+        path: Routes.chatbot,
+        builder: (context, state) => const ChatBotScreen(),
+      ),
       GoRoute(
-          path: Routes.profile,
-          builder: (context, state) => const ProfileScreen()),
+        path: Routes.profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
       GoRoute(
         path: Routes.cardDetails,
         builder: (context, state) => const CardDetailsScreen(),
       ),
       GoRoute(
         path: Routes.createAccount,
-        builder: (context, state) => const CreateAccountScreen(),
+        builder: (context, state) => CreateAccountScreen(
+          accountType: state.uri.queryParameters['type'] ?? 'card',
+        ),
       ),
       GoRoute(
         path: Routes.investments,
@@ -106,8 +107,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ConvertScreen(),
       ),
       GoRoute(
-          path: Routes.qrTransfer,
-          builder: (context, state) => QRTransferScreen()),
+        path: Routes.qrTransfer,
+        builder: (context, state) => QRTransferScreen(),
+      ),
       GoRoute(
         path: Routes.paymentHistory,
         builder: (context, state) => PaymentHistoryScreen(),

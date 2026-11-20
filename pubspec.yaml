@@ -19,7 +19,9 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.5.3
+  # Flutter 3.50 / Dart 3.14 (latest stable in this environment). Raised from
+  # the old ^3.5.3 floor (Flutter 3.24 era) so google_sign_in 7.x can resolve.
+  sdk: ^3.14.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -76,6 +78,9 @@ dependencies:
   firebase_core: ^5.2.0
   firebase_auth: ^7.1.0
   cloud_firestore: ^7.2.0
+  # 7.2.0 current stable; requires Dart ^3.7, satisfied by the new ^3.14 floor.
+  # Android reads the web client id from google-services.json automatically.
+  google_sign_in: ^7.2.0
   # flutter_markdown: ^0.7.7+1
 dev_dependencies:
   flutter_lints: any
@@ -84,6 +89,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true # lib/l10n/*.arb -> lib/generated/app_localizations.dart
   assets:
     - .env
     - assets/images/

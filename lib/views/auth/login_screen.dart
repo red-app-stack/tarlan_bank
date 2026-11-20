@@ -1,435 +1,384 @@
-import 'package:tarlan_bank/controllers/login_controller.dart';
-import 'package:tarlan_bank/utils/themes/theme_extension.dart';
-import 'package:tarlan_bank/views/shared/formatters.dart' show formatPhone;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-class LoginPage extends StatelessWidget {
+import 'package:tarlan_bank/core/errors/app_failure.dart';
+import 'package:tarlan_bank/core/utils/phone_number.dart';
+import 'package:tarlan_bank/features/auth/data/password_validation.dart';
+import 'package:tarlan_bank/features/auth/data/password_rule_labels.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+
+import 'email_verification_dialog.dart';
+
+/// Firebase Auth login (email/password + Google + anonymous guest).
+///
+/// Replaces the old phone → code → name → password GetX staging flow: the OTP
+/// stage belonged to the retired custom-JWT server. Registration keeps the
+/// phone/fullName data but collects it in one form (Firebase owns credentials).
+///
+/// TRANSITIONAL: navigation uses `Get.offAllNamed` because the live app still
+/// runs `GetMaterialApp`; swap to `context.go(Routes.main)` at Riverpod cutover.
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  final _fullName = TextEditingController();
+  final _phone = TextEditingController();
+
+  bool _registering = false;
+  bool _obscure = true;
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    _confirm.dispose();
+    _fullName.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  Future<bool> _run(Future<void> Function() action) async {
+    if (_busy) return false;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await action();
+      return true;
+    } on AppFailure catch (e) {
+      if (mounted) {
+        setState(() => _error = e.message);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = AppLocalizations.of(context).unexpectedError);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+    return false;
+  }
+
+  /// Registration requires verification before entering the app; on login we
+  /// prompt but allow "Позже" so existing test accounts are not locked out.
+  Future<void> _verifyAfterAuth({required bool register}) async {
+    final user = ref.read(authRepositoryProvider).currentUser;
+    if (user == null || user.isAnonymous || user.emailVerified) return;
+    final verified = await showEmailVerificationDialog(
+      context: context,
+      email: user.email?.trim().isNotEmpty == true
+          ? user.email!.trim()
+          : _email.text.trim(),
+      required: register,
+    );
+    if (!verified && register) return; // dialog already signed out
+    _done();
+  }
+
+  void _done() => Get.offAllNamed(Routes.main);
+
+  Future<void> _submitEmail() async {
+    final l = AppLocalizations.of(context);
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final register = _registering;
+    if (register) {
+      final rule = validateNewPassword(_password.text);
+      if (rule != null || _password.text != _confirm.text) {
+        setState(
+          () => _error = rule != null ? rule.label(l) : l.passwordsMismatch,
+        );
+        return;
+      }
+    }
+    final ok = await _run(() async {
+      final repo = ref.read(authRepositoryProvider);
+      if (register) {
+        // Validate the phone before creating any Auth account.
+        normalizePhone(_phone.text);
+        await repo.register(
+          email: _email.text.trim(),
+          password: _password.text,
+          fullName: _fullName.text.trim(),
+          phoneNumber: _phone.text.trim(),
+        );
+      } else {
+        await repo.login(email: _email.text.trim(), password: _password.text);
+      }
+    });
+    if (ok && mounted) await _verifyAfterAuth(register: register);
+  }
+
+  Future<void> _submitGoogle() => _run(() async {
+    await ref.read(authRepositoryProvider).signInWithGoogle();
+    _done();
+  });
+
+  Future<void> _submitGuest() => _run(() async {
+    await ref.read(authRepositoryProvider).signInAnonymously();
+    _done();
+  });
+
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(LoginController());
-
+    final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
-          child: Obx(() => Stack(
-                children: [
-                  _buildContent(controller, context),
-                  // if (controller.isLoading.value)
-                  //   Material(
-                  //     color: Colors.black.withValues(alpha: 0.4),
-                  //     child: Center(
-                  //       child: const Center(
-                  //         child: CircularProgressIndicator(strokeWidth: 3),
-                  //       ),
-                  //     ),
-                  //   ),
-                ],
-              )),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent(LoginController controller, BuildContext context) {
-    ThemeData theme = Theme.of(context);
-    return Column(
-      children: [
-        _buildAppBar(controller, context),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: controller.formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildPhoneStage(controller, theme),
-                  _buildAnimatedStages(controller, theme),
-                ],
-              ),
-            ),
-          ),
-        ),
-        _buildActionButton(controller, context),
-      ],
-    );
-  }
-
-  Widget _buildAppBar(LoginController controller, BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, top: 12, bottom: 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: IconButton(
-          icon: SvgPicture.asset(
-            'assets/icons/ic_back.svg',
-            width: 28,
-            height: 28,
-            colorFilter: ColorFilter.mode(
-                Theme.of(context).colorScheme.primary, BlendMode.srcIn),
-          ),
-          onPressed: () {
-            if (controller.stage.value == LoginStage.phone) {
-              Navigator.of(context).pop();
-            } else {
-              controller.previousStage();
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPhoneStage(
-    LoginController controller,
-    ThemeData theme,
-  ) {
-    return IgnorePointer(
-      ignoring: controller.stage.value != LoginStage.phone,
-      child: _buildTextField(
-        theme: theme,
-        textController: controller.phone,
-        focusNode: controller.phoneFocus,
-        keyboardType: TextInputType.phone,
-        label: 'Номер телефона',
-        hint: '(000) 000-00-00',
-        prefixText: '+7 ',
-        onChanged: (value) {
-          controller.clearErrorMessage();
-          final formattedValue = formatPhone(value);
-          controller.phone.value = TextEditingValue(
-            text: formattedValue,
-            selection: TextSelection.collapsed(offset: formattedValue.length),
-          );
-        },
-        errorText: controller.getErrorForStage(LoginStage.phone),
-        validator: (value) =>
-            controller.phone.text.length < 17 ? 'Введите полный номер' : null,
-        onFieldSubmitted: () => controller.stage.value == LoginStage.phone
-            ? controller.submitPhone()
-            : controller.focusNext(controller.phoneFocus),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedStages(LoginController controller, ThemeData theme) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildEmailStage(controller, theme),
-          _buildVerificationStage(controller, theme),
-          _buildFullNameStage(controller, theme),
-          _buildPasswordStage(controller, theme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmailStage(LoginController controller, ThemeData theme) {
-    return Obx(() {
-      final isVisible = controller.stage.value.index >= LoginStage.email.index;
-      if (!isVisible) return const SizedBox();
-
-      return AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: isVisible ? 1.0 : 0.0,
-        child: IgnorePointer(
-          ignoring: controller.stage.value != LoginStage.email,
-          child: _buildTextField(
-            theme: theme,
-            textController: controller.email,
-            focusNode: controller.emailFocus,
-            keyboardType: TextInputType.emailAddress,
-            label: controller.obfuscatedEmail.value != null
-                ? 'Подтвердите почту'
-                : 'Введите Email',
-            hint: controller.obfuscatedEmail.value,
-            prefixIcon: Icons.email,
-            errorText: controller.getErrorForStage(LoginStage.email),
-            validator: (value) =>
-                !GetUtils.isEmail(value ?? '') ? 'Неверный email' : null,
-            onFieldSubmitted: () => controller.stage.value == LoginStage.email
-                ? controller.submitEmail()
-                : controller.focusNext(controller.emailFocus),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildVerificationStage(LoginController controller, ThemeData theme) {
-    return Obx(() {
-      final isVisible =
-          controller.stage.value.index >= LoginStage.verification.index;
-      if (!isVisible) return const SizedBox();
-
-      return AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: isVisible ? 1.0 : 0.0,
-        child: IgnorePointer(
-          ignoring: controller.stage.value != LoginStage.verification,
-          child: Column(
-            children: [
-              _buildTextField(
-                theme: theme,
-                textController: controller.code,
-                focusNode: controller.codeFocus,
-                keyboardType: TextInputType.number,
-                label: 'Код подтверждения',
-                hint: '000000',
-                maxLength: 6,
-                prefixIcon: Icons.security,
-                errorText: controller.getErrorForStage(LoginStage.verification),
-                validator: (value) =>
-                    value?.length != 6 ? 'Код из 6 цифр' : null,
-                onFieldSubmitted: () =>
-                    controller.stage.value == LoginStage.verification
-                        ? controller.submitVerificationCode()
-                        : controller.focusNext(controller.codeFocus),
-              ),
-              controller.stage.value == LoginStage.verification
-                  ? Column(
-                      children: [
-                        const SizedBox(height: 12),
-                        Center(child: _buildResendText(controller, theme)),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(
+                        Icons.account_balance_rounded,
+                        size: 64,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l.appName,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _registering ? l.registerTitle : l.loginTitle,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      if (_registering) ...[
+                        _field(
+                          label: l.fullName,
+                          controller: _fullName,
+                          icon: Icons.person_outline,
+                          validator: (v) =>
+                              (v?.trim().split(' ').length ?? 0) < 2
+                              ? l.fullNameInvalid
+                              : null,
+                        ),
+                        _field(
+                          label: l.phone,
+                          controller: _phone,
+                          icon: Icons.phone_outlined,
+                          keyboardType: TextInputType.phone,
+                          validator: (v) {
+                            try {
+                              normalizePhone(v ?? '');
+                              return null;
+                            } on ValidationFailure {
+                              return l.phoneInvalid;
+                            }
+                          },
+                        ),
                       ],
-                    )
-                  : const SizedBox(),
-            ],
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildFullNameStage(LoginController controller, ThemeData theme) {
-    return Obx(() {
-      final isVisible =
-          controller.stage.value.index >= LoginStage.fullName.index;
-      if (!isVisible) return const SizedBox();
-
-      return AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: isVisible ? 1.0 : 0.0,
-        child: IgnorePointer(
-          ignoring: controller.stage.value != LoginStage.fullName ||
-              controller.isFullName(controller.userFullName.value ?? ''),
-          child: _buildTextField(
-            theme: theme,
-            textController: controller.fullName,
-            focusNode: controller.fullNameFocus,
-            label: 'Ваше ФИО',
-            hint: 'Фамилия Имя Отчество',
-            prefixIcon: Icons.person,
-            errorText: controller.getErrorForStage(LoginStage.fullName),
-            validator: (value) {
-              if (!controller.isFullName(value ?? '')) {
-                return 'Введите полное имя';
-              }
-              return null;
-            },
-            onFieldSubmitted: () =>
-                controller.stage.value == LoginStage.fullName
-                    ? controller.submitFullName()
-                    : controller.focusNext(controller.fullNameFocus),
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget _buildPasswordStage(LoginController controller, ThemeData theme) {
-    return Obx(() {
-      final isVisible =
-          controller.stage.value.index >= LoginStage.password.index;
-      if (!isVisible) return const SizedBox();
-
-      return AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: isVisible ? 1.0 : 0.0,
-        child: IgnorePointer(
-          ignoring: controller.stage.value != LoginStage.password,
-          child: _buildTextField(
-            theme: theme,
-            textController: controller.password,
-            focusNode: controller.passwordFocus,
-            label: controller.userFullName.value != null
-                ? 'Ваш пароль'
-                : 'Придумайте пароль',
-            prefixIcon: Icons.lock,
-            suffixIcon: IconButton(
-              icon: Icon(
-                controller.isPasswordVisible.value
-                    ? Icons.visibility_off
-                    : Icons.visibility,
+                      _field(
+                        label: l.email,
+                        controller: _email,
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) =>
+                            RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                                .hasMatch(v?.trim() ?? '')
+                            ? null
+                            : l.emailInvalid,
+                      ),
+                      _passwordField(theme, l),
+                      if (_registering) ...[
+                        _field(
+                          label: l.confirmPassword,
+                          controller: _confirm,
+                          icon: Icons.lock_outline,
+                          obscure: true,
+                          validator: (v) =>
+                              v == _password.text ? null : l.passwordsMismatch,
+                        ),
+                        _passwordHint(theme, l),
+                      ],
+                      if (_error != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _error!,
+                            style: TextStyle(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: _busy ? null : _submitEmail,
+                        child: _busy
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text(_registering ? l.signUp : l.signIn),
+                      ),
+                      TextButton(
+                        onPressed: _busy
+                            ? null
+                            : () => setState(() {
+                                _registering = !_registering;
+                                _error = null;
+                              }),
+                        child: Text(_registering ? l.haveAccount : l.noAccount),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: theme.dividerColor)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              l.orDivider,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
+                          Expanded(child: Divider(color: theme.dividerColor)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _busy ? null : _submitGoogle,
+                        icon: const Icon(Icons.g_mobiledata, size: 28),
+                        label: Text(l.signInGoogle),
+                      ),
+                      const SizedBox(height: 4),
+                      TextButton.icon(
+                        onPressed: _busy ? null : _submitGuest,
+                        icon: const Icon(Icons.person_off_outlined),
+                        label: Text(l.continueGuest),
+                      ),
+                      Text(
+                        l.guestHint,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              onPressed: () {
-                controller.isPasswordVisible.value =
-                    !controller.isPasswordVisible.value;
-              },
             ),
-            obscureText: !controller.isPasswordVisible.value,
-            errorText: controller.getErrorForStage(LoginStage.password),
-            validator: (value) => value!.length < 6
-                ? 'Пароль должен быть длиной минимум 6 символов'
-                : null,
-            onFieldSubmitted: () => controller.submitPassword(),
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 
-  Widget _buildTextField({
-    required ThemeData theme,
-    required TextEditingController textController,
-    bool readOnly = false,
-    required FocusNode focusNode,
-    required String label,
-    String? hint,
-    String? prefixText,
-    IconData? prefixIcon,
-    Widget? suffixIcon,
-    TextInputType? keyboardType,
-    bool obscureText = false,
-    int? maxLength,
-    String? Function(String?)? validator,
-    String? errorText,
-    void Function()? onFieldSubmitted,
-    void Function(String)? onChanged,
-  }) {
+  Widget _passwordField(ThemeData theme, AppLocalizations l) {
+    return _field(
+      label: _registering ? l.passwordRegister : l.password,
+      controller: _password,
+      icon: Icons.lock_outline,
+      obscure: _obscure,
+      onChanged: _registering ? (_) => setState(() {}) : null,
+      suffix: IconButton(
+        icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+        tooltip: _obscure ? l.showPassword : l.hidePassword,
+        onPressed: () => setState(() => _obscure = !_obscure),
+      ),
+      validator: (v) => (v == null || v.isEmpty) ? l.passwordRequired : null,
+    );
+  }
+
+  Widget _passwordHint(ThemeData theme, AppLocalizations l) {
+    final failed = passwordRuleFailures(_password.text);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        failed.isEmpty
+            ? l.passwordStrong
+            : failed.map((rule) => rule.label(l)).join(' • '),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: failed.isEmpty
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+
+  Widget _field({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    String? Function(String?)? validator,
+    TextInputType? keyboardType,
+    bool obscure = false,
+    void Function(String)? onChanged,
+    Widget? suffix,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
-        controller: textController,
-        focusNode: focusNode,
-        readOnly: readOnly,
+        controller: controller,
+        obscureText: obscure,
         keyboardType: keyboardType,
-        obscureText: obscureText,
-        maxLength: maxLength,
         onChanged: onChanged,
         textInputAction: TextInputAction.next,
-        onFieldSubmitted: (_) => onFieldSubmitted?.call(),
+        validator: validator,
         decoration: InputDecoration(
           labelText: label,
-          hintText: hint,
-          hintStyle: theme.textTheme.titleLarge?.copyWith(
-              color: theme
-                  .extension<Extra>()
-                  ?.primaryText
-                  ?.withValues(alpha: 0.5)),
-          prefixText: prefixText,
-          errorText: errorText,
-          prefixStyle: theme.textTheme.titleLarge,
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
-          suffixIcon: suffixIcon,
-          counterText: '',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: theme.colorScheme.outline),
-          ),
+          prefixIcon: Icon(icon, size: 20),
+          suffixIcon: suffix,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: theme.colorScheme.primary,
-              width: 2,
-            ),
+            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
           ),
-          filled: true,
           fillColor: theme.colorScheme.surfaceContainerLowest,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          filled: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
-        style: theme.textTheme.titleLarge,
-        validator: validator,
       ),
     );
-  }
-
-  Widget _buildResendText(LoginController controller, ThemeData theme) {
-    return Obx(() => (!controller.canResendCode.value)
-        ? Text(
-            'Повторная отправка через ${controller.countdownSeconds.value} сек',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          )
-        : TextButton(
-            onPressed: controller.sendVerificationCode,
-            child: Text(
-              'Отправить код повторно',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ));
-  }
-
-  Widget _buildActionButton(LoginController controller, BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-        bottom: 16,
-        left: 24,
-        right: 24,
-        top: 8,
-      ),
-      child: Obx(() => ElevatedButton(
-            onPressed:
-                controller.isLoading.value ? () {} : _getAction(controller),
-            child: controller.isLoading.value
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                  )
-                : Text(
-                    _getButtonText(controller),
-                  ),
-          )),
-    );
-  }
-
-  VoidCallback? _getAction(LoginController controller) {
-    switch (controller.stage.value) {
-      case LoginStage.phone:
-        return controller.submitPhone;
-      case LoginStage.email:
-        return controller.submitEmail;
-      case LoginStage.verification:
-        return controller.submitVerificationCode;
-      case LoginStage.fullName:
-        return controller.submitFullName;
-      case LoginStage.password:
-        return controller.submitPassword;
-    }
-  }
-
-  String _getButtonText(LoginController controller) {
-    switch (controller.stage.value) {
-      case LoginStage.phone:
-        return 'Продолжить';
-      case LoginStage.email:
-        return 'Отправить код';
-      case LoginStage.verification:
-        return 'Подтвердить';
-      case LoginStage.fullName:
-        return 'Продолжить';
-      case LoginStage.password:
-        return 'Завершить';
-    }
   }
 }

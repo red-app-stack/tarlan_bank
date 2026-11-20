@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'app_failure.dart';
 
@@ -23,17 +24,45 @@ AppFailure mapFirebaseError(Object error) {
         return AuthFailure('Email already registered', error);
       case 'weak-password':
         return ValidationFailure(
-            'Password is too weak (minimum 6 characters)', error);
+          'Password is too weak (minimum 6 characters)',
+          error,
+        );
       case 'too-many-requests':
         return AuthFailure('Too many attempts — try again later', error);
       case 'requires-recent-login':
-        return AuthFailure('Please sign in again to confirm this action', error);
+        return AuthFailure(
+          'Please sign in again to confirm this action',
+          error,
+        );
+      case 'popup-closed-by-user':
+        return AuthFailure('Sign-in was cancelled', error);
+      case 'account-exists-with-different-credential':
+        return AuthFailure(
+          'This email is registered with another sign-in method',
+          error,
+        );
+      case 'unauthorized-domain':
+        return const ServerFailure(403, 'Sign-in domain is not authorized');
       case 'user-disabled':
         return AuthFailure('This account has been disabled', error);
       case 'operation-not-allowed':
         return const ServerFailure(501, 'Sign-in method not enabled');
       default:
         return AuthFailure(error.message ?? 'Authentication failed', error);
+    }
+  }
+  if (error is GoogleSignInException) {
+    // Never surface the plugin's raw description (may contain account data).
+    switch (error.code) {
+      case GoogleSignInExceptionCode.canceled:
+        return AuthFailure('Sign-in was cancelled', error);
+      case GoogleSignInExceptionCode.uiUnavailable:
+      case GoogleSignInExceptionCode.interrupted:
+      case GoogleSignInExceptionCode.userMismatch:
+        return AuthFailure('Google sign-in is unavailable right now', error);
+      default:
+        // unknownError / clientConfigurationError / providerConfigurationError
+        return const ServerFailure(503, 'Google sign-in is not configured');
     }
   }
   if (error is FirebaseException) {

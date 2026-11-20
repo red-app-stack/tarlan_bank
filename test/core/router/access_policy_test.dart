@@ -1,0 +1,62 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:tarlan_bank/core/router/access_policy.dart';
+import 'package:tarlan_bank/features/auth/data/auth_user.dart';
+import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+
+void main() {
+  test('signed out: only public routes, everything else → login', () {
+    for (final route in publicRoutes) {
+      expect(
+          redirectFor(level: AccessLevel.signedOut, location: route), isNull);
+    }
+    for (final route in [Routes.main, Routes.convertation, Routes.profile]) {
+      expect(redirectFor(level: AccessLevel.signedOut, location: route),
+          Routes.login);
+    }
+  });
+
+  test('guest: main/menu + exchange + auth routes only', () {
+    for (final route in [Routes.main, Routes.convertation, Routes.login]) {
+      expect(redirectFor(level: AccessLevel.guest, location: route), isNull,
+          reason: route);
+    }
+    for (final route in [
+      Routes.profile,
+      Routes.phoneTransfer,
+      Routes.cardTransfer,
+      Routes.transferHistory,
+      Routes.securitySettings,
+      Routes.createAccount,
+    ]) {
+      expect(
+          redirectFor(level: AccessLevel.guest, location: route), Routes.login,
+          reason: route);
+    }
+  });
+
+  test('full user: login → main, other routes unchanged', () {
+    expect(redirectFor(level: AccessLevel.full, location: Routes.login),
+        Routes.main);
+    expect(
+        redirectFor(level: AccessLevel.full, location: Routes.profile), isNull);
+  });
+
+  test('stream still loading: no redirect', () {
+    expect(redirectFor(level: AccessLevel.loading, location: Routes.profile),
+        isNull);
+  });
+
+  test('accessLevel reads the anonymous flag from AuthUser', () {
+    expect(accessLevel(const AsyncLoading()), AccessLevel.loading);
+    expect(accessLevel(const AsyncData(null)), AccessLevel.signedOut);
+    expect(
+      accessLevel(AsyncData(AuthUser(uid: 'anon', isAnonymous: true))),
+      AccessLevel.guest,
+    );
+    expect(
+      accessLevel(const AsyncData(AuthUser(uid: 'real'))),
+      AccessLevel.full,
+    );
+  });
+}

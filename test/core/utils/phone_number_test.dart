@@ -5,11 +5,11 @@ import 'package:tarlan_bank/core/utils/phone_number.dart';
 void main() {
   group('normalizePhone — KZ formats', () {
     test('all local variants normalize to the same E.164', () {
-      const expected = '+770****4567';
+      const expected = '+7701234567';
       expect(normalizePhone('7701234567'), expected);
       expect(normalizePhone('8701234567'), expected);
       expect(normalizePhone('+7 (701) 234-567'), expected);
-      expect(normalizePhone('+770****4567'), expected);
+      expect(normalizePhone('+7701234567'), expected);
     });
 
     test('other international numbers pass through normalized', () {

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/errors/firebase_error_mapping.dart';
@@ -19,12 +20,37 @@ import 'auth_user.dart';
 /// Errors are mapped to sealed [AppFailure] via [mapFirebaseError];
 /// nothing raw escapes to consumers.
 class FirebaseAuthRepository implements AuthRepository {
-  FirebaseAuthRepository({fb.FirebaseAuth? auth, FirebaseFirestore? firestore})
-      : _auth = auth ?? fb.FirebaseAuth.instance,
-        _firestore = firestore ?? tarlanFirestore();
+  FirebaseAuthRepository({
+    fb.FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  }) : _auth = auth ?? fb.FirebaseAuth.instance,
+       _firestore = firestore ?? tarlanFirestore(),
+       _google = googleSignIn ?? GoogleSignIn.instance;
 
   final fb.FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _google;
+
+  /// 7.x requires exactly one initialize() call whose future completes before
+  /// any other method. Reset on failure so a retry can initialize again.
+  Future<void>? _googleInit;
+
+  Future<void> _ensureGoogleInit() async {
+    final pending = _googleInit;
+    if (pending != null) {
+      await pending;
+      return;
+    }
+    final future = _google.initialize();
+    _googleInit = future;
+    try {
+      await future;
+    } catch (_) {
+      _googleInit = null;
+      rethrow;
+    }
+  }
 
   @override
   Stream<AuthUser?> authStateChanges() {
@@ -111,6 +137,93 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<AuthUser> signInWithGoogle() async {
+    try {
+      // 7.x: initialize once, then authenticate() (throws on cancellation).
+      await _ensureGoogleInit();
+      final account = await _google.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null) {
+        throw const AuthFailure('Google sign-in did not return an ID token');
+      }
+      // 7.x exposes only an ID token; Firebase accepts credential(idToken:).
+      final credential = fb.GoogleAuthProvider.credential(idToken: idToken);
+      final userCred = await _auth.signInWithCredential(credential);
+      final user = userCred.user;
+      if (user == null) {
+        throw const AuthFailure('Google sign-in returned no user');
+      }
+      // Rules require a profile string for phoneNumber; Google never shares
+      // one. Empty string satisfies the invariant and disables phone lookup.
+      await _ensureProfile(user);
+      return _mapUser(user)!;
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  /// First Google sign-in creates the minimal profile. Never overwrites an
+  /// existing one (e.g. an email/password account linked to the same UID).
+  Future<void> _ensureProfile(fb.User user) async {
+    final ref = _firestore.collection('users').doc(user.uid);
+    final snap = await ref.get();
+    if (snap.exists) return;
+    await ref.set({
+      'email': user.email ?? '',
+      'fullName': user.displayName ?? user.email ?? 'User',
+      'phoneNumber': '',
+      'role': 'customer',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  @override
+  Future<AuthUser> signInAnonymously() async {
+    try {
+      final cred = await _auth.signInAnonymously();
+      final user = cred.user;
+      if (user == null) {
+        throw const AuthFailure('Anonymous sign-in returned no user');
+      }
+      // No users/{uid} doc and no phone_index for guests: rules deny writes
+      // to private collections for anonymous sessions.
+      return _mapUser(user)!;
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  @override
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user == null || user.isAnonymous || user.email == null) {
+      throw const AuthFailure('Sign in with an email account to verify it');
+    }
+    if (user.emailVerified) return;
+    try {
+      // Default Firebase-hosted handler on tarlan-bank.firebaseapp.com.
+      // No custom domain / ActionCodeSettings needed; Console template owns
+      // the continue URL. Firebase rate-limits repeat sends server-side.
+      await user.sendEmailVerification();
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  @override
+  Future<bool> refreshEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    try {
+      await user.reload();
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+    return _auth.currentUser?.emailVerified ?? false;
+  }
+
+  @override
   Future<void> logout() async {
     try {
       await _auth.signOut();
@@ -160,6 +273,8 @@ class FirebaseAuthRepository implements AuthRepository {
       // phoneNumber is null for email/password accounts; the registered
       // number lives in users/{uid}. Consumers needing it read the profile.
       phoneNumber: user.phoneNumber,
+      isAnonymous: user.isAnonymous,
+      emailVerified: user.emailVerified,
     );
   }
 }

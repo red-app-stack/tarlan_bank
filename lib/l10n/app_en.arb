@@ -1,0 +1,142 @@
+{
+  "@@locale": "en",
+  "appName": "Tarlan Bank",
+  "labelEnglish": "English",
+  "labelRussian": "Russian",
+  "labelKazakh": "Kazakh",
+  "success": "Success",
+  "error": "Error",
+  "errorGeneric": "Something went wrong",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "retry": "Retry",
+  "close": "Close",
+  "later": "Later",
+  "loading": "Loading…",
+  "orDivider": "or",
+  "back": "Back",
+  "next": "Next",
+  "done": "Done",
+  "loginTitle": "Sign in",
+  "registerTitle": "Create account",
+  "fullName": "Full name",
+  "fullNameInvalid": "Enter your first and last name",
+  "phone": "Phone",
+  "phoneInvalid": "Use format +7 701 234-56-78",
+  "email": "Email",
+  "emailInvalid": "Invalid email",
+  "password": "Password",
+  "passwordRegister": "Choose a password",
+  "passwordRequired": "Enter a password",
+  "confirmPassword": "Repeat password",
+  "passwordsMismatch": "Passwords do not match",
+  "passwordStrong": "Password is strong enough",
+  "passwordMinLength": "At least 8 characters",
+  "passwordDigit": "Needs at least one digit",
+  "passwordLetter": "Needs at least one letter",
+  "passwordSpecial": "Needs a special character (!@#$%^&* etc.)",
+  "unexpectedError": "Unexpected error. Please try again",
+  "signIn": "Sign in",
+  "signUp": "Create account",
+  "haveAccount": "Already have an account? Sign in",
+  "noAccount": "Don't have an account? Register",
+  "signInGoogle": "Continue with Google",
+  "continueGuest": "Continue as guest",
+  "guestHint": "Guest: home, menu and exchange rates",
+  "signInRequired": "Sign in to open a product",
+  "verifyTitle": "Verify your email",
+  "verifyBody": "We sent a letter to {email}. Follow the link in the email, then tap “Check”.",
+  "@verifyBody": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyCheck": "Check",
+  "verifyResend": "Resend email",
+  "verifyResendIn": "Resend in {seconds} s",
+  "@verifyResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "verifyNotConfirmed": "Not confirmed yet. Follow the link in the email",
+  "verifyLater": "Later",
+  "verifySignOut": "Sign out",
+  "home": "Home",
+  "cards": "Cards",
+  "deposits": "Deposits",
+  "credits": "Credits",
+  "installment": "Installment",
+  "investments": "Investments",
+  "exchangeRates": "Exchange rates",
+  "menu": "Menu",
+  "menuGuest": "Menu (guest)",
+  "securitySettings": "Security settings",
+  "products": "Products",
+  "bankSection": "Bank",
+  "atm": "ATMs",
+  "branches": "Branches",
+  "callBank": "Call the bank",
+  "supportTickets": "My support requests",
+  "logout": "Sign out",
+  "createCard": "card",
+  "createDeposit": "deposit",
+  "createCredit": "credit",
+  "createInstallment": "installment",
+  "currency": "Currency",
+  "interestRate": "{rate}%",
+  "@interestRate": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "personalInfo": "Personal details",
+  "birthDate": "Date of birth",
+  "financialInfo": "Financial details",
+  "monthlyIncome": "Monthly income",
+  "additionalIncome": "Additional income",
+  "documents": "Documents",
+  "docType": "Document type",
+  "docNumber": "Document number",
+  "docExpiry": "Valid until",
+  "notUsCitizen": "I am not a US citizen / taxpayer",
+  "openProduct": "Open {product}",
+  "@openProduct": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "productOpened": "{product} opened",
+  "@productOpened": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "failedOpen": "Failed to open {product}",
+  "@failedOpen": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      }
+    }
+  },
+  "docTypeIdentity": "ID card of Kazakhstan",
+  "docTypePassportKz": "Passport of Kazakhstan",
+  "docTypeResidence": "Residence permit in Kazakhstan",
+  "docTypeStatelessKz": "Stateless person certificate (KZ)",
+  "docTypeForeignPassport": "Foreign passport",
+  "docTypeStateless": "Stateless person certificate",
+  "docTypeForeignStateless": "Foreign stateless person certificate",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password"
+}
