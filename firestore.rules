@@ -1,0 +1,222 @@
+rules_version = '2';
+
+// Tarlan Bank — Firestore security rules (DEMO GRADE, see MIGRATION_PLAN.md §4/§7).
+//
+// Ported from the audited Postgres schema (Servers/postgresql/init/schema.sql):
+//   - balance >= 0 on every account write        (was missing entirely)
+//   - currency consistency on BOTH parties       (old trigger checked only
+//                                                 from_account, and was never
+//                                                 even attached via CREATE TRIGGER)
+//   - transactions immutable after create        (old table had no such guard)
+//   - account number UNIQUE                      (enforced by using the number
+//                                                 as the document ID)
+//   - owner-scoped access                        (old schema had no FKs/RLS)
+//
+// DEMO CAVEATS (production moves these behind a trusted callable):
+//   1. Any signed-in user may adjust any account's balance within the invariants
+//      below. Rules cannot verify cross-account atomicity or sufficiency; the
+//      client Firestore transaction does. A malicious client can inflate balances.
+//   2. `get` on accounts is open to any signed-in user who knows the 16-digit
+//      number (needed for transfer recipient lookup). `list` stays owner-only.
+//   3. Idempotency: txId is a client UUID; create-only rules make a retry with
+//      the same id fail with already-exists (repo treats that as duplicate-ok).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function accountPath(id) {
+      return /databases/$(database)/documents/accounts/$(id);
+    }
+    function acct(id) {
+      return get(accountPath(id)).data;
+    }
+    function accountCurrencies() {
+      return ['USD', 'EUR', 'KZT'];
+    }
+    function rateCurrencies() {
+      return ['USD', 'EUR', 'KZT', 'RUB', 'GBP'];
+    }
+
+    // ---- users/{uid}: profile only. Credentials live in Firebase Auth. ----
+    match /users/{uid} {
+      allow read: if isSelf(uid);
+      allow create: if isSelf(uid)
+        && request.resource.data.keys().hasOnly([
+             'email', 'fullName', 'phoneNumber', 'role',
+             'createdAt', 'updatedAt', 'profilePictureUrl'])
+        && request.resource.data.role == 'customer'
+        && request.resource.data.fullName is string
+        && request.resource.data.phoneNumber is string
+        && request.resource.data.createdAt == request.time;
+      allow update: if isSelf(uid)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['fullName', 'phoneNumber', 'profilePictureUrl', 'updatedAt']);
+      allow delete: if isSelf(uid);
+    }
+
+    // ---- accounts/{accountNumber}: doc ID == number → UNIQUE for free. ----
+    // Products: current (spending), deposit (term savings), credit (loan).
+    // Credit balance = outstanding DEBT (positive), never spendable money.
+    // A card is NOT an account type — instruments live in cards/{cardId}.
+    match /accounts/{accountNumber} {
+      function validTerms() {
+        let d = request.resource.data;
+        return (d.type != 'deposit' || (
+              d.terms is map
+              && d.terms.annualRate is number
+              && d.terms.annualRate >= 0 && d.terms.annualRate <= 1
+              && d.terms.termMonths is int && d.terms.termMonths > 0
+              && d.terms.maturityAt is timestamp))
+          && (d.type != 'credit' || (
+              d.terms is map
+              && d.terms.creditLimit is number && d.terms.creditLimit > 0
+              && d.terms.annualRate is number
+              && d.terms.annualRate >= 0 && d.terms.annualRate <= 1
+              && d.terms.termMonths is int && d.terms.termMonths > 0))
+          && (d.type != 'current' || !('terms' in d));
+      }
+
+      allow get: if signedIn();                       // demo caveat #2
+      allow list: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if signedIn()
+        && accountNumber.matches('^[0-9]{16}$')
+        && request.resource.data.keys().hasOnly([
+             'number', 'ownerId', 'type', 'currency', 'balance', 'status',
+             'createdAt', 'updatedAt', 'terms'])
+        && request.resource.data.number == accountNumber
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.balance is number
+        && request.resource.data.balance >= 0
+        && request.resource.data.currency in accountCurrencies()
+        && request.resource.data.type in ['current', 'deposit', 'credit']
+        && request.resource.data.status in ['active', 'inactive', 'closed']
+        && request.resource.data.createdAt == request.time
+        && validTerms();
+      allow update: if signedIn()                     // demo caveat #1
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.number == resource.data.number
+        && request.resource.data.currency == resource.data.currency
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.balance is number
+        && request.resource.data.balance >= 0
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['balance', 'status', 'updatedAt']);
+      allow delete: if false;                         // close via status, never drop
+    }
+
+    // ---- transactions/{txId}: create-only ledger, owner-scoped reads. ----
+    // fromOwnerId/toOwnerId are denormalized so reads need no joins; the
+    // create rule verifies them against the actual account docs via get().
+    match /transactions/{txId} {
+      function validParties() {
+        let d = request.resource.data;
+        let hasFrom = d.fromAccountId != null;
+        let hasTo = d.toAccountId != null;
+        return (hasFrom || hasTo)
+          && d.fromAccountId != d.toAccountId
+          // deposit: money in, no sender. withdrawal: money out, no recipient.
+          && (d.type != 'deposit' || (!hasFrom && hasTo))
+          && (d.type != 'withdrawal' || (hasFrom && !hasTo))
+          && (d.type != 'internal_transfer' || d.fromOwnerId == d.toOwnerId)
+          // sender must be the caller, and match the real account owner/currency
+          && (!hasFrom || (
+               acct(d.fromAccountId).ownerId == d.fromOwnerId
+               && acct(d.fromAccountId).currency == d.currency
+               && d.fromOwnerId == request.auth.uid))
+          // recipient must exist and match; currency must agree except on
+          // conversions (where the two accounts legitimately differ)
+          && (!hasTo || (
+               acct(d.toAccountId).ownerId == d.toOwnerId
+               && (d.type == 'currency_conversion'
+                   || acct(d.toAccountId).currency == d.currency)));
+      }
+
+      allow read: if signedIn()
+        && (resource.data.fromOwnerId == request.auth.uid
+            || resource.data.toOwnerId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.currency in accountCurrencies()
+        && request.resource.data.type in [
+             'deposit', 'withdrawal', 'phone_transfer', 'qr_transfer',
+             'currency_conversion', 'internal_transfer', 'card_transfer',
+             'swift_transfer']
+        && request.resource.data.status in ['pending', 'completed', 'failed', 'reversed']
+        && request.resource.data.createdAt == request.time
+        && (!('message' in request.resource.data)
+            || request.resource.data.message.size() <= 280)
+        && validParties();
+      allow update, delete: if false;                 // immutable ledger
+    }
+
+    // ---- exchange_rates/{FROM_TO}: public cache of the free rates API. ----
+    match /exchange_rates/{pair} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.data.rate is number
+        && request.resource.data.rate > 0
+        && request.resource.data.fromCurrency in rateCurrencies()
+        && request.resource.data.toCurrency in rateCurrencies()
+        && pair == request.resource.data.fromCurrency + '_' + request.resource.data.toCurrency
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // ---- cards/{cardId}: payment instruments linked to current accounts. ----
+    // NO full PAN, NO CVV — key whitelist makes storing them impossible.
+    match /cards/{cardId} {
+      allow read: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'accountId', 'ownerId', 'last4', 'expiryMonth', 'expiryYear',
+             'holderName', 'status', 'label', 'createdAt'])
+        && request.resource.data.ownerId == request.auth.uid
+        && acct(request.resource.data.accountId).ownerId == request.auth.uid
+        && request.resource.data.last4.matches('^[0-9]{4}$')
+        && request.resource.data.expiryMonth is int
+        && request.resource.data.expiryMonth >= 1
+        && request.resource.data.expiryMonth <= 12
+        && request.resource.data.expiryYear is int
+        && request.resource.data.holderName is string
+        && request.resource.data.status in ['active', 'blocked', 'expired']
+        && request.resource.data.createdAt == request.time;
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'label']);
+      allow delete: if false;
+    }
+
+    // ---- phone_index/{E164}: phone → uid + primary current account. ----
+    // Written at registration (uid) and first current-account open
+    // (accountNumber). Open get for transfer lookup; list denied.
+    // Demo caveat: knowing a phone number reveals uid + account number.
+    match /phone_index/{phone} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && phone.matches('^\\+[0-9]{10,15}$')
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'fullName', 'accountNumber']);
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['accountNumber', 'fullName']);
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

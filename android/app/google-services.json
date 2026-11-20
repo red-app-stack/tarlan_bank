@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "261784281693",
+    "project_id": "tarlan-bank",
+    "storage_bucket": "tarlan-bank.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:261784281693:android:e5bd5d8507347c1f12a3b4",
+        "android_client_info": {
+          "package_name": "com.tarlan.bank"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "261784281693-dd5kjn6hcfeb47cjntaf86elrl27vl3d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tarlan.bank",
+            "certificate_hash": "10780dbccce6b80cde7ed1c3148ace961df15704"
+          }
+        },
+        {
+          "client_id": "261784281693-ts914ussos8qjjuojjf3oh823mvfvdr1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tarlan.bank",
+            "certificate_hash": "8bae09713bf29de208559c9acfde7db12f9fcf96"
+          }
+        },
+        {
+          "client_id": "261784281693-qho5htnoirk8md0r2h7d96vr3hlsqara.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaLEGX8NQpxvsNdRs5nnIoMfWyJbvvluc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "261784281693-qho5htnoirk8md0r2h7d96vr3hlsqara.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "261784281693-044nosg9iurnrh4lqjn9d99sd34mi0sp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tarlan.bank"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
