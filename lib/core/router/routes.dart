@@ -22,6 +22,8 @@ class Routes {
   static const menuInvestments = '/menu/investments';
   static const menuProfile = '/menu/profile';
   static const menuChatbot = '/menu/chatbot';
+  static const menuChangePassword = '/menu/changePassword';
+  static const menuLinkedAccounts = '/menu/linkedAccounts';
 
   /// Legacy aliases kept until every caller is migrated.
 
@@ -48,6 +50,8 @@ class Routes {
   static const transferDetails = '/transferDetails';
   static const createAccount = '/createAccount';
   static const investments = '/investments';
+  static const changePassword = '/changePassword';
+  static const linkedAccounts = '/linkedAccounts';
 
   static const phoneTransfer = '/phoneTransfer';
   static const selfTransfer = '/selfTransfer';
@@ -58,3 +62,22 @@ class Routes {
   static const securitySettings = '/securitySettings';
   // static const userChat = '/userChat';
 }
+
+/// Marker on overlay-route pushes so redirect knows the shell is underneath.
+const String shellOverlayMarker = 'fromShell';
+
+bool isShellOverlayPush(Object? extra) =>
+    extra is Map && extra[shellOverlayMarker] == true;
+
+/// Shell chrome is shown only on the five branch root locations. Every nested
+/// path (history, details, settings, placeholders, …) renders its own header.
+const branchRootLocations = {
+  Routes.payments,
+  Routes.transfers,
+  Routes.home,
+  Routes.accounts,
+  Routes.menu,
+};
+
+bool showShellTopBarFor(String location) =>
+    branchRootLocations.contains(location);

@@ -49,9 +49,6 @@ service cloud.firestore {
     function accountCurrencies() {
       return ['USD', 'EUR', 'KZT'];
     }
-    function rateCurrencies() {
-      return ['USD', 'EUR', 'KZT', 'RUB', 'GBP'];
-    }
 
     // ---- users/{uid}: profile only. Credentials live in Firebase Auth. ----
     match /users/{uid} {
@@ -167,17 +164,18 @@ service cloud.firestore {
       allow update, delete: if false;                 // immutable ledger
     }
 
-    // ---- exchange_rates/{FROM_TO}: public cache of the free rates API. ----
+    // ---- config/urls: non-secret service endpoints. ----
+    match /config/{document} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---- exchange_rates/{FROM_TO}: trusted Node writer, public reads. ----
     match /exchange_rates/{pair} {
+      // Anonymous sessions count as signed-in, so guests can read rates.
+      // Writes are reserved for the trusted Node writer (Admin SDK bypasses rules).
       allow read: if signedIn();
-      allow create, update: if isFullUser()
-        && request.resource.data.rate is number
-        && request.resource.data.rate > 0
-        && request.resource.data.fromCurrency in rateCurrencies()
-        && request.resource.data.toCurrency in rateCurrencies()
-        && pair == request.resource.data.fromCurrency + '_' + request.resource.data.toCurrency
-        && request.resource.data.updatedAt == request.time;
-      allow delete: if false;
+      allow create, update, delete: if false;
     }
 
     // ---- cards/{cardId}: payment instruments linked to current accounts. ----
@@ -202,6 +200,20 @@ service cloud.firestore {
         && resource.data.ownerId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status', 'label']);
+      allow delete: if false;
+    }
+
+    // ---- recipient_index/{accountNumber}: owner-written display names. ----
+    match /recipient_index/{accountNumber} {
+      allow get: if isFullUser();
+      allow list: if false;
+      allow create, update: if isFullUser()
+        && acct(accountNumber).ownerId == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.accountNumber == accountNumber
+        && request.resource.data.fullName is string
+        && request.resource.data.keys().hasOnly([
+             'uid', 'accountNumber', 'fullName']);
       allow delete: if false;
     }
 

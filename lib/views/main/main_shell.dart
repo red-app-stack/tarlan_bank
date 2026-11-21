@@ -7,7 +7,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:tarlan_bank/core/router/routes.dart';
+import 'package:tarlan_bank/core/router/routes.dart'
+    show Routes, shellOverlayMarker, showShellTopBarFor;
+import 'package:tarlan_bank/core/router/auth_intent.dart';
 import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
@@ -62,26 +64,10 @@ String lMenu(AppLocalizations l) => l.navMenu;
 /// App shell: one router-driven navigation shell instead of a PageView and a
 /// GetX controller. Each tab owns its own StatefulShellBranch, so nested routes
 /// (e.g. /transfers/phone → /transfers/history) keep their own stack.
-/// Nested routes whose screen renders its own AppBar. The shell hides its
-/// top bar for these so two headers never stack.
-const _ownAppBarRoutes = {
-  Routes.paymentsHistory,
-  Routes.transfersHistory,
-  Routes.transfersDetails,
-  Routes.accountsCreate,
-  Routes.accountsDetails,
-  Routes.menuInvestments,
-};
-
 class MainShell extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
-  final String currentLocation;
 
-  const MainShell({
-    super.key,
-    required this.navigationShell,
-    required this.currentLocation,
-  });
+  const MainShell({super.key, required this.navigationShell});
 
   @override
   ConsumerState<MainShell> createState() => _MainShellState();
@@ -89,10 +75,16 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   final _searchController = TextEditingController();
+  late final GoRouter _router;
+  String _currentPath = Routes.home;
+  bool _routeUpdateScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    _router = GoRouter.of(context);
+    _currentPath = _router.routerDelegate.currentConfiguration.uri.path;
+    _router.routerDelegate.addListener(_onRouteChanged);
     ref.listenManual<int>(shellIndexProvider, (_, next) {
       if (next != widget.navigationShell.currentIndex) {
         widget.navigationShell.goBranch(next);
@@ -111,18 +103,57 @@ class _MainShellState extends ConsumerState<MainShell> {
         ref.read(pendingShellTabProvider.notifier).clear();
       });
     }
+    final overlay = ref.read(pendingOverlayRouteProvider);
+    if (overlay != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.push(overlay, extra: const {shellOverlayMarker: true});
+        ref.read(pendingOverlayRouteProvider.notifier).clear();
+      });
+    }
   }
 
   @override
   void dispose() {
+    _router.routerDelegate.removeListener(_onRouteChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _pushOverlay(String route) {
+    if (!ref.read(isFullUserProvider)) {
+      final origin = _router.routerDelegate.currentConfiguration.uri.path;
+      ref
+          .read(pendingAuthIntentProvider.notifier)
+          .request(AuthIntent(target: route, origin: origin));
+    }
+    context.push(route, extra: const {shellOverlayMarker: true});
+  }
+
+  void _onRouteChanged() {
+    if (_routeUpdateScheduled || !mounted) return;
+    _routeUpdateScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _routeUpdateScheduled = false;
+      if (!mounted) return;
+      final latest = _router.routerDelegate.currentConfiguration.uri.path;
+      final selected = widget.navigationShell.currentIndex;
+      if (ref.read(shellIndexProvider) != selected) {
+        ref.read(shellIndexProvider.notifier).setIndex(selected);
+      }
+      if (latest == _currentPath) return;
+      setState(() => _currentPath = latest);
+    });
   }
 
   void _onTap(int index, bool isFullUser) {
     final tab = _tabs[index];
     if (tab.requiresAuth && !isFullUser) {
-      context.push('/login?from=${Uri.encodeComponent(tab.path)}');
+      final origin = _router.routerDelegate.currentConfiguration.uri.path;
+      ref
+          .read(pendingAuthIntentProvider.notifier)
+          .request(AuthIntent(target: tab.path, origin: origin));
+      context.push(Routes.login);
       return;
     }
     if (index == widget.navigationShell.currentIndex) {
@@ -197,47 +228,47 @@ class _MainShellState extends ConsumerState<MainShell> {
       0,
       _tabs.length - 1,
     );
-    final showTopBar = !_ownAppBarRoutes.contains(widget.currentLocation);
+    final showTopBar = showShellTopBarFor(_currentPath);
 
     return Scaffold(
       appBar: showTopBar
           ? FrostedAppBar(
-        leading: IconButton(
-          tooltip: l.menu,
-          icon: SizedBox(
-            width: 38,
-            height: 38,
-            child: SvgPicture.asset(
-              'assets/icons/ic_user.svg',
-              colorFilter: ColorFilter.mode(
-                theme.colorScheme.primary,
-                BlendMode.srcIn,
+              leading: IconButton(
+                tooltip: l.menu,
+                icon: SizedBox(
+                  width: 38,
+                  height: 38,
+                  child: SvgPicture.asset(
+                    'assets/icons/ic_user.svg',
+                    colorFilter: ColorFilter.mode(
+                      theme.colorScheme.primary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+                onPressed: () => _pushOverlay(Routes.profile),
               ),
-            ),
-          ),
-          onPressed: () => context.push(Routes.profile),
-        ),
-        actionsPadding: const EdgeInsets.only(right: 8),
-        actions: [
-          IconButton(
-            tooltip: l.investments,
-            icon: SvgPicture.asset(
-              'assets/icons/ic_chatbot.svg',
-              width: 32,
-              height: 32,
-              colorFilter: ColorFilter.mode(
-                theme.colorScheme.primary,
-                BlendMode.srcIn,
+              actionsPadding: const EdgeInsets.only(right: 8),
+              actions: [
+                IconButton(
+                  tooltip: l.investments,
+                  icon: SvgPicture.asset(
+                    'assets/icons/ic_chatbot.svg',
+                    width: 32,
+                    height: 32,
+                    colorFilter: ColorFilter.mode(
+                      theme.colorScheme.primary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  onPressed: () => _pushOverlay(Routes.chatbot),
+                ),
+              ],
+              title: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: _searchField(theme),
               ),
-            ),
-            onPressed: () => context.push(Routes.chatbot),
-          ),
-        ],
-        title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _searchField(theme),
-        ),
-          )
+            )
           : null,
       extendBody: true,
       extendBodyBehindAppBar: true,

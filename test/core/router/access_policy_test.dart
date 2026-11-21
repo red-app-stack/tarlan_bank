@@ -74,4 +74,33 @@ void main() {
       AccessLevel.full,
     );
   });
+
+  group('auth intent', () {
+    test('remembered for protected targets when signed out or guest', () {
+      expect(
+        shouldRememberAuthIntent(AccessLevel.signedOut, Routes.accounts),
+        isTrue,
+      );
+      expect(
+        shouldRememberAuthIntent(AccessLevel.guest, Routes.paymentsHistory),
+        isTrue,
+      );
+    });
+
+    test('never remembered for public/guest routes or full users', () {
+      expect(
+        shouldRememberAuthIntent(AccessLevel.signedOut, Routes.login),
+        isFalse,
+      );
+      expect(shouldRememberAuthIntent(AccessLevel.guest, Routes.home), isFalse);
+      expect(
+        shouldRememberAuthIntent(AccessLevel.full, Routes.accounts),
+        isFalse,
+      );
+      expect(
+        shouldRememberAuthIntent(AccessLevel.loading, Routes.accounts),
+        isFalse,
+      );
+    });
+  });
 }

@@ -9,6 +9,8 @@ import 'package:tarlan_bank/features/auth/data/password_rule_labels.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/core/router/shell_index_provider.dart'
+    show pendingAuthIntentProvider;
 
 import 'email_verification_dialog.dart';
 
@@ -91,8 +93,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _done();
   }
 
-  void _done() {
-    if (context.mounted) context.go(Routes.home);
+  void _done({bool anonymous = false}) {
+    final intent = ref.read(pendingAuthIntentProvider);
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    final target = anonymous
+        ? (intent?.origin ?? Routes.home)
+        : (intent?.target ?? from ?? Routes.home);
+    ref.read(pendingAuthIntentProvider.notifier).clear();
+    if (context.mounted) context.go(target);
   }
 
   Future<void> _submitEmail() async {
@@ -133,7 +141,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _submitGuest() => _run(() async {
     await ref.read(authRepositoryProvider).signInAnonymously();
-    _done();
+    _done(anonymous: true);
   });
 
   @override

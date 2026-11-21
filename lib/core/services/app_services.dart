@@ -12,13 +12,12 @@ import 'package:tarlan_bank/services/dio_manager.dart';
 import 'package:tarlan_bank/services/screen_protect_service.dart';
 import 'package:tarlan_bank/services/secure_store.dart';
 import 'package:tarlan_bank/services/server_service.dart';
+import 'package:tarlan_bank/services/service_url_resolver.dart';
 import 'package:tarlan_bank/services/user_repository.dart';
 import 'package:tarlan_bank/services/verification_service.dart';
 import 'package:tarlan_bank/utils/overlay_helper.dart';
 
-/// Bootstrap owner: one place that creates/configures every long-lived
-/// service. main() stays tiny and Riverpod providers in service_providers.dart
-/// are the only way the app reads them. No service-locator registration.
+/// Bootstrap owner for long-lived services.
 class AppServices {
   AppServices._();
 
@@ -39,7 +38,7 @@ class AppServices {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    server = Server();
+    server = Server(resolver: ServiceUrlResolver());
     dioManager = DioManager(server: server, secureStorage: secureStorage);
     secureStore = SecureStore(secureStorage);
     authStateService = AuthStateService();

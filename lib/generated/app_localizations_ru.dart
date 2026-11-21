@@ -954,4 +954,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get txOther => 'Перевод';
+
+  @override
+  String get convertTitle => 'Конвертация';
+
+  @override
+  String get changePasswordTitle => 'Смена пароля';
+
+  @override
+  String get linkedAccountsTitle => 'Связанные аккаунты';
+
+  @override
+  String get featurePlaceholderBody => 'Этот экран пока недоступен.';
+
+  @override
+  String get recipientLookupLimited => 'Получатель не найден. Попробуйте позже';
 }

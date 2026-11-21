@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,6 +14,7 @@ import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart'
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
 import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
 import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
+import 'package:tarlan_bank/features/transactions/widgets/recipient_identity.dart';
 import 'package:tarlan_bank/features/transactions/widgets/account_dropdown.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_amount_controller.dart';
@@ -37,6 +40,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
   final TextEditingController phoneController = TextEditingController();
   final FlutterNativeContactPicker _contactPicker =
       FlutterNativeContactPicker();
+  Timer? _lookupTimer;
 
   Account? selectedAccount;
   bool isAccountDropdownExpanded = false;
@@ -47,7 +51,11 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
   void initState() {
     super.initState();
     amountCtl.initialize();
-    _applyInitialTransaction();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applyInitialTransaction();
+      ref.read(transferLookupProvider.notifier).clear();
+    });
   }
 
   void _applyInitialTransaction() {
@@ -63,9 +71,9 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
 
   @override
   void dispose() {
+    _lookupTimer?.cancel();
     amountCtl.dispose();
     phoneController.dispose();
-    ref.read(transferRecipientProvider.notifier).clear();
     super.dispose();
   }
 
@@ -76,26 +84,24 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
       text: formatPhone(digits),
       selection: TextSelection.collapsed(offset: formatPhone(digits).length),
     );
+    _lookupTimer?.cancel();
     if (digits.length == 10) {
-      _lookupRecipient(digits);
+      _lookupTimer = Timer(const Duration(milliseconds: 400), () {
+        if (mounted) _lookupRecipient(digits);
+      });
     } else {
-      ref.read(transferRecipientProvider.notifier).clear();
+      ref.read(transferLookupProvider.notifier).clear();
     }
     setState(() {});
   }
 
   Future<void> _lookupRecipient(String number) async {
     try {
-      final account = await ref
-          .read(accountsRepositoryProvider)
-          .lookupAccount(phoneNumber: number);
-      if (!mounted ||
-          phoneController.text.replaceAll(RegExp(r'\D'), '') != number) {
-        return;
-      }
-      ref.read(transferRecipientProvider.notifier).set(account);
+      await ref
+          .read(transferLookupProvider.notifier)
+          .lookup(phoneNumber: number);
     } on Object {
-      if (mounted) ref.read(transferRecipientProvider.notifier).clear();
+      if (mounted) ref.read(transferLookupProvider.notifier).clear();
     }
   }
 
@@ -168,7 +174,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
       );
       return;
     }
-    final recipient = ref.read(transferRecipientProvider);
+    final recipient = ref.read(transferLookupProvider).account;
     if (recipient == null) {
       showAppSnackBar(
         context,
@@ -226,7 +232,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
     final size = MediaQuery.of(context).size;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
-    final recipient = ref.watch(transferRecipientProvider);
+    final lookup = ref.watch(transferLookupProvider);
     final visibleAccounts = _sourceAccounts(accounts);
 
     if (!_initialized) {
@@ -237,14 +243,13 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
     }
 
     return Scaffold(
+      appBar: buildTransferHeader(context, l.transferByPhone),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              buildTransferHeader(context, l.mobileTransfer),
-              SizedBox(height: size.height * 0.02),
               Expanded(
                 child: RefreshIndicator(
                   edgeOffset: MediaQuery.of(context).padding.top,
@@ -260,7 +265,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
                       children: [
                         _buildCardSelector(theme, l, visibleAccounts),
                         SizedBox(height: size.height * 0.02),
-                        _buildPhoneInput(theme, l, recipient),
+                        _buildPhoneInput(theme, l, lookup),
                         SizedBox(height: size.height * 0.02),
                         _buildAmountInput(theme, l),
                       ],
@@ -325,7 +330,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
   Widget _buildPhoneInput(
     ThemeData theme,
     AppLocalizations l,
-    Account? recipient,
+    TransferLookupState lookup,
   ) {
     return CustomCard(
       label: l.enterPhoneNumber,
@@ -374,13 +379,11 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(left: 16, top: 12),
-            child: Text(
-              recipient == null
-                  ? l.recipientNotFound
-                  : censorCardNumber(recipient.number),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
+            child: RecipientIdentity(
+              state: lookup,
+              show:
+                  phoneController.text.replaceAll(RegExp(r'\D'), '').length ==
+                  10,
             ),
           ),
         ],

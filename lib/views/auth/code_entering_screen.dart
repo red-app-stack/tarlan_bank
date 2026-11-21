@@ -10,6 +10,7 @@ import 'package:local_auth_darwin/local_auth_darwin.dart';
 import 'package:tarlan_bank/core/providers/service_providers.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
+import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/utils/verification_dialog.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
@@ -75,21 +76,29 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isLandscape = size.width > size.height;
-    final userRepo = ref.watch(userRepositoryProvider);
+    final profile = ref.watch(userProfileProvider).value;
+    final authUser = ref.watch(currentUserProvider);
+    final fullName = profile?.fullName ?? '';
+    final email = profile?.email ?? authUser?.email ?? '';
 
     return Scaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.only(left: 24.0, right: 24, top: 12.0),
           child: isLandscape
-              ? _buildLandscapeLayout(theme, size, userRepo)
-              : _buildPortraitLayout(theme, size, userRepo),
+              ? _buildLandscapeLayout(theme, size, fullName, email)
+              : _buildPortraitLayout(theme, size, fullName, email),
         ),
       ),
     );
   }
 
-  Widget _buildPortraitLayout(ThemeData theme, Size size, dynamic userRepo) {
+  Widget _buildPortraitLayout(
+    ThemeData theme,
+    Size size,
+    String fullName,
+    String email,
+  ) {
     return Column(
       children: [
         _buildBackButton(theme),
@@ -97,13 +106,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
         SizedBox(
           width: size.width / 2,
           child: CustomCard(
-            child: Center(
-              child: buildUserCard(
-                userRepo.currentUser?.fullName ?? '',
-                theme,
-                size,
-              ),
-            ),
+            child: Center(child: buildUserCard(fullName, theme, size)),
           ),
         ),
         const SizedBox(height: 24),
@@ -112,13 +115,18 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
         _buildCodeIndicators(theme),
         const SizedBox(height: 24),
         Expanded(child: _buildNumPad(theme, size)),
-        _buildForgotCodeButton(theme, userRepo),
+        _buildForgotCodeButton(theme, email),
         const SizedBox(height: 12),
       ],
     );
   }
 
-  Widget _buildLandscapeLayout(ThemeData theme, Size size, dynamic userRepo) {
+  Widget _buildLandscapeLayout(
+    ThemeData theme,
+    Size size,
+    String fullName,
+    String email,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -131,16 +139,10 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
               SizedBox(
                 width: size.width / 4,
                 child: CustomCard(
-                  child: Center(
-                    child: buildUserCard(
-                      userRepo.currentUser?.fullName ?? '',
-                      theme,
-                      size,
-                    ),
-                  ),
+                  child: Center(child: buildUserCard(fullName, theme, size)),
                 ),
               ),
-              _buildForgotCodeButton(theme, userRepo),
+              _buildForgotCodeButton(theme, email),
             ],
           ),
         ),
@@ -304,13 +306,13 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
     );
   }
 
-  Widget _buildForgotCodeButton(ThemeData theme, dynamic userRepo) {
+  Widget _buildForgotCodeButton(ThemeData theme, String email) {
     final l = AppLocalizations.of(context);
     final isDisabled = isCreatingCode && creationStage == 0;
 
     Future<void> handleForgot() async {
       final verified = await showEmailConfirmationDialog(
-        email: userRepo.currentUser?.email ?? '',
+        email: email,
         context: context,
       );
       if (!verified || !mounted) return;

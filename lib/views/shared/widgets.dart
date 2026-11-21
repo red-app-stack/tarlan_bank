@@ -399,18 +399,44 @@ Widget fakeHero({required String tag, required Widget child}) {
   );
 }
 
-Widget buildUserCard(String fullName, ThemeData theme, Size size) {
+Widget buildUserCard(
+  String fullName,
+  ThemeData theme,
+  Size size, {
+  String? photoUrl,
+  String? subtitle,
+}) {
+  final initials = getInitials(fullName);
+  final initialsWidget = Text(
+    initials,
+    style: theme.textTheme.headlineMedium?.copyWith(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.bold,
+    ),
+  );
+  final hasPhoto = photoUrl != null && photoUrl.trim().isNotEmpty;
+
   return Column(
     children: [
-      CircleAvatar(
-        radius: 48,
-        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        child: Text(
-          getInitials(fullName),
-          style: theme.textTheme.headlineMedium?.copyWith(
-            color: theme.colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
+      ClipOval(
+        child: SizedBox(
+          width: 96,
+          height: 96,
+          child: hasPhoto
+              ? Image.network(
+                  photoUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    alignment: Alignment.center,
+                    child: initialsWidget,
+                  ),
+                )
+              : Container(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  alignment: Alignment.center,
+                  child: initialsWidget,
+                ),
         ),
       ),
       SizedBox(height: size.height * 0.02),
@@ -421,6 +447,16 @@ Widget buildUserCard(String fullName, ThemeData theme, Size size) {
           fontWeight: FontWeight.w600,
         ),
       ),
+      if (subtitle != null && subtitle.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     ],
   );
 }

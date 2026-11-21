@@ -10,11 +10,11 @@ import 'package:local_auth_darwin/types/auth_messages_ios.dart';
 import 'package:tarlan_bank/core/providers/service_providers.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/core/theme/theme_settings.dart';
+import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/services/auth_service.dart';
 import 'package:tarlan_bank/services/screen_protect_service.dart';
 import 'package:tarlan_bank/services/secure_store.dart';
-import 'package:tarlan_bank/services/user_repository.dart';
 import 'package:tarlan_bank/utils/themes/theme_extension.dart';
 import 'package:tarlan_bank/utils/verification_dialog.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
@@ -36,7 +36,6 @@ class SecuritySettingsScreen extends ConsumerStatefulWidget {
 class _SecuritySettingsScreenState
     extends ConsumerState<SecuritySettingsScreen> {
   late final SecureStore _secureStore = ref.read(secureStoreProvider);
-  late final UserRepository _userRepo = ref.read(userRepositoryProvider);
   late final AuthService _authService = ref.read(authServiceProvider);
   final LocalAuthentication _auth = LocalAuthentication();
 
@@ -228,7 +227,7 @@ class _SecuritySettingsScreenState
           message: l.auEmailConfirmationRequired,
         );
         if (await showEmailConfirmationDialog(
-          email: _userRepo.currentUser?.email ?? '',
+          email: ref.read(currentUserProvider)?.email ?? '',
           context: context,
         )) {
           await _deleteAccount();
@@ -254,13 +253,13 @@ class _SecuritySettingsScreenState
         MenuItem(
           icon: 'assets/icons/ic_lock.svg',
           title: l.auChangePassword,
-          routeArg: '/changePassword',
+          routeArg: Routes.changePassword,
           requiresAuth: true,
         ),
         MenuItem(
           icon: 'assets/icons/ic_accounts.svg',
           title: l.auLinkedAccounts,
-          routeArg: '/linkedAccounts',
+          routeArg: Routes.linkedAccounts,
         ),
         MenuItem(
           icon: 'assets/icons/ic_access_code.svg',

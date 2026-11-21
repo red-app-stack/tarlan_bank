@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -8,6 +10,7 @@ import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart'
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
 import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
 import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
+import 'package:tarlan_bank/features/transactions/widgets/recipient_identity.dart';
 import 'package:tarlan_bank/features/transactions/widgets/account_dropdown.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_amount_controller.dart';
@@ -31,6 +34,7 @@ class CardTransferScreen extends ConsumerStatefulWidget {
 class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
   final TransferAmountController amountCtl = TransferAmountController();
   final TextEditingController accountController = TextEditingController();
+  Timer? _lookupTimer;
 
   Account? selectedAccount;
   bool isAccountDropdownExpanded = false;
@@ -41,7 +45,11 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
   void initState() {
     super.initState();
     amountCtl.initialize();
-    _applyInitialTransaction();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _applyInitialTransaction();
+      ref.read(transferLookupProvider.notifier).clear();
+    });
   }
 
   void _applyInitialTransaction() {
@@ -59,9 +67,9 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
 
   @override
   void dispose() {
+    _lookupTimer?.cancel();
     amountCtl.dispose();
     accountController.dispose();
-    ref.read(transferRecipientProvider.notifier).clear();
     super.dispose();
   }
 
@@ -82,25 +90,24 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );
+    _lookupTimer?.cancel();
     if (digits.length == 16) {
-      _lookupRecipient(digits);
+      _lookupTimer = Timer(const Duration(milliseconds: 400), () {
+        if (mounted) _lookupRecipient(digits);
+      });
     } else {
-      ref.read(transferRecipientProvider.notifier).clear();
+      ref.read(transferLookupProvider.notifier).clear();
     }
     setState(() {});
   }
 
   Future<void> _lookupRecipient(String number) async {
     try {
-      final account = await ref
-          .read(accountsRepositoryProvider)
-          .lookupAccount(accountNumber: number);
-      if (!mounted || accountController.text.replaceAll(' ', '') != number) {
-        return;
-      }
-      ref.read(transferRecipientProvider.notifier).set(account);
+      await ref
+          .read(transferLookupProvider.notifier)
+          .lookup(accountNumber: number);
     } on Object {
-      if (mounted) ref.read(transferRecipientProvider.notifier).clear();
+      if (mounted) ref.read(transferLookupProvider.notifier).clear();
     }
   }
 
@@ -159,7 +166,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
       );
       return;
     }
-    final recipient = ref.read(transferRecipientProvider);
+    final recipient = ref.read(transferLookupProvider).account;
     if (recipient == null) {
       showAppSnackBar(
         context,
@@ -216,7 +223,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
     final size = MediaQuery.of(context).size;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
-    final recipient = ref.watch(transferRecipientProvider);
+    final lookup = ref.watch(transferLookupProvider);
     final visibleAccounts = _sourceAccounts(accounts);
 
     if (!_initialized) {
@@ -227,14 +234,13 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
     }
 
     return Scaffold(
+      appBar: buildTransferHeader(context, l.typeCardTransfer),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Column(
             children: [
-              buildTransferHeader(context, l.transferByAccount),
-              SizedBox(height: size.height * 0.02),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -242,7 +248,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
                     children: [
                       _buildCardSelector(theme, l, visibleAccounts),
                       SizedBox(height: size.height * 0.02),
-                      _buildAccountInput(theme, l, recipient),
+                      _buildAccountInput(theme, l, lookup),
                       SizedBox(height: size.height * 0.02),
                       _buildAmountInput(theme, l),
                     ],
@@ -306,7 +312,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
   Widget _buildAccountInput(
     ThemeData theme,
     AppLocalizations l,
-    Account? recipient,
+    TransferLookupState lookup,
   ) {
     return CustomCard(
       label: l.recipientAccountNumber,
@@ -337,16 +343,13 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
               onChanged: _onAccountChanged,
             ),
           ),
-          if (accountController.text.replaceAll(' ', '').length == 16)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                recipient == null
-                    ? l.recipientNotFound
-                    : censorCardNumber(recipient.number),
-                style: theme.textTheme.bodySmall,
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: RecipientIdentity(
+              state: lookup,
+              show: accountController.text.replaceAll(' ', '').length == 16,
             ),
+          ),
         ],
       ),
     );

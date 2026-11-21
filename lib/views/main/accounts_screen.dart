@@ -146,7 +146,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
 
     final user = ref.watch(currentUserProvider);
     final profile = ref.watch(userProfileProvider).value;
-    final fullName = user?.fullName ?? profile?['fullName'] as String? ?? '';
+    final fullName = profile?.fullName ?? '';
     final accountsAsync = ref.watch(accountsProvider);
     final isGuest = user == null || user.isAnonymous;
 

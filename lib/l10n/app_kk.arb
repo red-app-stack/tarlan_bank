@@ -345,5 +345,10 @@
   "txCardTransfer": "Картаға аудару",
   "txSwiftTransfer": "SWIFT аудару",
   "txPayment": "Төлем",
-  "txOther": "Аудару"
+  "txOther": "Аудару",
+  "convertTitle": "Валютаны айырбастау",
+  "changePasswordTitle": "Құпия сөзді өзгерту",
+  "linkedAccountsTitle": "Байланыстық тіркелгілер",
+  "featurePlaceholderBody": "Бұл экран әзірге қолжетімді емес.",
+  "recipientLookupLimited": "Алушы табылмады. Кейінірек қайталаңыз"
 }

@@ -51,3 +51,10 @@ String? redirectFor({required AccessLevel level, required String location}) {
       return location == Routes.login ? Routes.home : null;
   }
 }
+
+/// Whether a denial should remember the destination for after auth.
+/// Anonymous sign-in is explicitly not an auth success for this purpose.
+bool shouldRememberAuthIntent(AccessLevel level, String location) {
+  if (level == AccessLevel.full || level == AccessLevel.loading) return false;
+  return !publicRoutes.contains(location) && !guestRoutes.contains(location);
+}

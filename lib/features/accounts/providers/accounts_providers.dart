@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/providers/auth_providers.dart';
@@ -15,7 +17,15 @@ final accountsRepositoryProvider = Provider<AccountsRepository>((ref) {
 final accountsProvider = StreamProvider<List<Account>>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value(const []);
-  return ref.watch(accountsRepositoryProvider).watchAccounts(user.uid);
+  final repo = ref.watch(accountsRepositoryProvider);
+  final backfilled = <String>{};
+  return repo.watchAccounts(user.uid).map((accounts) {
+    if (!backfilled.contains(user.uid)) {
+      backfilled.add(user.uid);
+      unawaited(repo.ensureRecipientIndexes(user.uid).catchError((_) {}));
+    }
+    return accounts;
+  });
 });
 
 /// Realtime cards of the signed-in user; empty when signed out.

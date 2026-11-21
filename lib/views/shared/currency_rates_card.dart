@@ -1,3 +1,4 @@
+import 'package:tarlan_bank/features/exchange/data/rate_display.dart';
 import 'package:tarlan_bank/models/exchange_rate.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:material_ui/material_ui.dart';
@@ -31,7 +32,8 @@ class CurrencyRatesCard extends StatelessWidget {
   });
 
   List<CurrencyRate> _transformRates(
-      Map<String, Map<String, ExchangeRate>> exchangeRates) {
+    Map<String, Map<String, ExchangeRate>> exchangeRates,
+  ) {
     final colorMap = {
       'USD': const Color(0xFF4CAF50),
       'EUR': const Color(0xFF2196F3),
@@ -39,23 +41,17 @@ class CurrencyRatesCard extends StatelessWidget {
       'RUB': const Color(0xFFFF9800),
     };
 
-    final List<CurrencyRate> currencyRates = [];
-
-    exchangeRates.forEach((fromCurrency, toCurrencies) {
-      if (toCurrencies.containsKey('KZT')) {
-        final rate = toCurrencies['KZT']!.rate;
-        currencyRates.add(CurrencyRate(
-          code: fromCurrency,
-          symbol: getCurrencySymbol(fromCurrency),
-          iconColor: colorMap[fromCurrency] ?? Colors.grey,
-          sell: rate * 0.995,
-          buy: rate * 1.005,
-        ));
-      }
-    });
-
-    currencyRates.sort((a, b) => a.buy.compareTo(b.buy));
-    return currencyRates;
+    return displayRates(exchangeRates)
+        .map(
+          (rate) => CurrencyRate(
+            code: rate.code,
+            symbol: getCurrencySymbol(rate.code),
+            iconColor: colorMap[rate.code] ?? Colors.grey,
+            sell: rate.rateToKzt * 0.995,
+            buy: rate.rateToKzt * 1.005,
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -102,13 +98,19 @@ class CurrencyRatesCard extends StatelessWidget {
                         _shimmerIcon(baseColor),
                         const SizedBox(width: 12),
                         SizedBox(
-                            width: 50, child: _shimmerText(theme, baseColor)),
+                          width: 50,
+                          child: _shimmerText(theme, baseColor),
+                        ),
                         const Spacer(),
                         SizedBox(
-                            width: 80, child: _shimmerText(theme, baseColor)),
+                          width: 80,
+                          child: _shimmerText(theme, baseColor),
+                        ),
                         const Spacer(),
                         SizedBox(
-                            width: 80, child: _shimmerText(theme, baseColor)),
+                          width: 80,
+                          child: _shimmerText(theme, baseColor),
+                        ),
                       ],
                     ),
                   ),
@@ -133,9 +135,7 @@ class CurrencyRatesCard extends StatelessWidget {
         children: [
           _currencyIcon(rate.iconColor, rate.symbol, theme),
           const SizedBox(width: 12),
-          SizedBox(
-            child: Text(rate.code, style: theme.textTheme.titleLarge),
-          ),
+          SizedBox(child: Text(rate.code, style: theme.textTheme.titleLarge)),
           const Spacer(),
           _priceColumn('${rate.sell.toStringAsFixed(2)} KZT', theme), // ₸
           const Spacer(),
@@ -146,20 +146,14 @@ class CurrencyRatesCard extends StatelessWidget {
   }
 
   Widget _priceColumn(String price, ThemeData theme) {
-    return Text(
-      price,
-      style: theme.textTheme.titleLarge,
-    );
+    return Text(price, style: theme.textTheme.titleLarge);
   }
 
   Widget _currencyIcon(Color color, String symbol, ThemeData theme) {
     return Container(
       width: 24,
       height: 24,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       child: Center(
         child: Text(
           symbol,

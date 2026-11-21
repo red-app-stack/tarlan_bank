@@ -105,8 +105,10 @@ void main() {
       }
     });
     test('unknown wire string throws ValidationFailure', () {
-      expect(() => TransactionType.fromWire('refund'),
-          throwsA(isA<ValidationFailure>()));
+      expect(
+        () => TransactionType.fromWire('refund'),
+        throwsA(isA<ValidationFailure>()),
+      );
     });
   });
 }

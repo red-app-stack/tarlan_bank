@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/core/router/routes.dart'
+    show Routes, shellOverlayMarker;
 import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 
 /// Root navigator shared with GoRouter. All navigation goes through go_router;
@@ -23,6 +24,8 @@ const _aliases = {
   Routes.cardDetails: Routes.accountsDetails,
   Routes.securitySettings: Routes.menuSecurity,
   Routes.investments: Routes.menuInvestments,
+  Routes.changePassword: Routes.menuChangePassword,
+  Routes.linkedAccounts: Routes.menuLinkedAccounts,
 };
 
 String _location(String route, Object? arguments) {
@@ -51,7 +54,7 @@ Future<void> navigateToGlobal(String route, {Object? arguments}) async {
   // Profile/chatbot are overlay routes outside the shell: push so the branch
   // index and shell state underneath stay intact.
   if (location == Routes.profile || location == Routes.chatbot) {
-    router.push(location);
+    router.push(location, extra: const {shellOverlayMarker: true});
     return;
   }
   router.go(location, extra: arguments);

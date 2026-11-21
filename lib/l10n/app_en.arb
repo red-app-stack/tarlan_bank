@@ -373,5 +373,10 @@
   "txCardTransfer": "Card transfer",
   "txSwiftTransfer": "SWIFT transfer",
   "txPayment": "Payment",
-  "txOther": "Transfer"
+  "txOther": "Transfer",
+  "convertTitle": "Currency conversion",
+  "changePasswordTitle": "Change password",
+  "linkedAccountsTitle": "Linked accounts",
+  "featurePlaceholderBody": "This screen is not available yet.",
+  "recipientLookupLimited": "Recipient not found; try again later"
 }

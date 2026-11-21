@@ -7,6 +7,7 @@ import '../data/auth_repository.dart';
 import '../data/email_verification_cooldown_store.dart';
 import '../data/auth_user.dart';
 import '../data/firebase_auth_repository.dart';
+import '../data/user_profile.dart';
 
 /// Auth wiring (kitaphub-style composable providers).
 ///
@@ -19,7 +20,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return repo;
 });
 
-/// Raw auth stream as an [AsyncValue] (loading/data/error handled by consumers).
+/// Auth stream as an [AsyncValue].
 final authStateProvider = StreamProvider<AuthUser?>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges();
 });
@@ -29,8 +30,7 @@ final currentUserProvider = Provider<AuthUser?>((ref) {
   return ref.watch(authStateProvider).value;
 });
 
-/// Convenience flag for guards / UI. Includes Firebase anonymous guests —
-/// use [isFullUserProvider] when a feature needs a registered account.
+/// Includes anonymous guests; use [isFullUserProvider] for registered users.
 final isLoggedInProvider = Provider<bool>((ref) {
   return ref.watch(currentUserProvider) != null;
 });
@@ -41,16 +41,15 @@ final isFullUserProvider = Provider<bool>((ref) {
   return user != null && !user.isAnonymous;
 });
 
-/// Realtime `users/{uid}` profile for registered users; null for guests and
-/// signed-out users. Use this for fullName/phone instead of GetX UserRepository.
-final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) {
+/// Realtime `users/{uid}` profile; null for guests and signed-out users.
+final userProfileProvider = StreamProvider<UserProfile?>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null || user.isAnonymous) return Stream.value(null);
   return tarlanFirestore()
       .collection('users')
       .doc(user.uid)
       .snapshots()
-      .map((snap) => snap.data());
+      .map((snap) => snap.exists ? UserProfile.fromFirestore(snap) : null);
 });
 
 /// Persisted 60s resend cooldown (spam protection) shared by all screens.

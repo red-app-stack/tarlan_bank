@@ -57,7 +57,9 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
       torchEnabled: false,
       formats: const [BarcodeFormat.qrCode],
     );
-    _handleInitialTransaction();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _handleInitialTransaction();
+    });
   }
 
   void _handleInitialTransaction() {
@@ -117,10 +119,11 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
 
   String _generateQrData() {
     final user = ref.read(currentUserProvider);
+    final profile = ref.read(userProfileProvider).value;
     final acc = selectedAccount;
     if (acc == null) return '';
     return jsonEncode({
-      'fullName': user?.fullName ?? user?.email ?? '',
+      'fullName': profile?.fullName ?? user?.email ?? '',
       'accountNumber': acc.number,
       'currency': acc.currency,
       'amount': amountCtl.amount,
@@ -230,14 +233,11 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
     });
 
     return Scaffold(
+      appBar: buildTransferHeader(context, l.qrTransfer),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              child: buildTransferHeader(context, l.qrTransfer),
-            ),
             const SizedBox(height: 16),
             _buildToggleSwitch(context, l),
             const SizedBox(height: 16),

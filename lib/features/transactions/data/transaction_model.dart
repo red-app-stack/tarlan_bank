@@ -18,10 +18,10 @@ enum TransactionType {
   const TransactionType(this.wireName);
   final String wireName;
 
-  static TransactionType fromWire(String value) =>
-      values.firstWhere((t) => t.wireName == value,
-          orElse: () =>
-              throw ValidationFailure('Unknown transaction type: $value'));
+  static TransactionType fromWire(String value) => values.firstWhere(
+    (t) => t.wireName == value,
+    orElse: () => throw ValidationFailure('Unknown transaction type: $value'),
+  );
 }
 
 enum TransactionStatus { pending, completed, failed, reversed }
@@ -47,6 +47,10 @@ class BankTransaction {
     this.toOwnerId,
     this.createdAt,
     this.message,
+    this.toCurrency,
+    this.convertedAmount,
+    this.rate,
+    this.idempotencyKey,
   });
 
   /// Client-generated UUID v4; also the Firestore document ID.
@@ -63,6 +67,10 @@ class BankTransaction {
   /// Null while a serverTimestamp write is still pending locally.
   final DateTime? createdAt;
   final String? message;
+  final String? toCurrency;
+  final double? convertedAmount;
+  final double? rate;
+  final String? idempotencyKey;
 
   /// Display string in local time (matches the legacy UI format).
   String get formattedCreatedAt => createdAt == null
@@ -70,20 +78,25 @@ class BankTransaction {
       : DateFormat('dd.MM.yyyy HH:mm:ss').format(createdAt!.toLocal());
 
   Map<String, dynamic> toMap() => {
-        'amount': amount,
-        'currency': currency,
-        'type': type.wireName,
-        'status': status.name,
-        if (fromAccountId != null) 'fromAccountId': fromAccountId,
-        if (toAccountId != null) 'toAccountId': toAccountId,
-        if (fromOwnerId != null) 'fromOwnerId': fromOwnerId,
-        if (toOwnerId != null) 'toOwnerId': toOwnerId,
-        if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
-        if (message != null && message!.isNotEmpty) 'message': message,
-      };
+    'amount': amount,
+    'currency': currency,
+    'type': type.wireName,
+    'status': status.name,
+    if (fromAccountId != null) 'fromAccountId': fromAccountId,
+    if (toAccountId != null) 'toAccountId': toAccountId,
+    if (fromOwnerId != null) 'fromOwnerId': fromOwnerId,
+    if (toOwnerId != null) 'toOwnerId': toOwnerId,
+    if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+    if (message != null && message!.isNotEmpty) 'message': message,
+    if (toCurrency != null) 'toCurrency': toCurrency,
+    if (convertedAmount != null) 'convertedAmount': convertedAmount,
+    if (rate != null) 'rate': rate,
+    if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
+  };
 
   factory BankTransaction.fromFirestore(
-      DocumentSnapshot<Map<String, dynamic>> doc) {
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data();
     if (data == null) {
       throw StateError('Transaction document ${doc.id} has no data');
@@ -103,8 +116,31 @@ class BankTransaction {
       currency: data['currency'] as String,
       type: TransactionType.fromWire(data['type'] as String),
       status: TransactionStatus.values.byName(data['status'] as String),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      createdAt: _date(data['createdAt']),
       message: data['message'] as String?,
+      toCurrency: data['toCurrency'] as String?,
+      convertedAmount: _number(data['convertedAmount']),
+      rate: _number(data['rate']),
+      idempotencyKey: data['idempotencyKey'] as String?,
     );
   }
+
+  factory BankTransaction.fromApiMap(Map<String, dynamic> data) =>
+      BankTransaction.fromMap(
+        (data['id'] ?? data['idempotencyKey']) as String,
+        data,
+      );
 }
+
+DateTime? _date(Object? value) => switch (value) {
+  Timestamp t => t.toDate(),
+  DateTime d => d,
+  String s => DateTime.tryParse(s)?.toUtc(),
+  _ => null,
+};
+
+double? _number(Object? value) => switch (value) {
+  num n => n.toDouble(),
+  String s => double.tryParse(s),
+  _ => null,
+};

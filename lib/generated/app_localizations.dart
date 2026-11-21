@@ -1923,6 +1923,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transfer'**
   String get txOther;
+
+  /// No description provided for @convertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency conversion'**
+  String get convertTitle;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @linkedAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked accounts'**
+  String get linkedAccountsTitle;
+
+  /// No description provided for @featurePlaceholderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This screen is not available yet.'**
+  String get featurePlaceholderBody;
+
+  /// No description provided for @recipientLookupLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient not found; try again later'**
+  String get recipientLookupLimited;
 }
 
 class _AppLocalizationsDelegate

@@ -8,6 +8,8 @@ import 'package:tarlan_bank/core/errors/firebase_error_mapping.dart';
 import 'package:tarlan_bank/core/firebase/firestore_db.dart';
 import 'package:tarlan_bank/core/utils/phone_number.dart';
 
+import '../../transactions/data/recipient_lookup.dart';
+
 import 'account_model.dart';
 import 'accounts_repository.dart';
 import 'card_model.dart';
@@ -31,8 +33,8 @@ String generateAccountNumber(Random random) {
 /// it does make (none today) would go through the same rules invariants.
 class FirestoreAccountsRepository implements AccountsRepository {
   FirestoreAccountsRepository({FirebaseFirestore? firestore, Random? random})
-      : _db = firestore ?? tarlanFirestore(),
-        _random = random ?? Random.secure();
+    : _db = firestore ?? tarlanFirestore(),
+      _random = random ?? Random.secure();
 
   final FirebaseFirestore _db;
   final Random _random;
@@ -123,8 +125,10 @@ class FirestoreAccountsRepository implements AccountsRepository {
         };
         try {
           await _accounts.doc(number).set(data);
+          final fullName = await _ownFullName(ownerId);
+          await _writeRecipientIndex(ownerId, number, fullName);
           if (type == AccountType.current) {
-            await _linkPhoneIndex(ownerId, number);
+            await _linkPhoneIndex(ownerId, number, fullName);
           }
           return await getAccount(number);
         } on FirebaseException catch (e) {
@@ -140,17 +144,76 @@ class FirestoreAccountsRepository implements AccountsRepository {
 
   /// First current account becomes the phone-transfer target. Later current
   /// accounts do not overwrite it (recipient stability).
-  Future<void> _linkPhoneIndex(String ownerId, String number) async {
-    final userDoc = await _db.collection('users').doc(ownerId).get();
-    final phone = userDoc.data()?['phoneNumber'] as String?;
-    if (phone == null || phone.isEmpty) return; // profile without phone
+  Future<String> _ownFullName(String ownerId) async {
+    final doc = await _db.collection('users').doc(ownerId).get();
+    return doc.data()?['fullName'] as String? ?? '';
+  }
+
+  Future<void> _writeRecipientIndex(
+    String ownerId,
+    String number,
+    String fullName,
+  ) async {
+    if (fullName.trim().isEmpty) return;
+    await _db.collection('recipient_index').doc(number).set({
+      'uid': ownerId,
+      'accountNumber': number,
+      'fullName': fullName,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> _linkPhoneIndex(
+    String ownerId,
+    String number, [
+    String? fullName,
+  ]) async {
+    final name = fullName ?? await _ownFullName(ownerId);
+    final doc = await _db.collection('users').doc(ownerId).get();
+    final phone = doc.data()?['phoneNumber'] as String?;
+    if (phone == null || phone.isEmpty || name.trim().isEmpty) return;
     final ref = _db.collection('phone_index').doc(normalizePhone(phone));
     final snap = await ref.get();
     if (!snap.exists) {
-      await ref.set({'uid': ownerId, 'accountNumber': number});
-    } else if (snap.data()?['accountNumber'] == null) {
-      await ref.update({'accountNumber': number});
+      await ref.set({
+        'uid': ownerId,
+        'accountNumber': number,
+        'fullName': name,
+      });
+    } else if (snap.data()?['accountNumber'] == null ||
+        snap.data()?['fullName'] == null) {
+      await ref.update({'accountNumber': number, 'fullName': name});
     }
+  }
+
+  @override
+  Future<void> ensureRecipientIndexes(String ownerId) async {
+    final fullName = await _ownFullName(ownerId);
+    if (fullName.trim().isEmpty) return;
+    final snap = await _accounts.where('ownerId', isEqualTo: ownerId).get();
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      batch.set(_db.collection('recipient_index').doc(doc.id), {
+        'uid': ownerId,
+        'accountNumber': doc.id,
+        'fullName': fullName,
+      }, SetOptions(merge: true));
+    }
+    final profile = await _db.collection('users').doc(ownerId).get();
+    final phone = profile.data()?['phoneNumber'] as String?;
+    if (phone != null && phone.isNotEmpty) {
+      for (final candidate in phoneIndexCandidates(phone)) {
+        final indexDoc = await _db
+            .collection('phone_index')
+            .doc(candidate)
+            .get();
+        if (indexDoc.exists && indexDoc.data()?['uid'] == ownerId) {
+          batch.set(_db.collection('phone_index').doc(candidate), {
+            'fullName': fullName,
+          }, SetOptions(merge: true));
+        }
+      }
+    }
+    await batch.commit();
   }
 
   @override
@@ -172,7 +235,8 @@ class FirestoreAccountsRepository implements AccountsRepository {
   }) async {
     if ((phoneNumber == null) == (accountNumber == null)) {
       throw const ValidationFailure(
-          'Provide exactly one of phoneNumber / accountNumber');
+        'Provide exactly one of phoneNumber / accountNumber',
+      );
     }
     try {
       if (accountNumber != null) {
@@ -187,6 +251,59 @@ class FirestoreAccountsRepository implements AccountsRepository {
       return await getAccount(target);
     } on NotFoundFailure {
       return null; // "no such recipient" is a normal lookup outcome
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  @override
+  Future<TransferRecipient?> lookupRecipient({
+    String? phoneNumber,
+    String? accountNumber,
+  }) async {
+    if ((phoneNumber == null) == (accountNumber == null)) {
+      throw const ValidationFailure(
+        'Provide exactly one of phoneNumber / accountNumber',
+      );
+    }
+    try {
+      if (accountNumber != null) {
+        final doc = await _db
+            .collection('recipient_index')
+            .doc(accountNumber)
+            .get();
+        final data = doc.data();
+        if (!doc.exists || data == null) return null;
+        final name = data['fullName'] as String? ?? '';
+        if (name.trim().isEmpty) return null;
+        return TransferRecipient(
+          uid: data['uid'] as String? ?? '',
+          fullName: name,
+          accountNumber: accountNumber,
+        );
+      }
+      for (final candidate in phoneIndexCandidates(phoneNumber!)) {
+        final doc = await _db.collection('phone_index').doc(candidate).get();
+        final data = doc.data();
+        if (!doc.exists || data == null) continue;
+        var name = data['fullName'] as String? ?? '';
+        final number = data['accountNumber'] as String? ?? '';
+        if (name.trim().isEmpty && number.isNotEmpty) {
+          final profileDoc = await _db
+              .collection('recipient_index')
+              .doc(number)
+              .get();
+          name = profileDoc.data()?['fullName'] as String? ?? '';
+        }
+        if (name.trim().isEmpty || number.isEmpty) continue;
+        return TransferRecipient(
+          uid: data['uid'] as String? ?? '',
+          fullName: name,
+          accountNumber: number,
+          phoneNumber: candidate,
+        );
+      }
+      return null;
     } catch (e) {
       throw mapFirebaseError(e);
     }

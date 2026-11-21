@@ -1,4 +1,5 @@
 import 'account_model.dart';
+import '../../transactions/data/recipient_lookup.dart';
 import 'card_model.dart';
 
 /// Accounts boundary (remodeled — see MIGRATION_PLAN.md D8).
@@ -40,6 +41,17 @@ abstract interface class AccountsRepository {
   /// Transfer recipient lookup. Exactly one argument must be given.
   /// Returns null when no matching account exists.
   Future<Account?> lookupAccount({String? phoneNumber, String? accountNumber});
+
+  /// Recipient identity for transfer screens. Unlike lookupAccount this also
+  /// resolves the display name from the owner-written recipient index.
+  Future<TransferRecipient?> lookupRecipient({
+    String? phoneNumber,
+    String? accountNumber,
+  });
+
+  /// Backfills recipient_index docs for accounts opened before the index
+  /// existed. Owners may write only their own entries.
+  Future<void> ensureRecipientIndexes(String ownerId);
 
   /// Realtime cards of one owner.
   Stream<List<BankCard>> watchCards(String ownerId);

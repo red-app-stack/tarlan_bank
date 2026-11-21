@@ -4,24 +4,22 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/locale/product_labels.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart';
+import 'package:tarlan_bank/core/utils/phone_number.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/features/accounts/data/account_model.dart';
 import 'package:tarlan_bank/features/accounts/data/product_type.dart';
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
+import 'package:tarlan_bank/features/auth/data/user_profile.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/custom_input_field.dart';
 
-/// Account creation, migrated off the disposed GetX binding to Riverpod.
-/// The old `Bind.lazyPut` controller was deleted on route pop and never
-/// recreated — reopening the screen hit `Get.find` on a null controller.
-/// Local form state + a provider-backed repository cannot be disposed away.
+/// Account creation form backed by Riverpod providers.
 class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key, this.accountType = 'card'});
 
-  /// Product requested by home/menu tiles: card | deposit | credit | transfer.
   final String accountType;
 
   @override
@@ -83,13 +81,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     super.dispose();
   }
 
-  void _prefillProfile(Map<String, dynamic>? profile) {
+  void _prefillProfile(UserProfile? profile) {
     if (profile == null) return;
-    if (_fullName.text.isEmpty) _fullName.text = profile['fullName'] ?? '';
-    if (_phone.text.isEmpty) {
-      final phone = profile['phoneNumber']?.toString() ?? '';
-      _phone.text = phone.isEmpty ? '' : '+7 $phone';
-    }
+    if (_fullName.text.isEmpty) _fullName.text = profile.fullName;
+    if (_phone.text.isEmpty)
+      _phone.text = formatDisplayPhone(profile.phoneNumber);
   }
 
   String _formatDate(DateTime date) =>

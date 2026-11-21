@@ -10,15 +10,8 @@ import 'package:tarlan_bank/core/utils/phone_number.dart';
 import 'auth_repository.dart';
 import 'auth_user.dart';
 
-/// Firebase Auth implementation of [AuthRepository] (Week 1 cutover).
-///
-/// Identity lives in Firebase Auth; the `users/{uid}` Firestore doc holds the
-/// profile (fullName, phoneNumber, role) that Auth itself does not store for
-/// email/password accounts. Registration writes both, with best-effort
-/// rollback of the Auth account if the profile write fails.
-///
-/// Errors are mapped to sealed [AppFailure] via [mapFirebaseError];
-/// nothing raw escapes to consumers.
+/// Firebase Auth repository. Firebase Auth owns identity; `users/{uid}`
+/// owns the profile. Errors map to sealed [AppFailure].
 class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({
     fb.FirebaseAuth? auth,
@@ -107,6 +100,7 @@ class FirebaseAuthRepository implements AuthRepository {
         'fullName': fullName.trim(),
         'phoneNumber': phoneNumber.trim(),
         'role': 'customer',
+        'profilePictureUrl': created.photoURL ?? '',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -116,12 +110,7 @@ class FirebaseAuthRepository implements AuthRepository {
           .collection('phone_index')
           .doc(normalizePhone(phoneNumber))
           .set({'uid': created.uid});
-      return AuthUser(
-        uid: created.uid,
-        email: created.email,
-        fullName: fullName.trim(),
-        phoneNumber: phoneNumber.trim(),
-      );
+      return AuthUser(uid: created.uid, email: created.email);
     } catch (e) {
       // Best-effort rollback: never leave an Auth account without its profile.
       if (created != null) {
@@ -155,7 +144,7 @@ class FirebaseAuthRepository implements AuthRepository {
       }
       // Rules require a profile string for phoneNumber; Google never shares
       // one. Empty string satisfies the invariant and disables phone lookup.
-      await _ensureProfile(user);
+      await _ensureProfile(user, photoUrl: account.photoUrl);
       return _mapUser(user)!;
     } catch (e) {
       throw mapFirebaseError(e);
@@ -164,18 +153,36 @@ class FirebaseAuthRepository implements AuthRepository {
 
   /// First Google sign-in creates the minimal profile. Never overwrites an
   /// existing one (e.g. an email/password account linked to the same UID).
-  Future<void> _ensureProfile(fb.User user) async {
+  Future<void> _ensureProfile(fb.User user, {String? photoUrl}) async {
     final ref = _firestore.collection('users').doc(user.uid);
     final snap = await ref.get();
-    if (snap.exists) return;
-    await ref.set({
-      'email': user.email ?? '',
-      'fullName': user.displayName ?? user.email ?? 'User',
-      'phoneNumber': '',
-      'role': 'customer',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final url = photoUrl?.trim().isNotEmpty == true
+        ? photoUrl!.trim()
+        : user.photoURL;
+    if (!snap.exists || url == null || url.isEmpty) {
+      if (!snap.exists) {
+        // Google's photo URL is the avatar source for provider sign-ins.
+        // An empty string keeps the field present for email accounts that
+        // later link Google, without fabricating an image.
+        await ref.set({
+          'email': user.email ?? '',
+          'fullName': user.displayName ?? user.email ?? 'User',
+          'phoneNumber': '',
+          'role': 'customer',
+          'profilePictureUrl': url ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      return;
+    }
+    final existing = snap.data()?['profilePictureUrl'] as String?;
+    if (existing != url) {
+      await ref.update({
+        'profilePictureUrl': url,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
   @override
@@ -287,10 +294,6 @@ class FirebaseAuthRepository implements AuthRepository {
     return AuthUser(
       uid: user.uid,
       email: user.email,
-      fullName: user.displayName,
-      // phoneNumber is null for email/password accounts; the registered
-      // number lives in users/{uid}. Consumers needing it read the profile.
-      phoneNumber: user.phoneNumber,
       isAnonymous: user.isAnonymous,
       emailVerified: user.emailVerified,
     );

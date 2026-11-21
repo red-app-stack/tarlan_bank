@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/features/exchange/providers/exchange_providers.dart';
@@ -12,8 +11,7 @@ import 'package:tarlan_bank/views/shared/service_item.dart';
 
 import '../shared/custom_card.dart';
 
-/// Home migrated to Riverpod: no GetX controller, no JWT-dependent rates.
-/// Exchange rates come from the Firestore cache (readable by guests too).
+/// Home screen with Firestore-backed exchange rates.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -34,19 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ),
   ];
 
-  bool _refreshing = false;
-
-  Future<void> _refresh() async {
-    if (_refreshing) return;
-    setState(() => _refreshing = true);
-    try {
-      await ref.read(exchangeRepositoryProvider).fetchRates();
-    } on AppFailure {
-      // Cached values stay visible; no raw error is shown (offline UX).
-    } finally {
-      if (mounted) setState(() => _refreshing = false);
-    }
-  }
+  Future<void> _refresh() => ref.read(exchangeRatesProvider.notifier).refresh();
 
   void _onServiceTap(ServiceItemData service) {
     if (service.routeArg == Routes.investments) {
@@ -117,17 +103,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     label: l.exchangeRates,
                     labelStyle: theme.textTheme.titleLarge,
                     child: ratesAsync.when(
-                      data: (rates) => CurrencyRatesCard(
-                        exchangeRates: rates,
-                        isLoading: false,
+                      data: (snapshot) => CurrencyRatesCard(
+                        exchangeRates: snapshot.nested,
+                        isLoading: snapshot.isRefreshing,
                       ),
                       loading: () => const CurrencyRatesCard(
                         exchangeRates: {},
                         isLoading: true,
                       ),
-                      error: (_, _) => CurrencyRatesCard(
-                        exchangeRates: const {},
-                        isLoading: _refreshing,
+                      error: (_, _) => const CurrencyRatesCard(
+                        exchangeRates: {},
+                        isLoading: true,
                       ),
                     ),
                   ),

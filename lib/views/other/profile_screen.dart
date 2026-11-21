@@ -2,21 +2,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:tarlan_bank/core/providers/service_providers.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/core/utils/phone_number.dart';
+import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart'
     show BankTransaction, TransactionType;
 import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
-import 'package:tarlan_bank/models/user_model.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/shared_classes.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
 
-/// Profile overview. All data comes from Riverpod providers; the router
-/// constructs this screen with no arguments; constructor params are optional.
+/// Profile overview from `users/{uid}`.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -25,20 +24,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  UserModel? _currentUser;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProfileData();
-  }
-
-  Future<void> _loadProfileData() async {
-    final user = await ref.read(userRepositoryProvider).retrieveLocalUser();
-    if (!mounted) return;
-    setState(() => _currentUser = user);
-  }
-
   String _typeLabel(AppLocalizations l, TransactionType type) => switch (type) {
     TransactionType.deposit => l.auTxDeposit,
     TransactionType.withdrawal => l.auTxWithdrawal,
@@ -55,7 +40,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return '${_typeLabel(l, tx.type)} ${formatCurrency(tx.amount, tx.currency, 'RU')}';
   }
 
-  List<MenuSection> _sections(AppLocalizations l, List<BankTransaction> txs) {
+  List<MenuSection> _sections(
+    AppLocalizations l,
+    List<BankTransaction> txs,
+    String phone,
+  ) {
     bool isOneOf(BankTransaction tx, Set<String> types) =>
         types.contains(tx.type.wireName);
 
@@ -129,7 +118,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           MenuItem(
             icon: 'assets/icons/ic_smartphone.svg',
-            title: '+7 ${formatPhone(_currentUser?.phoneNumber ?? '')}',
+            title: phone.isEmpty ? l.phone : phone,
             description: l.auTrustedPhone,
           ),
           MenuItem(
@@ -150,7 +139,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final l = AppLocalizations.of(context);
     final txsAsync = ref.watch(transactionsHistoryProvider(null));
     final txs = txsAsync.value ?? const <BankTransaction>[];
-    final sections = _sections(l, txs);
+    final profile = ref.watch(userProfileProvider).value;
+    final authUser = ref.watch(currentUserProvider);
+    final fullName = profile?.fullName ?? authUser?.email ?? l.unknown;
+    final phone = formatDisplayPhone(profile?.phoneNumber ?? '');
+    final photoUrl = profile?.photoUrl ?? '';
+    final sections = _sections(l, txs, phone);
 
     return Scaffold(
       extendBody: true,
@@ -162,8 +156,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: RefreshIndicator(
           edgeOffset: MediaQuery.of(context).padding.top,
           onRefresh: () async {
+            ref.invalidate(userProfileProvider);
             ref.invalidate(transactionsHistoryProvider(null));
-            await _loadProfileData();
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -178,10 +172,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   SizedBox(
                     width: size.width / 2,
                     child: CustomCard(
+                      crossAxisAlignment: .center,
                       child: buildUserCard(
-                        _currentUser?.fullName ?? '',
+                        fullName,
                         theme,
                         size,
+                        photoUrl: photoUrl,
                       ),
                     ),
                   ),

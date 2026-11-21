@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../accounts/data/account_model.dart';
+import '../../accounts/providers/accounts_providers.dart';
 import '../data/transaction_model.dart';
+import '../data/recipient_lookup.dart';
+import '../data/recipient_lookup_guard.dart';
 
 /// The transaction opened on the details screen.
 ///
@@ -35,4 +38,66 @@ class TransferRecipientNotifier extends Notifier<Account?> {
 final transferRecipientProvider =
     NotifierProvider<TransferRecipientNotifier, Account?>(
       TransferRecipientNotifier.new,
+    );
+
+class TransferLookupState {
+  const TransferLookupState({
+    this.recipient,
+    this.account,
+    this.pending = false,
+    this.blocked = false,
+  });
+
+  final TransferRecipient? recipient;
+  final Account? account;
+  final bool pending;
+  final bool blocked;
+}
+
+class TransferLookupNotifier extends Notifier<TransferLookupState> {
+  final _guard = RecipientLookupGuard(
+    maxFailures: 5,
+    cooldown: const Duration(minutes: 2),
+  );
+
+  @override
+  TransferLookupState build() => const TransferLookupState();
+
+  Future<void> lookup({String? phoneNumber, String? accountNumber}) async {
+    if (state.pending || _guard.isBlocked) {
+      state = TransferLookupState(blocked: _guard.isBlocked);
+      return;
+    }
+    state = const TransferLookupState(pending: true);
+    try {
+      final recipient = await ref
+          .read(accountsRepositoryProvider)
+          .lookupRecipient(
+            phoneNumber: '+7$phoneNumber',
+            accountNumber: accountNumber,
+          );
+      if (recipient == null) {
+        _guard.registerFailure();
+        state = TransferLookupState(blocked: _guard.isBlocked);
+        return;
+      }
+      final account = await ref
+          .read(accountsRepositoryProvider)
+          .getAccount(recipient.accountNumber);
+      _guard.registerSuccess();
+      state = TransferLookupState(recipient: recipient, account: account);
+    } on Object {
+      _guard.registerFailure();
+      state = TransferLookupState(blocked: _guard.isBlocked);
+    }
+  }
+
+  void clear() {
+    state = const TransferLookupState();
+  }
+}
+
+final transferLookupProvider =
+    NotifierProvider<TransferLookupNotifier, TransferLookupState>(
+      TransferLookupNotifier.new,
     );

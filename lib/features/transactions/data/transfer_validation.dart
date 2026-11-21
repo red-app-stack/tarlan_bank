@@ -43,7 +43,8 @@ TransferPlan planTransfer({
   }
   if (type == TransactionType.currencyConversion) {
     throw const ValidationFailure(
-        'Currency conversion is not available yet (exchange seam pending)');
+      'Currency conversion is not available yet (exchange seam pending)',
+    );
   }
 
   // Party shape per type — mirrors the rules' validParties().
@@ -67,7 +68,8 @@ TransferPlan planTransfer({
   if (type == TransactionType.internalTransfer &&
       from!.ownerId != to!.ownerId) {
     throw const ValidationFailure(
-        'Internal transfers must stay within one owner');
+      'Internal transfers must stay within one owner',
+    );
   }
 
   double? newFrom;
@@ -80,7 +82,8 @@ TransferPlan planTransfer({
       // transfer (D8). Deposit sources are allowed by the model; the UI
       // restricts sources to current accounts.
       throw const ValidationFailure(
-          'Credit accounts cannot be a transfer source');
+        'Credit accounts cannot be a transfer source',
+      );
     }
     if (from.currency != currency) {
       throw const ValidationFailure('Currency does not match sender account');
@@ -98,7 +101,8 @@ TransferPlan planTransfer({
     }
     if (to.currency != currency) {
       throw const ValidationFailure(
-          'Currency does not match recipient account');
+        'Currency does not match recipient account',
+      );
     }
     if (to.type == AccountType.credit) {
       // current -> credit is a REPAYMENT: it decreases the outstanding debt.

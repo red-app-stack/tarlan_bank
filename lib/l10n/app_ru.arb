@@ -345,5 +345,10 @@
   "txCardTransfer": "Перевод на карту",
   "txSwiftTransfer": "SWIFT перевод",
   "txPayment": "Платеж",
-  "txOther": "Перевод"
+  "txOther": "Перевод",
+  "convertTitle": "Конвертация",
+  "changePasswordTitle": "Смена пароля",
+  "linkedAccountsTitle": "Связанные аккаунты",
+  "featurePlaceholderBody": "Этот экран пока недоступен.",
+  "recipientLookupLimited": "Получатель не найден. Попробуйте позже"
 }

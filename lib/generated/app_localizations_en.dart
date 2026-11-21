@@ -948,4 +948,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get txOther => 'Transfer';
+
+  @override
+  String get convertTitle => 'Currency conversion';
+
+  @override
+  String get changePasswordTitle => 'Change password';
+
+  @override
+  String get linkedAccountsTitle => 'Linked accounts';
+
+  @override
+  String get featurePlaceholderBody => 'This screen is not available yet.';
+
+  @override
+  String get recipientLookupLimited => 'Recipient not found; try again later';
 }

@@ -23,18 +23,18 @@ class DepositTerms {
   final bool autoRenew;
 
   Map<String, dynamic> toMap() => {
-        'annualRate': annualRate,
-        'termMonths': termMonths,
-        'maturityAt': Timestamp.fromDate(maturityAt),
-        'autoRenew': autoRenew,
-      };
+    'annualRate': annualRate,
+    'termMonths': termMonths,
+    'maturityAt': Timestamp.fromDate(maturityAt),
+    'autoRenew': autoRenew,
+  };
 
   factory DepositTerms.fromMap(Map<String, dynamic> map) => DepositTerms(
-        annualRate: (map['annualRate'] as num).toDouble(),
-        termMonths: (map['termMonths'] as num).toInt(),
-        maturityAt: (map['maturityAt'] as Timestamp).toDate(),
-        autoRenew: map['autoRenew'] as bool? ?? false,
-      );
+    annualRate: (map['annualRate'] as num).toDouble(),
+    termMonths: (map['termMonths'] as num).toInt(),
+    maturityAt: (map['maturityAt'] as Timestamp).toDate(),
+    autoRenew: map['autoRenew'] as bool? ?? false,
+  );
 }
 
 /// Credit (loan) product parameters. `balance` on a credit account is the
@@ -55,19 +55,19 @@ class CreditTerms {
   final DateTime? nextPaymentAt;
 
   Map<String, dynamic> toMap() => {
-        'creditLimit': creditLimit,
-        'annualRate': annualRate,
-        'termMonths': termMonths,
-        if (nextPaymentAt != null)
-          'nextPaymentAt': Timestamp.fromDate(nextPaymentAt!),
-      };
+    'creditLimit': creditLimit,
+    'annualRate': annualRate,
+    'termMonths': termMonths,
+    if (nextPaymentAt != null)
+      'nextPaymentAt': Timestamp.fromDate(nextPaymentAt!),
+  };
 
   factory CreditTerms.fromMap(Map<String, dynamic> map) => CreditTerms(
-        creditLimit: (map['creditLimit'] as num).toDouble(),
-        annualRate: (map['annualRate'] as num).toDouble(),
-        termMonths: (map['termMonths'] as num).toInt(),
-        nextPaymentAt: (map['nextPaymentAt'] as Timestamp?)?.toDate(),
-      );
+    creditLimit: (map['creditLimit'] as num).toDouble(),
+    annualRate: (map['annualRate'] as num).toDouble(),
+    termMonths: (map['termMonths'] as num).toInt(),
+    nextPaymentAt: (map['nextPaymentAt'] as Timestamp?)?.toDate(),
+  );
 }
 
 /// A financial account in the single Firestore ledger (`accounts/{number}`).
@@ -105,8 +105,8 @@ class Account {
   final CreditTerms? creditTerms;
 
   /// Credit only: undrawn portion of the limit. Never spendable cash.
-  double? get availableCredit => (type == AccountType.credit &&
-          creditTerms != null)
+  double? get availableCredit =>
+      (type == AccountType.credit && creditTerms != null)
       ? creditTerms!.creditLimit - balance
       : null;
 
@@ -116,17 +116,17 @@ class Account {
       type != AccountType.credit && status == AccountStatus.active;
 
   Map<String, dynamic> toMap() => {
-        'number': number,
-        'ownerId': ownerId,
-        'type': type.name,
-        'currency': currency,
-        'balance': balance,
-        'status': status.name,
-        if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
-        if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
-        if (depositTerms != null) 'terms': depositTerms!.toMap(),
-        if (creditTerms != null) 'terms': creditTerms!.toMap(),
-      };
+    'number': number,
+    'ownerId': ownerId,
+    'type': type.name,
+    'currency': currency,
+    'balance': balance,
+    'status': status.name,
+    if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+    if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
+    if (depositTerms != null) 'terms': depositTerms!.toMap(),
+    if (creditTerms != null) 'terms': creditTerms!.toMap(),
+  };
 
   factory Account.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();

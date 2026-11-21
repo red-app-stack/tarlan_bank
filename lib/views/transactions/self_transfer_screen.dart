@@ -42,14 +42,18 @@ class _SelfTransferScreenState extends ConsumerState<SelfTransferScreen> {
   void initState() {
     super.initState();
     amountCtl.initialize();
-    final initial = widget.transaction ?? ref.read(selectedTransactionProvider);
-    ref.read(selectedTransactionProvider.notifier).clear();
-    if (initial != null) {
-      if (initial.amount > 0) {
-        amountCtl.update(initial.amount.toString(), () {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final initial =
+          widget.transaction ?? ref.read(selectedTransactionProvider);
+      ref.read(selectedTransactionProvider.notifier).clear();
+      if (initial != null) {
+        if (initial.amount > 0) {
+          amountCtl.update(initial.amount.toString(), () {});
+        }
+        _pendingDestination = initial.toAccountId;
       }
-      _pendingDestination = initial.toAccountId;
-    }
+    });
   }
 
   @override
@@ -71,8 +75,13 @@ class _SelfTransferScreenState extends ConsumerState<SelfTransferScreen> {
     return current;
   }
 
-  List<Account> _destinationAccounts(List<Account> all) =>
-      all.where((a) => a.number != selectedAccount?.number).toList();
+  List<Account> _destinationAccounts(List<Account> all) => all
+      .where(
+        (a) =>
+            a.number != selectedAccount?.number &&
+            a.currency == selectedAccount?.currency,
+      )
+      .toList();
 
   void _syncSelection(List<Account> accounts) {
     final source = _sourceAccounts(accounts);
@@ -187,14 +196,13 @@ class _SelfTransferScreenState extends ConsumerState<SelfTransferScreen> {
     }
 
     return Scaffold(
+      appBar: buildTransferHeader(context, l.transferBetweenOwn),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Column(
             children: [
-              buildTransferHeader(context, l.ownAccounts),
-              SizedBox(height: size.height * 0.02),
               Expanded(
                 child: RefreshIndicator(
                   edgeOffset: MediaQuery.of(context).padding.top,
@@ -218,6 +226,7 @@ class _SelfTransferScreenState extends ConsumerState<SelfTransferScreen> {
                           (account) => setState(() {
                             selectedAccount = account;
                             isAccountDropdownExpanded = false;
+                            _syncSelection(accounts);
                           }),
                           () => setState(
                             () => isAccountDropdownExpanded =

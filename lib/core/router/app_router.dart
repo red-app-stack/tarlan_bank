@@ -3,9 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/core/router/access_policy.dart';
+import 'package:tarlan_bank/core/router/auth_intent.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart'
     show rootNavigatorKey;
-import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/core/router/routes.dart'
+    show Routes, isShellOverlayPush;
+import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
@@ -24,6 +27,7 @@ import 'package:tarlan_bank/views/other/investments_screen.dart';
 import 'package:tarlan_bank/views/other/profile_screen.dart';
 import 'package:tarlan_bank/views/other/security_settings_screen.dart';
 import 'package:tarlan_bank/views/payments/payment_history_screen.dart';
+import 'package:tarlan_bank/views/shared/placeholder_screen.dart';
 import 'package:tarlan_bank/views/transactions/card_transfer_screen.dart';
 import 'package:tarlan_bank/views/transactions/convert_screen.dart';
 import 'package:tarlan_bank/views/transactions/phone_transfer_screen.dart';
@@ -31,6 +35,57 @@ import 'package:tarlan_bank/views/transactions/qr_transfer_screen.dart';
 import 'package:tarlan_bank/views/transactions/self_transfer_screen.dart';
 import 'package:tarlan_bank/views/transactions/transaction_details_screen.dart';
 import 'package:tarlan_bank/views/transactions/transfer_history_screen.dart';
+
+CustomTransitionPage<void> _overlayPage({
+  required LocalKey key,
+  required Widget child,
+  required bool fromLeft,
+}) => _slidePage(
+  key: key,
+  child: child,
+  begin: fromLeft ? const Offset(-1, 0) : const Offset(1, 0),
+);
+
+CustomTransitionPage<void> _slidePage({
+  required LocalKey key,
+  required Widget child,
+  required Offset begin,
+  Duration duration = const Duration(milliseconds: 200),
+}) {
+  return CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(begin: begin, end: Offset.zero).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+        ),
+        child: child,
+      );
+    },
+  );
+}
+
+CustomTransitionPage<void> _nestedPage({
+  required LocalKey key,
+  required Widget child,
+}) => _slidePage(key: key, child: child, begin: const Offset(1, 0));
+
+CustomTransitionPage<void> _fadePage({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 200),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(opacity: animation, child: child),
+  );
+}
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthListenable();
@@ -43,29 +98,74 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final auth = ref.read(authStateProvider);
-      return redirectFor(
-        level: accessLevel(auth),
-        location: state.matchedLocation,
-      );
+      final level = accessLevel(auth);
+      final location = state.matchedLocation;
+      // Cold/deep link to an overlay: land on the shell first, then let
+      // MainShell push the overlay so the branch underneath is preserved.
+      if (level == AccessLevel.full &&
+          (location == Routes.profile || location == Routes.chatbot) &&
+          !isShellOverlayPush(state.extra)) {
+        ref.read(pendingOverlayRouteProvider.notifier).request(location);
+        return Routes.home;
+      }
+      final redirect = redirectFor(level: level, location: location);
+      if (redirect == Routes.login &&
+          shouldRememberAuthIntent(level, location)) {
+        ref
+            .read(pendingAuthIntentProvider.notifier)
+            .request(AuthIntent(target: location, origin: Routes.home));
+      }
+      return redirect;
     },
     routes: [
       GoRoute(
         path: Routes.loading,
-        builder: (_, _) =>
-            const Scaffold(body: Center(child: CircularProgressIndicator())),
+        pageBuilder: (_, state) => _fadePage(
+          key: state.pageKey,
+          child: const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+        ),
       ),
-      GoRoute(path: Routes.login, builder: (_, state) => const LoginPage()),
+      GoRoute(
+        path: Routes.login,
+        pageBuilder: (_, state) =>
+            _fadePage(key: state.pageKey, child: const LoginPage()),
+      ),
       GoRoute(
         path: Routes.verifyLink,
-        builder: (_, state) => const VerificationLinkScreen(),
+        pageBuilder: (_, state) => _fadePage(
+          key: state.pageKey,
+          child: const VerificationLinkScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.verifyAction,
-        builder: (_, state) => const VerificationLinkScreen(),
+        pageBuilder: (_, state) => _fadePage(
+          key: state.pageKey,
+          child: const VerificationLinkScreen(),
+        ),
       ),
       GoRoute(
         path: Routes.codeEntering,
-        builder: (_, state) => const CodeEnteringScreen(),
+        pageBuilder: (_, state) =>
+            _fadePage(key: state.pageKey, child: const CodeEnteringScreen()),
+      ),
+      GoRoute(
+        path: Routes.profile,
+        pageBuilder: (_, state) => _overlayPage(
+          key: state.pageKey,
+          child: const ProfileScreen(),
+          fromLeft: true,
+        ),
+      ),
+      GoRoute(
+        path: Routes.chatbot,
+        pageBuilder: (_, state) => _overlayPage(
+          key: state.pageKey,
+          child: const ChatBotScreen(),
+          fromLeft: false,
+        ),
       ),
       StatefulShellRoute(
         builder: (context, state, navigationShell) =>
@@ -92,7 +192,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'history',
-                    builder: (_, state) => PaymentHistoryScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: PaymentHistoryScreen(),
+                    ),
                   ),
                 ],
               ),
@@ -106,31 +209,50 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'phone',
-                    builder: (_, state) => PhoneTransferScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: PhoneTransferScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'self',
-                    builder: (_, state) => SelfTransferScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: SelfTransferScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'card',
-                    builder: (_, state) => CardTransferScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: CardTransferScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'convert',
-                    builder: (_, state) => ConvertScreen(),
+                    pageBuilder: (_, state) =>
+                        _nestedPage(key: state.pageKey, child: ConvertScreen()),
                   ),
                   GoRoute(
                     path: 'qr',
-                    builder: (_, state) => QRTransferScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: QRTransferScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'history',
-                    builder: (_, state) => TransferHistoryScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: TransferHistoryScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'details',
-                    builder: (_, state) => TransactionDetailsScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: TransactionDetailsScreen(),
+                    ),
                   ),
                 ],
               ),
@@ -150,13 +272,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'create',
-                    builder: (_, state) => CreateAccountScreen(
-                      accountType: state.uri.queryParameters['type'] ?? 'card',
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: CreateAccountScreen(
+                        accountType:
+                            state.uri.queryParameters['type'] ?? 'card',
+                      ),
                     ),
                   ),
                   GoRoute(
                     path: 'details',
-                    builder: (_, state) => CardDetailsScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: CardDetailsScreen(),
+                    ),
                   ),
                 ],
               ),
@@ -170,19 +299,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'security',
-                    builder: (_, _) => const SecuritySettingsScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: const SecuritySettingsScreen(),
+                    ),
                   ),
                   GoRoute(
                     path: 'investments',
-                    builder: (_, _) => InvestmentsScreen(),
+                    pageBuilder: (_, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: InvestmentsScreen(),
+                    ),
                   ),
                   GoRoute(
-                    path: 'profile',
-                    builder: (_, _) => const ProfileScreen(),
+                    path: 'changePassword',
+                    pageBuilder: (context, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: PlaceholderScreen(
+                        title: AppLocalizations.of(context).changePasswordTitle,
+                        message: AppLocalizations.of(context)
+                            .featurePlaceholderBody,
+                      ),
+                    ),
                   ),
                   GoRoute(
-                    path: 'chatbot',
-                    builder: (_, _) => const ChatBotScreen(),
+                    path: 'linkedAccounts',
+                    pageBuilder: (context, state) => _nestedPage(
+                      key: state.pageKey,
+                      child: PlaceholderScreen(
+                        title: AppLocalizations.of(context).linkedAccountsTitle,
+                        message: AppLocalizations.of(context)
+                            .featurePlaceholderBody,
+                      ),
+                    ),
                   ),
                 ],
               ),

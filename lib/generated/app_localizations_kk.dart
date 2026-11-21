@@ -950,4 +950,19 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get txOther => 'Аудару';
+
+  @override
+  String get convertTitle => 'Валютаны айырбастау';
+
+  @override
+  String get changePasswordTitle => 'Құпия сөзді өзгерту';
+
+  @override
+  String get linkedAccountsTitle => 'Байланыстық тіркелгілер';
+
+  @override
+  String get featurePlaceholderBody => 'Бұл экран әзірге қолжетімді емес.';
+
+  @override
+  String get recipientLookupLimited => 'Алушы табылмады. Кейінірек қайталаңыз';
 }

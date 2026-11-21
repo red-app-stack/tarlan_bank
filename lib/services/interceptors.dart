@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart'
     show Interceptor, RequestOptions, RequestInterceptorHandler;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 
@@ -10,11 +11,18 @@ class AuthInterceptor extends Interceptor {
 
   @override
   Future<void> onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     final token = await secureStorage.read(key: 'auth_token');
 
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      final idToken = await firebaseUser.getIdToken();
+      options.headers['x-firebase-id-token'] = idToken;
     }
 
     options.headers['Accept'] ??= 'application/json';

@@ -33,9 +33,9 @@ class FirestoreTransactionsRepository implements TransactionsRepository {
     FirebaseFirestore? firestore,
     fb.FirebaseAuth? auth,
     Uuid? uuid,
-  })  : _db = firestore ?? tarlanFirestore(),
-        _auth = auth ?? fb.FirebaseAuth.instance,
-        _uuid = uuid ?? const Uuid();
+  }) : _db = firestore ?? tarlanFirestore(),
+       _auth = auth ?? fb.FirebaseAuth.instance,
+       _uuid = uuid ?? const Uuid();
 
   final FirebaseFirestore _db;
   final fb.FirebaseAuth _auth;
@@ -150,10 +150,12 @@ class FirestoreTransactionsRepository implements TransactionsRepository {
       // owner-scoped read rule; both composite indexes exist
       // (firestore.indexes.json: fromOwnerId/toOwnerId + createdAt desc).
       final snap = await _transactions
-          .where(Filter.or(
-            Filter('fromOwnerId', isEqualTo: uid),
-            Filter('toOwnerId', isEqualTo: uid),
-          ))
+          .where(
+            Filter.or(
+              Filter('fromOwnerId', isEqualTo: uid),
+              Filter('toOwnerId', isEqualTo: uid),
+            ),
+          )
           .orderBy('createdAt', descending: true)
           .limit(200)
           .get();
@@ -190,6 +192,8 @@ class FirestoreTransactionsRepository implements TransactionsRepository {
     // the TRUSTED validator may write (production callable). The demo has no
     // trusted path, so refuse loudly instead of writing blind (D3/§4).
     throw const ServerFailure(
-        501, 'Cancellation requires the trusted validator (not wired yet)');
+      501,
+      'Cancellation requires the trusted validator (not wired yet)',
+    );
   }
 }
