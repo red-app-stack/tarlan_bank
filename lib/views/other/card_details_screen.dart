@@ -1,70 +1,113 @@
-// lib/views/main/card_details.dart
-import 'package:tarlan_bank/controllers/accounts_controller.dart';
-import 'package:tarlan_bank/services/auth_state_service.dart';
-import 'package:tarlan_bank/services/user_repository.dart';
-import 'package:tarlan_bank/utils/themes/theme_extension.dart';
-import 'package:tarlan_bank/views/main/accounts_screen.dart';
-import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
-import '../shared/widgets.dart';
-import '../shared/custom_card.dart';
-import '../shared/service_item.dart';
-import '../shared/list_item.dart';
 
-// Breakpoint at which the two-column wide layout activates.
+import 'package:tarlan_bank/core/errors/app_failure.dart';
+import 'package:tarlan_bank/core/router/app_navigation.dart';
+import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/utils/themes/theme_extension.dart';
+import 'package:tarlan_bank/views/main/accounts_screen.dart';
+import 'package:tarlan_bank/views/shared/custom_card.dart';
+import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/list_item.dart';
+import 'package:tarlan_bank/views/shared/service_item.dart';
+import 'package:tarlan_bank/views/shared/widgets.dart';
+
 const double _kWideBreakpoint = 600.0;
-
-// Maximum width the card back will grow to — prevents it looking
-// grotesque on a 1400 px desktop screen.
 const double _kCardMaxWidth = 420.0;
 
-class CardDetailsScreen extends StatefulWidget {
-  const CardDetailsScreen({super.key});
+class CardDetailsScreen extends ConsumerStatefulWidget {
+  const CardDetailsScreen({super.key, this.card});
+
+  /// The router opens this route without arguments; `null` renders an empty
+  /// state instead of throwing (see [legacyArguments] removal).
+  final BankCard? card;
 
   @override
-  State<CardDetailsScreen> createState() => _CardDetailsScreenState();
+  ConsumerState<CardDetailsScreen> createState() => _CardDetailsScreenState();
 }
 
-class _CardDetailsScreenState extends State<CardDetailsScreen> {
-  final AuthStateService _state = Get.find();
-  final UserRepository _userRepo = Get.find();
+class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
+  final Set<String> _visibleCvv = <String>{};
 
-  late final BankCard card;
-
-  @override
-  void initState() {
-    super.initState();
-    card = Get.arguments as BankCard;
+  Future<void> _closeCard(BankCard card) async {
+    try {
+      await ref
+          .read(accountsRepositoryProvider)
+          .closeAccount(card.accountNumber);
+      ref.invalidate(accountsProvider);
+      if (mounted) navigateBack();
+    } on AppFailure {
+      // Keep the card visible on failure; the error is surfaced by the shell.
+    }
   }
+
+  Map<String, String> _settings(AppLocalizations l) => {
+    l.renameCard: 'assets/icons/ic_edit.svg',
+    l.manageSubscriptions: 'assets/icons/ic_subscriptions.svg',
+    l.orderCard: 'assets/icons/ic_card.svg',
+    l.setLimits: 'assets/icons/ic_limits.svg',
+    l.getCertificate: 'assets/icons/ic_document.svg',
+    l.blocks: 'assets/icons/ic_lock.svg',
+    'Google Pay': 'assets/icons/ic_google_pay.svg',
+    l.cardSettings: 'assets/icons/ic_settings.svg',
+  };
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accountsCtrl = Get.find<AccountsController>();
+    final l = AppLocalizations.of(context);
+    final card = widget.card ?? ref.watch(selectedCardProvider);
+    if (card == null) {
+      return Scaffold(
+        appBar: buildHeader(context, l.cardDetails),
+        body: SafeArea(child: _emptyState(l.cardDetailsEmpty)),
+      );
+    }
 
+    final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth >= _kWideBreakpoint;
             return isWide
-                ? _buildWideLayout(context, theme, accountsCtrl)
-                : _buildNarrowLayout(context, theme, accountsCtrl);
+                ? _buildWideLayout(context, theme, card, l)
+                : _buildNarrowLayout(context, theme, card, l);
           },
         ),
       ),
     );
   }
 
-  // ── Narrow layout (unchanged behaviour) ─────────────────────────────────────
+  Widget _emptyState(String message) {
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset(
+            'assets/icons/ic_empty_list.svg',
+            height: size.height * 0.18,
+            colorFilter: ColorFilter.mode(
+              theme.colorScheme.secondaryContainer,
+              BlendMode.srcIn,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(message, style: theme.textTheme.titleMedium),
+        ],
+      ),
+    );
+  }
 
   Widget _buildNarrowLayout(
     BuildContext context,
     ThemeData theme,
-    AccountsController accountsCtrl,
+    BankCard card,
+    AppLocalizations l,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
@@ -76,15 +119,15 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 spacing: 16,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  buildHeader(context, 'Детали карты'),
+                  buildHeader(context, l.cardDetails),
                   _buildCardBack(theme, card),
-                  _buildBalanceCard(theme, accountsCtrl),
-                  _buildStatsRow(theme),
+                  _buildBalanceCard(theme, card, l),
+                  _buildStatsRow(theme, l),
                   CustomCard(
                     padding: EdgeInsets.zero,
-                    child: _buildSettingsList(theme),
+                    child: _buildSettingsList(theme, l),
                   ),
-                  _buildCloseCardButton(theme),
+                  _buildCloseCardButton(theme, card, l),
                 ],
               ),
             ),
@@ -94,65 +137,57 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     );
   }
 
-  // ── Wide layout (two-column) ─────────────────────────────────────────────────
-
   Widget _buildWideLayout(
     BuildContext context,
     ThemeData theme,
-    AccountsController accountsCtrl,
+    BankCard card,
+    AppLocalizations l,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          buildHeader(context, 'Детали карты'),
+          buildHeader(context, l.cardDetails),
           const SizedBox(height: 16),
           Expanded(
             child: SingleChildScrollView(
-              child: Column(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 24,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 24,
-                    children: [
-                      // ── Left column: card visual + balance ──────────────────────
-                      Expanded(
-                        flex: 5,
-                        child: Column(
-                          spacing: 16,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Card capped so it doesn't stretch to 700 px+
-                            Center(
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                    maxWidth: _kCardMaxWidth),
-                                child: _buildCardBack(theme, card),
-                              ),
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      spacing: 16,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: _kCardMaxWidth,
                             ),
-                            _buildBalanceCard(theme, accountsCtrl),
-                          ],
+                            child: _buildCardBack(theme, card),
+                          ),
                         ),
-                      ),
-
-                      // ── Right column: stats + settings + close ───────────────────
-                      Expanded(
-                        flex: 5,
-                        child: Column(
-                          spacing: 16,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildStatsRow(theme),
-                            CustomCard(
-                              padding: EdgeInsets.zero,
-                              child: _buildSettingsGrid(theme),
-                            ),
-                            _buildCloseCardButton(theme),
-                          ],
+                        _buildBalanceCard(theme, card, l),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      spacing: 16,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildStatsRow(theme, l),
+                        CustomCard(
+                          padding: EdgeInsets.zero,
+                          child: _buildSettingsGrid(theme, l),
                         ),
-                      ),
-                    ],
+                        _buildCloseCardButton(theme, card, l),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -163,11 +198,33 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     );
   }
 
-  // ── Shared section builders ───────────────────────────────────────────────────
+  String _balanceFor(BankCard card, String currency) {
+    switch (currency) {
+      case 'KZT':
+        return card.tengeBalance ?? '';
+      case 'USD':
+        return card.usdBalance ?? '';
+      case 'EUR':
+        return card.euroBalance ?? '';
+      default:
+        return '';
+    }
+  }
 
-  Widget _buildBalanceCard(ThemeData theme, AccountsController accountsCtrl) {
+  Widget _buildBalanceCard(ThemeData theme, BankCard card, AppLocalizations l) {
+    final locale = Localizations.localeOf(context).toString();
+    final accounts = ref.watch(accountsProvider).value ?? const [];
+    String total(String currency) {
+      final own = _balanceFor(card, currency);
+      if (own.isNotEmpty) return own;
+      final sum = accounts
+          .where((a) => a.currency == currency)
+          .fold<double>(0, (s, a) => s + a.balance);
+      return formatCurrency(sum, currency, locale);
+    }
+
     return CustomCard(
-      label: 'Общий баланс',
+      label: l.totalBalance,
       padding: const EdgeInsets.all(20),
       child: Column(
         spacing: 8,
@@ -176,39 +233,30 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Text(
-                card.tengeBalance ?? accountsCtrl.getFormattedBalance('KZT'),
-                style: const TextStyle(fontSize: 18),
-              ),
-              Text(
-                card.usdBalance ?? accountsCtrl.getFormattedBalance('USD'),
-                style: const TextStyle(fontSize: 18),
-              ),
-              Text(
-                card.euroBalance ?? accountsCtrl.getFormattedBalance('EUR'),
-                style: const TextStyle(fontSize: 18),
-              ),
+              Text(total('KZT'), style: const TextStyle(fontSize: 18)),
+              Text(total('USD'), style: const TextStyle(fontSize: 18)),
+              Text(total('EUR'), style: const TextStyle(fontSize: 18)),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Сумма в обработке: 0,00 KZT',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            l.pendingAmount,
+            style: TextStyle(color: theme.colorScheme.outline),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               ServiceItem(
                 svgPath: 'assets/icons/ic_deposit.svg',
-                label: 'Пополнить',
+                label: l.topUp,
               ),
               ServiceItem(
                 svgPath: 'assets/icons/ic_transfer.svg',
-                label: 'Перевести',
+                label: l.transfer,
               ),
               ServiceItem(
                 svgPath: 'assets/icons/ic_withdraw.svg',
-                label: 'Снять',
+                label: l.withdraw,
               ),
             ],
           ),
@@ -217,7 +265,7 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     );
   }
 
-  Widget _buildStatsRow(ThemeData theme) {
+  Widget _buildStatsRow(ThemeData theme, AppLocalizations l) {
     return Row(
       spacing: 16,
       children: [
@@ -228,8 +276,8 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
               spacing: 4,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Выписка', style: theme.textTheme.titleMedium),
-                Text('Доходы и расходы', style: theme.textTheme.bodySmall),
+                Text(l.statement, style: theme.textTheme.titleMedium),
+                Text(l.incomeExpenses, style: theme.textTheme.bodySmall),
               ],
             ),
           ),
@@ -241,8 +289,8 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
               spacing: 4,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Реквизиты', style: theme.textTheme.titleMedium),
-                Text('Номера счетов', style: theme.textTheme.bodySmall),
+                Text(l.requisites, style: theme.textTheme.titleMedium),
+                Text(l.accountNumbers, style: theme.textTheme.bodySmall),
               ],
             ),
           ),
@@ -251,13 +299,16 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     );
   }
 
-  Widget _buildCloseCardButton(ThemeData theme) {
+  Widget _buildCloseCardButton(
+    ThemeData theme,
+    BankCard card,
+    AppLocalizations l,
+  ) {
     return Center(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.find<AccountsController>()
-              .deleteSingleAccount(card.id.toString()),
+          onTap: () => _closeCard(card),
           borderRadius: BorderRadius.circular(30),
           splashFactory: InkRipple.splashFactory,
           splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
@@ -265,9 +316,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: Text(
-              'Закрыть карту',
-              style: theme.textTheme.bodyLarge
-                  ?.copyWith(color: theme.colorScheme.error),
+              l.closeCard,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
           ),
         ),
@@ -275,29 +327,14 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
     );
   }
 
-  // ── Card visual ──────────────────────────────────────────────────────────────
-
   Widget _buildCardBack(ThemeData theme, BankCard card) {
-    RxString cvv = 'CVV'.obs;
-
-    final Color colorBg = switch (card.color) {
+    final showCvv = _visibleCvv.contains(card.number);
+    final colorBg = switch (card.color) {
       'primary' => theme.colorScheme.tertiary,
-      'yellow' => theme.extension<Extra>()!.yellowCardBg!,
       'gold' => theme.extension<Extra>()!.goldCardBg!,
-      'purple' => theme.extension<Extra>()!.purpleCardBg!,
       'red' => theme.extension<Extra>()!.redCardBg!,
       _ => theme.extension<Extra>()!.grayCardBg!,
     };
-
-    final Color colorFg = switch (card.color) {
-      'primary' => theme.colorScheme.secondary,
-      'yellow' => theme.extension<Extra>()!.yellowCardFg!,
-      'gold' => theme.extension<Extra>()!.goldCardFg!,
-      'purple' => theme.extension<Extra>()!.purpleCardFg!,
-      'red' => theme.extension<Extra>()!.redCardFg!,
-      _ => theme.extension<Extra>()!.grayCardFg!,
-    };
-
     return Container(
       decoration: BoxDecoration(
         color: colorBg,
@@ -327,15 +364,13 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _userRepo.currentUser?.fullName ?? '',
+                    card.name,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white,
                       fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
                     ),
                   ),
                   const Spacer(flex: 5),
-                  // Card number row
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
@@ -356,13 +391,13 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                         IconButton(
                           icon: const Icon(Icons.copy, color: Colors.white),
                           onPressed: () => Clipboard.setData(
-                              ClipboardData(text: card.number)),
+                            ClipboardData(text: card.number),
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Expiry + CVV row
                   Row(
                     children: [
                       Expanded(
@@ -370,8 +405,9 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                         child: Container(
                           padding: const EdgeInsets.only(left: 12),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface
-                                .withValues(alpha: 0.2),
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -384,8 +420,10 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon:
-                                    const Icon(Icons.copy, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.copy,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () => Clipboard.setData(
                                   ClipboardData(text: card.expiryDate),
                                 ),
@@ -398,34 +436,39 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                       Expanded(
                         flex: 2,
                         child: GestureDetector(
-                          onTap: () {
-                            cvv.value = cvv.value == 'CVV' ? card.cvv : 'CVV';
-                          },
+                          onTap: () => setState(() {
+                            if (showCvv) {
+                              _visibleCvv.remove(card.number);
+                            } else {
+                              _visibleCvv.add(card.number);
+                            }
+                          }),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 12),
+                              horizontal: 4,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surface
-                                  .withValues(alpha: 0.2),
+                              color: theme.colorScheme.surface.withValues(
+                                alpha: 0.2,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: Obx(
-                                () => Text(
-                                  cvv.value,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontFamily: 'Poppins',
-                                  ),
+                              child: Text(
+                                showCvv ? card.cvv : 'CVV',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontFamily: 'Poppins',
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const Spacer(flex: 3),
                     ],
                   ),
+                  const Spacer(flex: 3),
                 ],
               ),
             ),
@@ -434,67 +477,48 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
       ),
     );
   }
-}
 
-// ── Settings list (narrow: vertical list) ────────────────────────────────────
-
-Widget _buildSettingsList(ThemeData theme) {
-  return Column(
-    spacing: 8,
-    children: _settingsItems.entries
-        .map((e) => ListItem.vertical(
-              svgPath: e.value,
-              title: e.key,
-              onTap: () {},
-            ))
-        .toList(),
-  );
-}
-
-// ── Settings grid (wide: 2-column grid) ──────────────────────────────────────
-
-Widget _buildSettingsGrid(ThemeData theme) {
-  final entries = _settingsItems.entries.toList();
-  // Pair them up: [0,1], [2,3], [4,5], [6,7]
-  final List<Widget> rows = [];
-  for (int i = 0; i < entries.length; i += 2) {
-    final bool isLast = i + 1 >= entries.length;
-    rows.add(
-      Row(
-        children: [
-          Expanded(
-            child: ListItem.vertical(
-              svgPath: entries[i].value,
-              title: entries[i].key,
-              onTap: () {},
-            ),
-          ),
-          if (!isLast)
-            Expanded(
-              child: ListItem.vertical(
-                svgPath: entries[i + 1].value,
-                title: entries[i + 1].key,
-                onTap: () {},
-              ),
-            )
-          else
-            const Expanded(child: SizedBox()),
-        ],
-      ),
+  Widget _buildSettingsList(ThemeData theme, AppLocalizations l) {
+    return Column(
+      spacing: 8,
+      children: _settings(l).entries
+          .map(
+            (e) =>
+                ListItem.vertical(svgPath: e.value, title: e.key, onTap: () {}),
+          )
+          .toList(),
     );
   }
-  return Column(spacing: 8, children: rows);
+
+  Widget _buildSettingsGrid(ThemeData theme, AppLocalizations l) {
+    final entries = _settings(l).entries.toList();
+    final rows = <Widget>[];
+    for (var i = 0; i < entries.length; i += 2) {
+      final isLast = i + 1 >= entries.length;
+      rows.add(
+        Row(
+          children: [
+            Expanded(
+              child: ListItem.vertical(
+                svgPath: entries[i].value,
+                title: entries[i].key,
+                onTap: () {},
+              ),
+            ),
+            if (!isLast)
+              Expanded(
+                child: ListItem.vertical(
+                  svgPath: entries[i + 1].value,
+                  title: entries[i + 1].key,
+                  onTap: () {},
+                ),
+              )
+            else
+              const Expanded(child: SizedBox()),
+          ],
+        ),
+      );
+    }
+    return Column(spacing: 8, children: rows);
+  }
 }
-
-// ── Shared data ───────────────────────────────────────────────────────────────
-
-const Map<String, String> _settingsItems = {
-  'Переименовать карту': 'assets/icons/ic_edit.svg',
-  'Управление подписками': 'assets/icons/ic_subscriptions.svg',
-  'Заказать карту': 'assets/icons/ic_card.svg',
-  'Установить лимиты': 'assets/icons/ic_limits.svg',
-  'Получить справку': 'assets/icons/ic_document.svg',
-  'Блокировки': 'assets/icons/ic_lock.svg',
-  'Google Pay': 'assets/icons/ic_google_pay.svg',
-  'Настройки карты': 'assets/icons/ic_settings.svg',
-};

@@ -2,7 +2,7 @@ import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
+
 import '../../models/account_model.dart';
 
 class AnimatedCardDropdown extends StatelessWidget {
@@ -39,10 +39,7 @@ class AnimatedCardDropdown extends StatelessWidget {
             highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
             child: Row(
               children: [
-                Text(
-                  label,
-                  style: theme.textTheme.titleLarge,
-                ),
+                Text(label, style: theme.textTheme.titleLarge),
                 const Spacer(),
                 AnimatedRotation(
                   duration: const Duration(milliseconds: 200),
@@ -55,9 +52,7 @@ class AnimatedCardDropdown extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(
-            height: 12,
-          ),
+          SizedBox(height: 12),
           ClipRRect(
             child: AnimatedCrossFade(
               firstChild: selectedAccount != null
@@ -70,12 +65,14 @@ class AnimatedCardDropdown extends StatelessWidget {
                   : const SizedBox.shrink(),
               secondChild: Column(
                 children: accounts
-                    .map((account) => _AccountItem(
-                          account: account,
-                          theme: theme,
-                          isSelected: account == selectedAccount,
-                          onTap: () => onAccountSelected(account),
-                        ))
+                    .map(
+                      (account) => _AccountItem(
+                        account: account,
+                        theme: theme,
+                        isSelected: account == selectedAccount,
+                        onTap: () => onAccountSelected(account),
+                      ),
+                    )
                     .toList(),
               ),
               crossFadeState: isExpanded
@@ -106,67 +103,64 @@ class _AccountItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
-              : null,
-          borderRadius: BorderRadius.circular(8),
-          border: Border(
-            left: BorderSide(
-              color:
-                  isSelected ? theme.colorScheme.primary : Colors.transparent,
-              width: 4,
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
+            : null,
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            width: 4,
+          ),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          splashFactory: InkRipple.splashFactory,
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+          child: Padding(
+            padding: EdgeInsets.only(left: 12, right: 16, top: 12, bottom: 12),
+            child: Row(
+              children: [
+                _buildCardIcon(theme),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _capitalize(formatAccountType(account.accountType)),
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        censorCardNumber(account.accountNumber),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  formatCurrency(account.balance, account.currency, 'ru_RU'),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Roboto',
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(12),
-                splashFactory: InkRipple.splashFactory,
-                splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
-                highlightColor:
-                    theme.colorScheme.primary.withValues(alpha: 0.04),
-                child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 12,
-                      right: 16,
-                      top: 12,
-                      bottom: 12,
-                    ),
-                    child: Row(children: [
-                      _buildCardIcon(theme),
-                      const SizedBox(width: 12),
-                      Expanded(
-                          child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            formatAccountType(account.accountType)
-                                    .capitalizeFirst ??
-                                'Счет',
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            censorCardNumber(account.accountNumber),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      )),
-                      Text(
-                        formatCurrency(
-                            account.balance, account.currency, 'ru_RU'),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Roboto',
-                        ),
-                      ),
-                    ])))));
+      ),
+    );
   }
 
   Widget _buildCardIcon(ThemeData theme) {
@@ -174,10 +168,10 @@ class _AccountItem extends StatelessWidget {
       'assets/icons/ic_card.svg',
       width: 36,
       height: 36,
-      colorFilter: ColorFilter.mode(
-        theme.colorScheme.primary,
-        BlendMode.srcIn,
-      ),
+      colorFilter: ColorFilter.mode(theme.colorScheme.primary, BlendMode.srcIn),
     );
   }
 }
+
+String _capitalize(String value) =>
+    value.isEmpty ? value : value[0].toUpperCase() + value.substring(1);

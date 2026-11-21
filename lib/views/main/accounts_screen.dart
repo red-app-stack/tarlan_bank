@@ -1,36 +1,27 @@
-import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
-import 'package:tarlan_bank/models/account_model.dart';
-import 'package:tarlan_bank/models/card_model.dart';
-import 'package:tarlan_bank/services/auth_state_service.dart';
-import 'package:tarlan_bank/services/user_repository.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:card_swiper/card_swiper.dart';
+
+import 'package:tarlan_bank/core/router/app_navigation.dart';
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/accounts/data/account_model.dart';
+import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
+import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/utils/themes/theme_extension.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
+import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
-import 'package:card_swiper/card_swiper.dart';
-import '../../controllers/accounts_controller.dart';
-import '../shared/formatters.dart';
 
+/// View model for the card swiper. Cards are instruments derived from the
+/// Firestore [Account] ledger — no CVV is ever stored or displayed.
 class BankCard {
-  final int id;
-  final String accountNumber; // e.g. "4000123412341234"
-  final String name; // user’s full name
-  final String cardType; // "card", "deposit", etc.
-  final String type; // “VISA Мультивалютная” …
-  final String number; // same as accountNumber – kept for legacy UI
-  final String? tengeBalance;
-  final String? usdBalance;
-  final String? euroBalance;
-  final String color; // card colour (brand theme)
-  final String expiryDate; // e.g. "12/30"
-  final String cvv; // **plain CVV** – shown only when the user taps “Show CVV”
-
-  BankCard({
+  const BankCard({
     required this.id,
     required this.accountNumber,
     required this.name,
@@ -41,127 +32,123 @@ class BankCard {
     required this.usdBalance,
     required this.euroBalance,
     required this.color,
-    this.expiryDate = "12/30",
-    this.cvv = "",
+    this.expiryDate = '12/30',
+    this.cvv = '',
   });
+
+  final int id;
+  final String accountNumber;
+  final String name;
+  final String cardType;
+  final String type;
+  final String number;
+  final String? tengeBalance;
+  final String? usdBalance;
+  final String? euroBalance;
+  final String color;
+  final String expiryDate;
+  final String cvv;
 }
 
-class AccountsScreenController extends GetxController {
-  final AuthStateService _state = Get.find<AuthStateService>();
-  final UserRepository _userRepo = Get.find<UserRepository>();
-  late AccountsController _accountsController;
+/// Last card opened from the accounts branch; read by CardDetailsScreen.
+class SelectedCardNotifier extends Notifier<BankCard?> {
+  @override
+  BankCard? build() => null;
 
-  final RxMap<String, bool> cardFlipStates = <String, bool>{}.obs;
-  final RxString visibleCard = ''.obs;
+  void select(BankCard? card) => state = card;
+}
 
-  bool get isLoggedIn => _state.isLoggedIn;
+final selectedCardProvider = NotifierProvider<SelectedCardNotifier, BankCard?>(
+  SelectedCardNotifier.new,
+);
 
-  var currentCard = 0.obs;
-  var currentDepositCard = 0.obs;
-  var currentCreditCard = 0.obs;
-
-  final RxList<BankCard> cards = <BankCard>[].obs;
-  final RxList<BankCard> deposits = <BankCard>[].obs;
-  final RxList<BankCard> credits = <BankCard>[].obs;
+class AccountsScreen extends ConsumerStatefulWidget {
+  const AccountsScreen({super.key});
 
   @override
-  void onInit() {
-    super.onInit();
-    _accountsController = Get.put(AccountsController());
-    ever(_accountsController.accounts, (_) => updateBankCards());
-  }
-
-  void fetchAndUpdateCards() async {
-    await _accountsController.fetchAccounts();
-    updateBankCards();
-  }
-
-  void toggleCardFlip(String cardNumber) {
-    cardFlipStates[cardNumber] = !(cardFlipStates[cardNumber] ?? false);
-  }
-
-  void updateBankCards() {
-    cards.clear();
-    deposits.clear();
-    credits.clear();
-
-    for (AccountModel card in _accountsController.accounts) {
-      final bankCard = BankCard(
-        id: card.id,
-        accountNumber: card.accountNumber,
-        name: _userRepo.currentUser?.fullName ?? '',
-        cardType: card.accountType,
-        type:
-            'VISA ${card.accountType == 'card' ? 'Мультивалютная' : card.accountType}',
-        number: card.accountNumber,
-        tengeBalance: card.currency == 'KZT'
-            ? formatCurrency(card.balance, 'KZT', currentLocale.toString())
-            : null,
-        usdBalance: card.currency == 'USD'
-            ? formatCurrency(card.balance, 'USD', currentLocale.toString())
-            : null,
-        euroBalance: card.currency == 'EUR'
-            ? formatCurrency(card.balance, 'EUR', currentLocale.toString())
-            : null,
-        color: _getCardColor(card.accountType),
-        expiryDate:
-            '${card.expiryMonth}/${card.expiryYear.toString().substring(2)}',
-        cvv: card.cvv ?? '768',
-      );
-
-      switch (card.accountType.toLowerCase()) {
-        case 'card':
-          cards.add(bankCard);
-          if (visibleCard.value.isEmpty) visibleCard.value = bankCard.number;
-          break;
-        case 'deposit':
-          deposits.add(bankCard);
-          break;
-        case 'credit':
-          credits.add(bankCard);
-          break;
-      }
-    }
-  }
-
-  String _getCardColor(String accountType) {
-    switch (accountType.toLowerCase()) {
-      case 'credit':
-        return 'red';
-      case 'deposit':
-        return 'gold';
-      case 'card':
-        return 'primary';
-      default:
-        return 'primary';
-    }
-  }
-
-  void onPageChanged(int index, String type) {
-    switch (type) {
-      case 'card':
-        currentCard.value = index % cards.length;
-        break;
-      case 'deposit':
-        currentDepositCard.value = index % deposits.length;
-        break;
-      case 'credit':
-        currentCreditCard.value = index % credits.length;
-        break;
-    }
-  }
+  ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
 }
 
-class AccountsScreen extends StatelessWidget {
-  final AccountsScreenController _controller =
-      Get.put(AccountsScreenController());
+class _AccountsScreenState extends ConsumerState<AccountsScreen> {
+  final Map<String, bool> _cardFlipStates = <String, bool>{};
+  final Set<String> _visibleCvv = <String>{};
+  int _currentCard = 0;
+  int _currentCreditCard = 0;
+  int _currentDepositCard = 0;
+  String _visibleCard = '';
 
-  AccountsScreen({super.key});
+  Future<void> _refresh() async {
+    ref.invalidate(accountsProvider);
+    ref.invalidate(userProfileProvider);
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+  }
+
+  void _onPageChanged(int index, List<BankCard> cards, String type) {
+    if (cards.isEmpty) return;
+    setState(() {
+      final page = index % cards.length;
+      switch (type) {
+        case 'card':
+          _currentCard = page;
+          _visibleCard = cards[page].number;
+        case 'credit':
+          _currentCreditCard = page;
+        case 'deposit':
+          _currentDepositCard = page;
+      }
+      for (final card in cards) {
+        _cardFlipStates[card.number] = false;
+      }
+    });
+  }
+
+  BankCard _toBankCard(
+    Account account,
+    String fullName,
+    String locale,
+    AppLocalizations l,
+  ) {
+    final isCurrent = account.type == AccountType.current;
+    final typeKey = isCurrent ? 'card' : account.type.name;
+    return BankCard(
+      id: int.tryParse(account.number) ?? 0,
+      accountNumber: account.number,
+      name: fullName,
+      cardType: typeKey,
+      type: isCurrent ? 'VISA ${l.multiCurrency}' : 'VISA ${account.type.name}',
+      number: account.number,
+      tengeBalance: account.currency == 'KZT'
+          ? formatCurrency(account.balance, 'KZT', locale)
+          : null,
+      usdBalance: account.currency == 'USD'
+          ? formatCurrency(account.balance, 'USD', locale)
+          : null,
+      euroBalance: account.currency == 'EUR'
+          ? formatCurrency(account.balance, 'EUR', locale)
+          : null,
+      color: switch (account.type) {
+        AccountType.credit => 'red',
+        AccountType.deposit => 'gold',
+        AccountType.current => 'primary',
+      },
+    );
+  }
+
+  void _openProduct(String type) =>
+      navigateTo(context, Routes.accountsCreate, arguments: {'extra': type});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final locale = Localizations.localeOf(context).toString();
+    final l = AppLocalizations.of(context);
+
+    final user = ref.watch(currentUserProvider);
+    final profile = ref.watch(userProfileProvider).value;
+    final fullName = user?.fullName ?? profile?['fullName'] as String? ?? '';
+    final accountsAsync = ref.watch(accountsProvider);
+    final isGuest = user == null || user.isAnonymous;
 
     return Scaffold(
       body: SafeArea(
@@ -169,99 +156,111 @@ class AccountsScreen extends StatelessWidget {
         top: false,
         child: RefreshIndicator(
           edgeOffset: MediaQuery.of(context).padding.top,
-          onRefresh: () async {
-            _controller.fetchAndUpdateCards();
-            const timeout = Duration(seconds: 10);
-            try {
-              await Future.any([
-                _controller.cards.stream.timeout(timeout).first,
-                _controller.credits.stream.timeout(timeout).first,
-                _controller.deposits.stream.timeout(timeout).first,
-              ]).timeout(timeout);
-              await Future.delayed(const Duration(milliseconds: 300));
-            } on TimeoutException {
-              print('Refresh operation timed out');
-            } catch (e) {
-              print('Error during refresh: $e');
-            }
-          },
+          onRefresh: _refresh,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            // 1. ADD CENTER AND CONSTRAINED BOX FOR WIDE SCREENS
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 24.0, vertical: 56 + kToolbarHeight),
+                    horizontal: 24.0,
+                    vertical: 56 + kToolbarHeight,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 16,
                     children: [
                       CustomCard(
-                        label: 'Счета',
+                        label: l.navAccounts,
                         padding: EdgeInsetsGeometry.all(18),
                       ),
-                      Obx(() => _buildCardSection(
-                            context: context,
-                            cards: _controller.cards,
-                            title: 'Карты',
-                            size: size,
-                            type: 'card',
-                            child: ListItem.vertical(
-                                svgPath: 'assets/icons/ic_add.svg',
-                                title: 'Открыть новую карту',
-                                onTap: () {
-                                  _controller._state
-                                      .setTargetArguments({'extra': 'card'});
-                                  Get.toNamed('/createAccount',
-                                      arguments: 'card');
-                                }),
-                          )),
-                      Obx(
-                        () => _buildCardSection(
-                          context: context,
-                          cards: _controller.credits,
-                          title: 'Кредиты',
-                          size: size,
-                          type: 'credit',
-                          child: ListItem.vertical(
-                              svgPath: 'assets/icons/ic_add.svg',
-                              title: 'Оформить кредит наличными',
-                              subtitle: 'Онлайн до 7 000 000 тенге',
-                              onTap: () {
-                                _controller._state
-                                    .setTargetArguments({'extra': 'credit'});
-                                Get.toNamed('/createAccount',
-                                    arguments: 'credit');
-                              }),
-                        ),
+                      accountsAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (_, _) => _buildEmptyState(l, size, theme),
+                        data: (accounts) {
+                          if (isGuest || accounts.isEmpty) {
+                            return _buildEmptyState(l, size, theme);
+                          }
+                          final cards = <BankCard>[];
+                          final deposits = <BankCard>[];
+                          final credits = <BankCard>[];
+                          for (final account in accounts) {
+                            final card = _toBankCard(
+                              account,
+                              fullName,
+                              locale,
+                              l,
+                            );
+                            switch (account.type) {
+                              case AccountType.current:
+                                cards.add(card);
+                              case AccountType.deposit:
+                                deposits.add(card);
+                              case AccountType.credit:
+                                credits.add(card);
+                            }
+                          }
+                          if (_visibleCard.isEmpty && cards.isNotEmpty) {
+                            _visibleCard = cards.first.number;
+                          }
+                          return Column(
+                            spacing: 16,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildCardSection(
+                                context: context,
+                                cards: cards,
+                                title: l.cards,
+                                size: size,
+                                type: 'card',
+                                child: ListItem.vertical(
+                                  svgPath: 'assets/icons/ic_add.svg',
+                                  title: l.openNewCard,
+                                  onTap: () => _openProduct('card'),
+                                ),
+                              ),
+                              _buildCardSection(
+                                context: context,
+                                cards: credits,
+                                title: l.credits,
+                                size: size,
+                                type: 'credit',
+                                child: ListItem.vertical(
+                                  svgPath: 'assets/icons/ic_add.svg',
+                                  title: l.creditCash,
+                                  subtitle: l.creditCashSubtitle,
+                                  onTap: () => _openProduct('credit'),
+                                ),
+                              ),
+                              _buildCardSection(
+                                context: context,
+                                cards: deposits,
+                                title: l.deposits,
+                                size: size,
+                                type: 'deposit',
+                                child: ListItem.vertical(
+                                  svgPath: 'assets/icons/ic_add.svg',
+                                  title: l.openProduct(l.createDeposit),
+                                  subtitle: l.openDepositSubtitle,
+                                  onTap: () => _openProduct('deposit'),
+                                ),
+                              ),
+                              if (isGuest)
+                                BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 10,
+                                    sigmaY: 10,
+                                  ),
+                                  child: Container(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
-                      Obx(() => _buildCardSection(
-                            context: context,
-                            cards: _controller.deposits,
-                            title: 'Депозиты',
-                            size: size,
-                            type: 'deposit',
-                            child: ListItem.vertical(
-                                svgPath: 'assets/icons/ic_add.svg',
-                                title: 'Открыть депозит',
-                                subtitle: 'На выгодных условиях',
-                                onTap: () {
-                                  _controller._state
-                                      .setTargetArguments({'extra': 'deposit'});
-                                  Get.toNamed('/createAccount',
-                                      arguments: 'deposit');
-                                }),
-                          )),
-                      if (!_controller._state.isLoggedIn)
-                        BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                              color: Colors.black.withValues(alpha: 0.1)),
-                        )
-                      else
-                        const SizedBox.shrink(),
                     ],
                   ),
                 ),
@@ -273,66 +272,73 @@ class AccountsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildEmptyState(AppLocalizations l, Size size, ThemeData theme) =>
+      Padding(
+        padding: EdgeInsets.symmetric(vertical: size.height * 0.12),
+        child: Center(
+          child: Column(
+            children: [
+              SvgPicture.asset(
+                'assets/icons/ic_empty_list.svg',
+                height: size.height * 0.18,
+                colorFilter: ColorFilter.mode(
+                  theme.colorScheme.secondaryContainer,
+                  BlendMode.srcIn,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(l.emptyAccounts, style: theme.textTheme.titleMedium),
+            ],
+          ),
+        ),
+      );
+
   Widget _buildBankCard({
     required BuildContext context,
     required BankCard card,
-    Function()? onCardTap,
-    Function()? onCardLongPress,
   }) {
     final theme = Theme.of(context);
-    final Color colorBg = card.color == 'primary'
-        ? theme.colorScheme.tertiary
-        : card.color == 'yellow'
-            ? theme.extension<Extra>()!.yellowCardBg!
-            : card.color == 'gold'
-                ? theme.extension<Extra>()!.goldCardBg!
-                : card.color == 'purple'
-                    ? theme.extension<Extra>()!.purpleCardBg!
-                    : card.color == 'red'
-                        ? theme.extension<Extra>()!.redCardBg!
-                        : theme.extension<Extra>()!.grayCardBg!;
-
-    final Color colorFg = card.color == 'primary'
-        ? theme.colorScheme.secondary
-        : card.color == 'yellow'
-            ? theme.extension<Extra>()!.yellowCardFg!
-            : card.color == 'gold'
-                ? theme.extension<Extra>()!.goldCardFg!
-                : card.color == 'purple'
-                    ? theme.extension<Extra>()!.purpleCardFg!
-                    : card.color == 'red'
-                        ? theme.extension<Extra>()!.redCardFg!
-                        : theme.extension<Extra>()!.grayCardFg!;
+    final colorBg = switch (card.color) {
+      'primary' => theme.colorScheme.tertiary,
+      'gold' => theme.extension<Extra>()!.goldCardBg!,
+      'red' => theme.extension<Extra>()!.redCardBg!,
+      _ => theme.extension<Extra>()!.grayCardBg!,
+    };
+    final colorFg = switch (card.color) {
+      'primary' => theme.colorScheme.secondary,
+      'gold' => theme.extension<Extra>()!.goldCardFg!,
+      'red' => theme.extension<Extra>()!.redCardFg!,
+      _ => theme.extension<Extra>()!.grayCardFg!,
+    };
 
     return GestureDetector(
-      onTap: card.cardType == 'card'
-          ? () {
-              Get.toNamed('/cardDetails', arguments: card);
-            }
-          : () {},
-      child: Obx(() => TweenAnimationBuilder(
-            key: ValueKey(card.number),
-            tween: Tween<double>(
-              begin: 0,
-              end: _controller.cardFlipStates[card.number] ?? false ? 180 : 0,
-            ),
-            duration: const Duration(milliseconds: 400),
-            builder: (context, double value, child) {
-              return Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(value * pi / 180),
-                child: value < 90
-                    ? _buildCardFront(theme, card, colorBg, colorFg)
-                    : Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.identity()..rotateY(pi),
-                        child: _buildCardBack(theme, card, colorBg, colorFg),
-                      ),
-              );
-            },
-          )),
+      onTap: () {
+        ref.read(selectedCardProvider.notifier).select(card);
+        navigateTo(context, Routes.accountsDetails);
+      },
+      child: TweenAnimationBuilder<double>(
+        key: ValueKey(card.number),
+        tween: Tween<double>(
+          begin: 0,
+          end: _cardFlipStates[card.number] == true ? 180 : 0,
+        ),
+        duration: const Duration(milliseconds: 400),
+        builder: (context, value, child) {
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(value * pi / 180),
+            child: value < 90
+                ? _buildCardFront(theme, card, colorBg, colorFg)
+                : Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(pi),
+                    child: _buildCardBack(theme, card, colorBg, colorFg),
+                  ),
+          );
+        },
+      ),
     );
   }
 
@@ -357,87 +363,69 @@ class AccountsScreen extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-                bottom: 28,
-                right: 28,
-                child: Align(
-                    alignment: Alignment.bottomRight,
-                    child: SvgPicture.asset(
-                      "assets/icons/visa.svg",
-                      width: 50,
-                      height: 16,
-                      colorFilter: ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ))),
+              bottom: 28,
+              right: 28,
+              child: SvgPicture.asset(
+                'assets/icons/visa.svg',
+                width: 50,
+                height: 16,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
             Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _controller._userRepo.currentUser?.fullName ?? '',
+                    card.name,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w400),
+                      color: Colors.white,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                   const Spacer(flex: 5),
                   Text(
                     card.type,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500),
+                      color: Colors.white,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const Spacer(),
                   Text(
                     censorCardNumber(card.number),
                     style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600),
+                      color: Colors.white,
+                      fontFamily: 'Poppins',
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const Spacer(),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.end,
                     children: [
-                      Expanded(
-                        child: Wrap(
-                          spacing: 10,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.end,
-                          children: [
-                            Text(
-                              card.tengeBalance ?? '',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontFamily: 'Roboto',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                              ),
+                      for (final balance in [
+                        card.tengeBalance,
+                        card.usdBalance,
+                        card.euroBalance,
+                      ])
+                        if (balance != null)
+                          Text(
+                            balance,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontFamily: 'Roboto',
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 20,
                             ),
-                            Text(
-                              card.usdBalance ?? '',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontFamily: 'Roboto',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                              ),
-                            ),
-                            Text(
-                              card.euroBalance ?? '',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontFamily: 'Roboto',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                              ),
-                            )
-                          ],
-                        ),
-                      )
+                          ),
                     ],
                   ),
                 ],
@@ -455,7 +443,7 @@ class AccountsScreen extends StatelessWidget {
     Color colorBg,
     Color colorFg,
   ) {
-    RxString cvv = 'CVV'.obs;
+    final showCvv = _visibleCvv.contains(card.number);
     return Container(
       decoration: BoxDecoration(
         color: colorBg,
@@ -467,34 +455,33 @@ class AccountsScreen extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-                bottom: 28,
-                right: 28,
-                child: Align(
-                    alignment: Alignment.bottomRight,
-                    child: SvgPicture.asset(
-                      "assets/icons/visa.svg",
-                      width: 50,
-                      height: 16,
-                      colorFilter: ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ))),
+              bottom: 28,
+              right: 28,
+              child: SvgPicture.asset(
+                'assets/icons/visa.svg',
+                width: 50,
+                height: 16,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
             Padding(
-              padding: EdgeInsets.all(24),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _controller._userRepo.currentUser?.fullName ?? '',
+                    card.name,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w400),
+                      color: Colors.white,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                   const Spacer(flex: 5),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -511,9 +498,10 @@ class AccountsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         IconButton(
-                          icon: Icon(Icons.copy, color: Colors.white),
+                          icon: const Icon(Icons.copy, color: Colors.white),
                           onPressed: () => Clipboard.setData(
-                              ClipboardData(text: card.number)),
+                            ClipboardData(text: card.number),
+                          ),
                         ),
                       ],
                     ),
@@ -524,10 +512,11 @@ class AccountsScreen extends StatelessWidget {
                       Expanded(
                         flex: 3,
                         child: Container(
-                          padding: EdgeInsets.only(left: 12),
+                          padding: const EdgeInsets.only(left: 12),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface
-                                .withValues(alpha: 0.2),
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -540,7 +529,10 @@ class AccountsScreen extends StatelessWidget {
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.copy, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.copy,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () => Clipboard.setData(
                                   ClipboardData(text: card.expiryDate),
                                 ),
@@ -551,55 +543,55 @@ class AccountsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                          flex: 2,
-                          child: GestureDetector(
-                            onTap: () {
-                              cvv.value = cvv.value == 'CVV' ? card.cvv : 'CVV';
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surface
-                                    .withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
+                        flex: 2,
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            if (showCvv) {
+                              _visibleCvv.remove(card.number);
+                            } else {
+                              _visibleCvv.add(card.number);
+                            }
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface.withValues(
+                                alpha: 0.2,
                               ),
-                              child: Center(
-                                child: Obx(() => Text(
-                                      cvv.value,
-                                      style:
-                                          theme.textTheme.titleMedium?.copyWith(
-                                        color: Colors.white,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    )),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                showCvv ? card.cvv : 'CVV',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
                             ),
-                          )),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const Spacer(flex: 3),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  bool _getCurrentPage(String type, int index) {
-    switch (type) {
-      case 'card':
-        return _controller.currentCard.value == index;
-      case 'credit':
-        return _controller.currentCreditCard.value == index;
-      case 'deposit':
-        return _controller.currentDepositCard.value == index;
-      default:
-        return false;
-    }
-  }
+  bool _getCurrentPage(String type, int index) => switch (type) {
+    'card' => _currentCard == index,
+    'credit' => _currentCreditCard == index,
+    'deposit' => _currentDepositCard == index,
+    _ => false,
+  };
 
   Widget _buildCardSection({
     required BuildContext context,
@@ -607,8 +599,6 @@ class AccountsScreen extends StatelessWidget {
     required String title,
     required Size size,
     required String type,
-    Function()? onCardTap,
-    Function()? onCardLongPress,
     Widget? child,
   }) {
     final theme = Theme.of(context);
@@ -618,105 +608,83 @@ class AccountsScreen extends StatelessWidget {
       padding: const EdgeInsets.only(top: 16),
       topRowPadding: const EdgeInsets.symmetric(horizontal: 16),
       endWidget: cards.length > 1
-          ? Obx(() => Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(
-                  cards.length,
-                  (index) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    width: _getCurrentPage(type, index) ? 16 : 8,
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _getCurrentPage(type, index)
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.primary.withValues(alpha: 0.2),
-                    ),
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                cards.length,
+                (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  width: _getCurrentPage(type, index) ? 16 : 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _getCurrentPage(type, index)
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withValues(alpha: 0.2),
                   ),
                 ),
-              ))
+              ),
+            )
           : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (cards.isNotEmpty) ...[
+          if (cards.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              // 2. USE LAYOUTBUILDER TO DYNAMICALLY SIZE CARDS & CAP MAX WIDTH
-              child: LayoutBuilder(builder: (context, constraints) {
-                final availableWidth = constraints.maxWidth;
-                final double targetCardWidth = availableWidth * 0.85;
-                final double cardWidth =
-                    targetCardWidth > 420 ? 420.0 : targetCardWidth;
-                final double cardHeight = cardWidth / 1.586;
-
-                return SizedBox(
-                  height: cardHeight + 20,
-                  child: Swiper(
-                    physics: cards.isEmpty
-                        ? const NeverScrollableScrollPhysics()
-                        : null,
-                    loop: false,
-                    allowImplicitScrolling: cards.isNotEmpty,
-                    itemCount: cards.length,
-                    onIndexChanged: (index) {
-                      _controller.onPageChanged(index, type);
-                      if (type == 'card') {
-                        _controller.visibleCard.value = cards[index].number;
-                      }
-                      for (BankCard card in cards) {
-                        if (_controller.cardFlipStates[card.number] == true) {
-                          _controller.toggleCardFlip(card.number);
-                        }
-                      }
-                    },
-                    itemBuilder: (context, index) {
-                      final card = cards[index];
-                      return Center(
-                        child: SizedBox(
-                          width: cardWidth,
-                          child: TweenAnimationBuilder<double>(
-                            duration: const Duration(milliseconds: 100),
-                            tween: Tween<double>(
-                              begin: 0.0,
-                              end: _getCurrentPage(type, index) ? 4 : 0,
-                            ),
-                            builder: (context, elevation, child) {
-                              return Material(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final target = constraints.maxWidth * 0.85;
+                  final cardWidth = target > 420 ? 420.0 : target;
+                  final cardHeight = cardWidth / 1.586;
+                  return SizedBox(
+                    height: cardHeight + 20,
+                    child: Swiper(
+                      loop: false,
+                      allowImplicitScrolling: true,
+                      itemCount: cards.length,
+                      onIndexChanged: (index) =>
+                          _onPageChanged(index, cards, type),
+                      itemBuilder: (context, index) {
+                        final card = cards[index];
+                        return Center(
+                          child: SizedBox(
+                            width: cardWidth,
+                            child: TweenAnimationBuilder<double>(
+                              duration: const Duration(milliseconds: 100),
+                              tween: Tween<double>(
+                                begin: 0,
+                                end: _getCurrentPage(type, index) ? 4 : 0,
+                              ),
+                              builder: (context, elevation, child) => Material(
                                 elevation: elevation,
-                                shadowColor:
-                                    Colors.black.withValues(alpha: 0.5),
+                                shadowColor: Colors.black.withValues(
+                                  alpha: 0.5,
+                                ),
                                 borderRadius: BorderRadius.circular(16),
                                 child: _buildBankCard(
                                   context: context,
                                   card: card,
-                                  onCardTap: () {
-                                    _controller._state
-                                        .setTargetArguments({'extra': card});
-                                    Get.toNamed('/cardDetails');
-                                  },
-                                  onCardLongPress: onCardLongPress,
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    layout: SwiperLayout.TINDER,
-                    itemWidth: cardWidth,
-                    itemHeight: cardHeight,
-                    scale: 0.5,
-                    viewportFraction: 0.5,
-                    curve: Curves.easeInOut,
-                    duration: 400,
-                  ),
-                );
-              }),
+                        );
+                      },
+                      layout: SwiperLayout.TINDER,
+                      itemWidth: cardWidth,
+                      itemHeight: cardHeight,
+                      scale: 0.5,
+                      viewportFraction: 0.5,
+                      curve: Curves.easeInOut,
+                      duration: 400,
+                    ),
+                  );
+                },
+              ),
             ),
-          ],
           child ?? const SizedBox.shrink(),
         ],
       ),

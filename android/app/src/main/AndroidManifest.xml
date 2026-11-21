@@ -16,7 +16,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:enableOnBackInvokedCallback="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -30,7 +30,22 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Firebase email-verification App Link (handleCodeInApp: true).
+                 Firebase provisions the assetlinks file for its default host. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https"
+                      android:host="tarlan-bank.firebaseapp.com"
+                      android:pathPrefix="/__/auth/links"/>
+            </intent-filter>
         </activity>
+        <!-- We handle links with app_links, not Flutter's router forwarding
+             (GetX Nav2 would otherwise show "Route not found" for the URI). -->
+        <meta-data
+            android:name="flutter_deep_linking_enabled"
+            android:value="false" />
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

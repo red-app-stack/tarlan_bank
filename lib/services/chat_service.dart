@@ -20,7 +20,7 @@ class ChatServiceException implements Exception {
 
 class ChatService {
   final DioManager _dio;
-  const ChatService({required DioManager dio}) : _dio = dio;
+  const ChatService({required this._dio});
 
   Future<void> warmup() async {
     ResponseBody body;
@@ -40,40 +40,40 @@ class ChatService {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(
-      (line) {
-        if (!line.startsWith('data: ')) return;
-        final jsonStr = line.substring(6).trim();
-        if (jsonStr.isEmpty) return;
+          (line) {
+            if (!line.startsWith('data: ')) return;
+            final jsonStr = line.substring(6).trim();
+            if (jsonStr.isEmpty) return;
 
-        Map<String, dynamic> event;
-        try {
-          event = json.decode(jsonStr) as Map<String, dynamic>;
-        } catch (_) {
-          return;
-        }
-
-        switch (event['type'] as String?) {
-          case 'done':
-            if (!completer.isCompleted) completer.complete();
-          case 'error':
-            final msg = (event['message'] as String?) ?? 'Warmup failed';
-            if (!completer.isCompleted) {
-              completer.completeError(ChatServiceException(message: msg));
+            Map<String, dynamic> event;
+            try {
+              event = json.decode(jsonStr) as Map<String, dynamic>;
+            } catch (_) {
+              return;
             }
-        }
-      },
-      onError: (Object err) {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            ChatServiceException(message: err.toString()),
-          );
-        }
-      },
-      onDone: () {
-        if (!completer.isCompleted) completer.complete();
-      },
-      cancelOnError: true,
-    );
+
+            switch (event['type'] as String?) {
+              case 'done':
+                if (!completer.isCompleted) completer.complete();
+              case 'error':
+                final msg = (event['message'] as String?) ?? 'Warmup failed';
+                if (!completer.isCompleted) {
+                  completer.completeError(ChatServiceException(message: msg));
+                }
+            }
+          },
+          onError: (Object err) {
+            if (!completer.isCompleted) {
+              completer.completeError(
+                ChatServiceException(message: err.toString()),
+              );
+            }
+          },
+          onDone: () {
+            if (!completer.isCompleted) completer.complete();
+          },
+          cancelOnError: true,
+        );
 
     try {
       await completer.future;
@@ -108,55 +108,56 @@ class ChatService {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(
-      (line) {
-        if (!line.startsWith('data: ')) return;
-        final jsonStr = line.substring(6).trim();
-        if (jsonStr.isEmpty) return;
+          (line) {
+            if (!line.startsWith('data: ')) return;
+            final jsonStr = line.substring(6).trim();
+            if (jsonStr.isEmpty) return;
 
-        Map<String, dynamic> event;
-        try {
-          event = json.decode(jsonStr) as Map<String, dynamic>;
-        } catch (_) {
-          return;
-        }
-
-        final type = event['type'] as String?;
-
-        switch (type) {
-          case 'chunk':
-            final chunk = (event['text'] as String?) ?? '';
-            if (chunk.isNotEmpty) {
-              fullText.write(chunk);
-              onChunk?.call(chunk);
+            Map<String, dynamic> event;
+            try {
+              event = json.decode(jsonStr) as Map<String, dynamic>;
+            } catch (_) {
+              return;
             }
 
-          case 'done':
-            final finalText = (event['text'] as String?) ?? fullText.toString();
+            final type = event['type'] as String?;
+
+            switch (type) {
+              case 'chunk':
+                final chunk = (event['text'] as String?) ?? '';
+                if (chunk.isNotEmpty) {
+                  fullText.write(chunk);
+                  onChunk?.call(chunk);
+                }
+
+              case 'done':
+                final finalText =
+                    (event['text'] as String?) ?? fullText.toString();
+                if (!completer.isCompleted) {
+                  completer.complete(finalText.trim());
+                }
+
+              case 'error':
+                final msg = (event['message'] as String?) ?? 'Unknown error';
+                if (!completer.isCompleted) {
+                  completer.completeError(ChatServiceException(message: msg));
+                }
+            }
+          },
+          onError: (Object err) {
             if (!completer.isCompleted) {
-              completer.complete(finalText.trim());
+              completer.completeError(
+                ChatServiceException(message: err.toString()),
+              );
             }
-
-          case 'error':
-            final msg = (event['message'] as String?) ?? 'Unknown error';
+          },
+          onDone: () {
             if (!completer.isCompleted) {
-              completer.completeError(ChatServiceException(message: msg));
+              completer.complete(fullText.toString().trim());
             }
-        }
-      },
-      onError: (Object err) {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            ChatServiceException(message: err.toString()),
-          );
-        }
-      },
-      onDone: () {
-        if (!completer.isCompleted) {
-          completer.complete(fullText.toString().trim());
-        }
-      },
-      cancelOnError: true,
-    );
+          },
+          cancelOnError: true,
+        );
 
     try {
       return await completer.future;

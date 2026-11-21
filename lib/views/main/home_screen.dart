@@ -6,7 +6,7 @@ import 'package:tarlan_bank/core/router/app_navigation.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/features/exchange/providers/exchange_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
-import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/views/shared/currency_rates_card.dart';
 import 'package:tarlan_bank/views/shared/service_item.dart';
 

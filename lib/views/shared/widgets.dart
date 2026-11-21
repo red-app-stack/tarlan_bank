@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+
 import '../../utils/themes/theme_extension.dart';
 import 'formatters.dart';
 
@@ -30,10 +31,10 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-        kToolbarHeight +
-            (bottom?.preferredSize.height ?? 0) +
-            (floating ? _floatingGap * 2 : 8),
-      );
+    kToolbarHeight +
+        (bottom?.preferredSize.height ?? 0) +
+        (floating ? _floatingGap * 2 : 8),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -69,9 +70,7 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return ClipRRect(
       borderRadius: floating
-          ? BorderRadius.all(
-              Radius.circular(24),
-            )
+          ? BorderRadius.all(Radius.circular(24))
           : const BorderRadius.only(
               bottomLeft: Radius.circular(24),
               bottomRight: Radius.circular(24),
@@ -136,13 +135,16 @@ Widget buildTextInput(
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(30),
               borderSide: BorderSide(
-                  width: 1.5, color: Theme.of(context).colorScheme.outline),
+                width: 1.5,
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(30),
               borderSide: BorderSide(
-                  width: 2.0,
-                  color: Theme.of(context).colorScheme.inverseSurface),
+                width: 2.0,
+                color: Theme.of(context).colorScheme.inverseSurface,
+              ),
             ),
             // Use a suffixIcon based on the iconType
             suffixIcon: _buildSuffixIcon(
@@ -171,8 +173,9 @@ Widget buildTextInput(
           focusNode: currentFocus,
           enabled: enabled,
           inputFormatters: inputFormatters,
-          textInputAction:
-              nextFocus != null ? TextInputAction.next : TextInputAction.done,
+          textInputAction: nextFocus != null
+              ? TextInputAction.next
+              : TextInputAction.done,
           onEditingComplete: () {
             if (nextFocus != null) {
               FocusScope.of(context).requestFocus(nextFocus);
@@ -186,31 +189,36 @@ Widget buildTextInput(
   );
 }
 
-Widget buildUserAvatar(ThemeData theme, String? userName,
-    {double? radius = 24}) {
+Widget buildUserAvatar(
+  ThemeData theme,
+  String? userName, {
+  double? radius = 24,
+}) {
   return CircleAvatar(
     radius: radius,
     backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-    child: Text(getInitials(userName ?? ''),
-        style: radius == 16
-            ? theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              )
-            : radius == 24
-                ? theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  )
-                : radius == 48
-                    ? theme.textTheme.headlineMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      )
-                    : theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      )),
+    child: Text(
+      getInitials(userName ?? ''),
+      style: radius == 16
+          ? theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            )
+          : radius == 24
+          ? theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            )
+          : radius == 48
+          ? theme.textTheme.headlineMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            )
+          : theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+    ),
   );
 }
 
@@ -227,8 +235,12 @@ List<String> _getAutofillHints(String iconType) {
   }
 }
 
-Widget? _buildSuffixIcon(String iconType, bool activeIcon, BuildContext context,
-    {required VoidCallback onPressed}) {
+Widget? _buildSuffixIcon(
+  String iconType,
+  bool activeIcon,
+  BuildContext context, {
+  required VoidCallback onPressed,
+}) {
   switch (iconType) {
     case 'password':
       return IconButton(
@@ -248,25 +260,21 @@ Widget? _buildSuffixIcon(String iconType, bool activeIcon, BuildContext context,
       );
     case 'edit':
       return IconButton(
-        icon: Icon(
-          Icons.edit,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+        icon: Icon(Icons.edit, color: Theme.of(context).colorScheme.onSurface),
         onPressed: onPressed,
       );
     case 'email':
       return IconButton(
-        icon: Icon(
-          Icons.email,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+        icon: Icon(Icons.email, color: Theme.of(context).colorScheme.onSurface),
         onPressed: onPressed,
       );
     case 'delete':
       return activeIcon
           ? IconButton(
-              icon: Icon(Icons.delete,
-                  color: Theme.of(context).colorScheme.error),
+              icon: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+              ),
               onPressed: onPressed,
             )
           : IconButton(
@@ -286,18 +294,12 @@ Widget? _buildSuffixIcon(String iconType, bool activeIcon, BuildContext context,
       );
     case 'clear':
       return IconButton(
-        icon: Icon(
-          Icons.clear,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+        icon: Icon(Icons.clear, color: Theme.of(context).colorScheme.onSurface),
         onPressed: onPressed,
       );
     case 'check':
       return IconButton(
-        icon: Icon(
-          Icons.check,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        icon: Icon(Icons.check, color: Theme.of(context).colorScheme.primary),
         onPressed: onPressed,
       );
     case 'dropdown':
@@ -326,18 +328,12 @@ Widget? _buildSuffixIcon(String iconType, bool activeIcon, BuildContext context,
       );
     case 'mic':
       return IconButton(
-        icon: Icon(
-          Icons.mic,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+        icon: Icon(Icons.mic, color: Theme.of(context).colorScheme.onSurface),
         onPressed: onPressed,
       );
     case 'send':
       return IconButton(
-        icon: Icon(
-          Icons.send,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
         onPressed: onPressed,
       );
     case 'calendar':
@@ -354,8 +350,12 @@ Widget? _buildSuffixIcon(String iconType, bool activeIcon, BuildContext context,
   }
 }
 
-Widget buildSignInText(String text, String actionText, BuildContext context,
-    VoidCallback onSignInPressed) {
+Widget buildSignInText(
+  String text,
+  String actionText,
+  BuildContext context,
+  VoidCallback onSignInPressed,
+) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
@@ -365,9 +365,9 @@ Widget buildSignInText(String text, String actionText, BuildContext context,
         child: Text(
           actionText,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-              ),
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+          ),
         ),
       ),
     ],
@@ -392,15 +392,9 @@ Widget buildBackground(BuildContext context) {
 Widget fakeHero({required String tag, required Widget child}) {
   return Hero(
     tag: tag,
-    child: Material(
-      color: Colors.transparent,
-      child: child,
-    ),
-    flightShuttleBuilder: (_, __, ___, ____, _____) {
-      return Material(
-        color: Colors.transparent,
-        child: child,
-      );
+    child: Material(color: Colors.transparent, child: child),
+    flightShuttleBuilder: (_, _, _, _, _) {
+      return Material(color: Colors.transparent, child: child);
     },
   );
 }
@@ -435,19 +429,20 @@ PreferredSizeWidget buildHeader(BuildContext context, String label) {
   return FrostedAppBar(
     floating: true,
     leading: IconButton(
-        icon: SvgPicture.asset(
-          'assets/icons/ic_back.svg',
-          width: 36,
-          height: 36,
-          colorFilter: ColorFilter.mode(
-            Theme.of(context).colorScheme.primary,
-            BlendMode.srcIn,
-          ),
+      icon: SvgPicture.asset(
+        'assets/icons/ic_back.svg',
+        width: 36,
+        height: 36,
+        colorFilter: ColorFilter.mode(
+          Theme.of(context).colorScheme.primary,
+          BlendMode.srcIn,
         ),
-        onPressed: () {
-          FocusScope.of(context).unfocus();
-          Navigator.of(context).pop();
-        }),
+      ),
+      onPressed: () {
+        FocusScope.of(context).unfocus();
+        Navigator.of(context).pop();
+      },
+    ),
     title: Text(
       label,
       style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 20),

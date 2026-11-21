@@ -64,6 +64,11 @@ class StubAuthRepository implements AuthRepository {
   Future<bool> refreshEmailVerification() async => false;
 
   @override
+  Future<void> applyEmailActionCode(String code) async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
   Future<void> logout() async {}
 
   @override

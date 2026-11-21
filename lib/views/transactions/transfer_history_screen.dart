@@ -1,270 +1,202 @@
-import 'dart:async';
-import 'package:tarlan_bank/views/shared/custom_card.dart';
-import 'package:tarlan_bank/views/shared/history_base.dart';
-import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../../models/transaction_model.dart';
 
-class TransferHistoryController extends GetxController {
-  void refreshData(GlobalKey<RefreshIndicatorState> refreshKey) {
-    print('Starting refresh delay...');
-    Future.delayed(const Duration(seconds: 5), () {
-      print('Delay complete, showing refresh indicator');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        refreshKey.currentState?.show();
-        print('Refresh indicator shown');
-      });
-    });
-  }
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
+import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/views/shared/custom_card.dart';
+import 'package:tarlan_bank/views/shared/history_base.dart';
 
-  final HistoryBaseController history = Get.put(HistoryBaseController());
-  TransferHistoryController();
+import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
+
+class TransferHistoryScreen extends ConsumerStatefulWidget {
+  const TransferHistoryScreen({super.key});
 
   @override
-  void onInit() async {
-    super.onInit();
-    history.updatePeriod('За неделю');
-    await history.loadAndCategorize(
-        start: DateTime.now().subtract(const Duration(days: 7)),
-        end: DateTime.now());
-  }
-
-  // void updatePeriod(String period) {
-  //   selectedPeriod.value = period;
-  //   final now = DateTime.now();
-  //   DateTime? startDate;
-  //   DateTime? endDate = now;
-  //   String formatDate(DateTime date) {
-  //     const months = [
-  //       'января',
-  //       'февраля',
-  //       'марта',
-  //       'апреля',
-  //       'мая',
-  //       'июня',
-  //       'июля',
-  //       'августа',
-  //       'сентября',
-  //       'октября',
-  //       'ноября',
-  //       'декабря'
-  //     ];
-  //     String yearSuffix =
-  //         date.year != now.year ? " '${date.year.toString().substring(2)}" : "";
-  //     return "${date.day} ${months[date.month - 1]}$yearSuffix";
-  //   }
-  //   switch (selectedPeriod.value) {
-  //     case 'За неделю':
-  //       startDate = now.subtract(const Duration(days: 7));
-  //       break;
-  //     case 'За месяц':
-  //       startDate = now.subtract(const Duration(days: 30));
-  //       break;
-  //     case 'За 3 месяца':
-  //       startDate = now.subtract(const Duration(days: 90));
-  //       break;
-  //     case 'Выбранный период':
-  //       if (selectedDateRange.value != null) {
-  //         startDate = selectedDateRange.value!.start;
-  //         endDate = selectedDateRange.value!.end
-  //             .add(Duration(days: 1))
-  //             .subtract(Duration(microseconds: 1));
-  //         print(endDate);
-  //       }
-  //       break;
-  //   }
-  //   if (startDate != null) {
-  //     selectedPeriodDetail.value = startDate.day == endDate.day
-  //         ? formatDate(startDate)
-  //         : "${formatDate(startDate)} - ${formatDate(endDate)}";
-  //   }
-  //   loadTransactions(startDate, endDate);
-  // }
+  ConsumerState<TransferHistoryScreen> createState() =>
+      _TransferHistoryScreenState();
 }
 
-class TransferHistoryScreen extends StatelessWidget {
-  final controller = Get.put(TransferHistoryController());
-
-  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+class _TransferHistoryScreenState extends ConsumerState<TransferHistoryScreen> {
+  final GlobalKey<RefreshIndicatorState> refreshKey =
       GlobalKey<RefreshIndicatorState>();
+  late final HistoryBaseController history;
 
-  TransferHistoryScreen({super.key});
+  @override
+  void initState() {
+    super.initState();
+    history = HistoryBaseController(
+      ref,
+      onChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
+    history.updatePeriod(periodWeek);
+    _load();
+  }
+
+  Future<void> _load() async {
+    final now = DateTime.now();
+    try {
+      await history.loadAndCategorize(
+        start: now.subtract(const Duration(days: 7)),
+        end: now,
+      );
+    } on Object {
+      // Keep the previous (possibly empty) state; no raw error is shown.
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    final now = DateTime.now();
+    DateTime? start;
+    switch (history.selectedPeriod) {
+      case periodWeek:
+        start = now.subtract(const Duration(days: 7));
+      case periodMonth:
+        start = now.subtract(const Duration(days: 30));
+      case periodThreeMonths:
+        start = now.subtract(const Duration(days: 90));
+      case periodCustom:
+        start = history.selectedDateRange?.start;
+    }
+    try {
+      await history.loadAndCategorize(start: start, end: now);
+    } on Object {
+      // Swallow only for UI resilience; cached list stays visible.
+    }
+  }
+
+  void _openDetails(BankTransaction tx) {
+    ref.read(selectedTransactionProvider.notifier).select(tx);
+    context.go(Routes.transfersDetails);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    controller.refreshData(_refreshIndicatorKey);
+    final transactions = history.visibleTransactions;
+
     return Scaffold(
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        appBar: FrostedAppBar(
-          floating: true,
-          leading: IconButton(
-              icon: SvgPicture.asset(
-                'assets/icons/ic_back.svg',
-                width: 36,
-                height: 36,
-                colorFilter: ColorFilter.mode(
-                  Theme.of(context).colorScheme.primary,
-                  BlendMode.srcIn,
-                ),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      appBar: buildTransferHeader(context, l.transferHistory),
+      body: RefreshIndicator(
+        edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
+        key: refreshKey,
+        onRefresh: _onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 56 + kToolbarHeight,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom,
               ),
-              onPressed: () {
-                FocusScope.of(context).unfocus();
-                Navigator.of(context).pop();
-              }),
-          title: Text(
-            'История переводов',
-            style:
-                Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 20),
+              child: Column(
+                spacing: 16,
+                children: [
+                  const SizedBox(),
+                  buildFilterCard(
+                    context,
+                    history.selectedPeriodDetail,
+                    () => showFilterBottomSheet(context, history),
+                  ),
+                  transactions.isEmpty
+                      ? buildEmptyState(theme, size, l.noTransfers)
+                      : _buildTransactionsList(context, l, transactions),
+                ],
+              ),
+            ),
           ),
         ),
-        body: RefreshIndicator(
-            edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
-            key: _refreshIndicatorKey,
-            onRefresh: () async {
-              try {
-                DateTime now = DateTime.now();
-                DateTime? start;
-                switch (controller.history.selectedPeriod.value) {
-                  case 'За неделю':
-                    start = now.subtract(const Duration(days: 7));
-                    break;
-                  case 'За месяц':
-                    start = now.subtract(const Duration(days: 30));
-                    break;
-                  case 'За 3 месяца':
-                    start = now.subtract(const Duration(days: 90));
-                    break;
-                  case 'Выбранный период':
-                    if (controller.history.selectedDateRange.value != null) {
-                      start = controller.history.selectedDateRange.value!.start;
-                    }
-                    break;
-                }
-
-                await controller.history
-                    .loadAndCategorize(start: start, end: now);
-                await Future.delayed(const Duration(milliseconds: 500));
-              } on TimeoutException {
-                print('Refresh operation timed out');
-              } catch (e) {
-                print('Error during refresh: $e');
-              }
-              return Future.value();
-            },
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0, vertical: 56 + kToolbarHeight),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom,
-                  ),
-                  child: Column(
-                    spacing: 16,
-                    children: [
-                      SizedBox(),
-                      buildFilterCard(
-                        context,
-                        controller.history.selectedPeriodDetail,
-                        () =>
-                            showFilterBottomSheet(context, controller.history),
-                      ),
-                      Obx(() => controller.history.accountsController
-                              .transactionHistory.isNotEmpty
-                          ? _buildTransactionsList(context)
-                          : buildEmptyState(
-                              theme,
-                              size,
-                              'Здесь будет отображаться \nистория ваших переводов',
-                            )),
-                    ],
-                  ),
-                ),
-              ),
-            )));
+      ),
+    );
   }
 
-  Widget _buildTransactionsList(BuildContext context) {
+  Widget _buildTransactionsList(
+    BuildContext context,
+    AppLocalizations l,
+    List<BankTransaction> transactions,
+  ) {
     final size = MediaQuery.of(context).size;
-    return Obx(() {
-      final categories =
-          controller.history.categorizedTransactions.keys.toList();
-      final transactions =
-          controller.history.categorizedTransactions[categories[0]] ?? [];
+    final now = DateTime.now();
+    final Map<String, List<BankTransaction>> byDate = {};
 
-      Map<String, List<Transaction>> transactionsByDate = {};
-      DateTime now = DateTime.now();
-      for (var transaction in transactions) {
-        String dateKey = (transaction.createdAt.year == now.year)
-            ? DateFormat('d MMMM', 'ru').format(transaction.createdAt)
-            : DateFormat('d MMMM y', 'ru').format(transaction.createdAt);
-        transactionsByDate.putIfAbsent(dateKey, () => []);
-        transactionsByDate[dateKey]!.add(transaction);
-      }
+    for (final tx in transactions) {
+      final created = tx.createdAt ?? now;
+      final key = created.year == now.year
+          ? DateFormat('d MMMM', 'ru').format(created)
+          : DateFormat('d MMMM y', 'ru').format(created);
+      byDate.putIfAbsent(key, () => []).add(tx);
+    }
 
-      final today = DateFormat('d MMMM', 'ru').format(now);
-      return transactions.isEmpty
-          ? Center(
-              child: Padding(
-                  padding: EdgeInsets.all(size.height * 0.03),
-                  child: SvgPicture.asset(
-                    'assets/icons/ic_empty_list.svg',
-                    height: size.width > size.height
-                        ? size.height * 0.3
-                        : size.width * 0.3,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).colorScheme.secondaryContainer,
-                      BlendMode.srcIn,
-                    ),
-                  )))
-          : ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: transactionsByDate.length,
-              itemBuilder: (context, index) {
-                String date = transactionsByDate.keys.elementAt(index);
-                List<Transaction> dayTransactions = transactionsByDate[date]!;
+    if (byDate.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(size.height * 0.03),
+          child: SvgPicture.asset(
+            'assets/icons/ic_empty_list.svg',
+            height: size.width > size.height
+                ? size.height * 0.3
+                : size.width * 0.3,
+            colorFilter: ColorFilter.mode(
+              Theme.of(context).colorScheme.secondaryContainer,
+              BlendMode.srcIn,
+            ),
+          ),
+        ),
+      );
+    }
 
-                return CustomCard(
-                  label: date == today ? 'Сегодня, $date' : date,
-                  labelStyle: Theme.of(context).textTheme.titleLarge,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 12,
-                    children: [
-                      ...dayTransactions.map((transaction) =>
-                          _buildTransactionContent(context, transaction)),
-                    ],
-                  ),
-                );
-              },
-            );
-    });
+    final today = DateFormat('d MMMM', 'ru').format(now);
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: byDate.length,
+      itemBuilder: (context, index) {
+        final date = byDate.keys.elementAt(index);
+        final dayTransactions = byDate[date]!;
+        return CustomCard(
+          label: date == today ? l.today(date) : date,
+          labelStyle: Theme.of(context).textTheme.titleLarge,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 12,
+            children: [
+              ...dayTransactions.map(
+                (tx) => _buildTransactionContent(context, tx),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  Widget _buildTransactionContent(
-      BuildContext context, Transaction transaction) {
+  Widget _buildTransactionContent(BuildContext context, BankTransaction tx) {
     return InkWell(
-        onTap: () {
-          Get.toNamed('/transferDetails', arguments: transaction);
-        },
-        splashColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-        highlightColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+      onTap: () => _openDetails(tx),
+      splashColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+      highlightColor: Theme.of(context).colorScheme.primary
+          .withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      customBorder: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: TransactionCard(tx: transaction));
+      ),
+      child: TransactionCard(tx: tx),
+    );
   }
 }

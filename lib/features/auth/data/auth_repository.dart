@@ -38,6 +38,10 @@ abstract interface class AuthRepository {
   /// Calls `reload()` and returns the refreshed `emailVerified` flag.
   Future<bool> refreshEmailVerification();
 
+  /// Applies an `oobCode` from a Firebase verification App Link, then reloads
+  /// the session so `emailVerified` is fresh.
+  Future<void> applyEmailActionCode(String code);
+
   Future<void> logout();
 
   Future<void> deleteAccount();

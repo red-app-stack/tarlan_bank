@@ -1,31 +1,31 @@
-import 'dart:async';
-import 'package:tarlan_bank/controllers/accounts_controller.dart';
-import 'package:tarlan_bank/models/transaction_model.dart';
-import 'package:tarlan_bank/models/user_model.dart';
-import 'package:tarlan_bank/services/user_repository.dart';
-import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:get/get.dart';
-import '../shared/custom_card.dart';
-import '../shared/list_item.dart';
-import '../shared/shared_classes.dart';
-import '../shared/widgets.dart';
 
-class ProfileScreen extends StatefulWidget {
+import 'package:tarlan_bank/core/providers/service_providers.dart';
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/transactions/data/transaction_model.dart'
+    show BankTransaction, TransactionType;
+import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/models/user_model.dart';
+import 'package:tarlan_bank/views/shared/custom_card.dart';
+import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/list_item.dart';
+import 'package:tarlan_bank/views/shared/shared_classes.dart';
+import 'package:tarlan_bank/views/shared/widgets.dart';
+
+/// Profile overview. All data comes from Riverpod providers; the router
+/// constructs this screen with no arguments; constructor params are optional.
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  final UserRepository _userRepo = Get.find<UserRepository>();
-  final AccountsController _accountsCtrl = Get.find<AccountsController>();
-
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   UserModel? _currentUser;
-  List<Transaction>? accountOperations;
-  List<Transaction>? transferOperations;
-  List<Transaction>? paymentOperations;
-  List<MenuSection> sections = [];
 
   @override
   void initState() {
@@ -34,256 +34,196 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
-    _currentUser = await _userRepo.retrieveLocalUser();
-    // await _accountsCtrl.fetchTransactionHistory(); call on refresh
+    final user = await ref.read(userRepositoryProvider).retrieveLocalUser();
+    if (!mounted) return;
+    setState(() => _currentUser = user);
+  }
 
-    // 2️⃣ If we have no locally stored user, use the first account as a placeholder
-    if (_currentUser == null && _accountsCtrl.accounts.isNotEmpty) {
-      final acc = _accountsCtrl.accounts.first;
-      _currentUser = UserModel(
-        id: acc.id,
-        email: '',
-        fullName: acc.fullName,
-        phoneNumber: acc.phoneNumber,
-        role: 'client',
-        isVerified: true,
-        createdAt: DateTime.now(),
-      );
-    }
-    final txs = _accountsCtrl.paymentHistory;
+  String _typeLabel(AppLocalizations l, TransactionType type) => switch (type) {
+    TransactionType.deposit => l.auTxDeposit,
+    TransactionType.withdrawal => l.auTxWithdrawal,
+    TransactionType.phoneTransfer => l.auTxPhoneTransfer,
+    TransactionType.qrTransfer => l.auTxQrTransfer,
+    TransactionType.currencyConversion => l.auTxCurrencyConversion,
+    TransactionType.internalTransfer => l.auTxInternalTransfer,
+    TransactionType.cardTransfer => l.auTxCardTransfer,
+    TransactionType.swiftTransfer => l.auTxSwiftTransfer,
+  };
 
-    accountOperations = txs.where((t) {
-      return [
+  String _description(AppLocalizations l, BankTransaction? tx, String empty) {
+    if (tx == null) return empty;
+    return '${_typeLabel(l, tx.type)} ${formatCurrency(tx.amount, tx.currency, 'RU')}';
+  }
+
+  List<MenuSection> _sections(AppLocalizations l, List<BankTransaction> txs) {
+    bool isOneOf(BankTransaction tx, Set<String> types) =>
+        types.contains(tx.type.wireName);
+
+    final accountOperations = txs.where(
+      (tx) => isOneOf(tx, {
         'deposit',
         'withdrawal',
         'currency_conversion',
-        'internal_transfer'
-      ].contains(t.type);
-    }).toList();
+        'internal_transfer',
+      }),
+    );
+    final transferOperations = txs.where(
+      (tx) =>
+          isOneOf(tx, {'phone_transfer', 'card_transfer', 'swift_transfer'}),
+    );
+    final paymentOperations = txs.where(
+      (tx) => tx.type.wireName == 'qr_transfer',
+    );
 
-    transferOperations = txs.where((t) {
-      return ['phone_transfer', 'card_transfer', 'swift_transfer']
-          .contains(t.type);
-    }).toList();
-
-    paymentOperations = txs.where((t) => t.type == 'payment_transfer').toList();
-
-    sections = [
+    return [
       MenuSection(
-        title: 'Мои уведомления',
+        title: l.auMyNotifications,
         items: [
-          _buildTransactionItem(),
-          _buildTransferItem(),
-          _buildPaymentItem(),
-          _buildSecurityItem(),
+          MenuItem(
+            icon: 'assets/icons/ic_transactions.svg',
+            title: l.auAccountOperations,
+            description: _description(
+              l,
+              accountOperations.isEmpty ? null : accountOperations.first,
+              l.auNoOperations,
+            ),
+            routeArg: Routes.transfersHistory,
+          ),
+          MenuItem(
+            icon: 'assets/icons/ic_transfers.svg',
+            title: l.navTransfers,
+            description: _description(
+              l,
+              transferOperations.isEmpty ? null : transferOperations.first,
+              l.auNoTransfers,
+            ),
+            routeArg: Routes.transfersHistory,
+          ),
+          MenuItem(
+            icon: 'assets/icons/ic_payments.svg',
+            title: l.navPayments,
+            description: _description(
+              l,
+              paymentOperations.isEmpty ? null : paymentOperations.first,
+              l.auNoPayments,
+            ),
+            routeArg: Routes.paymentsHistory,
+          ),
+          MenuItem(
+            icon: 'assets/icons/ic_security.svg',
+            title: l.securitySettings,
+            description: l.auSecurityTip,
+          ),
         ],
       ),
       MenuSection(
-        title: 'Настройки',
+        title: l.auSettingsTitle,
         items: [
           MenuItem(
-              icon: 'assets/icons/ic_notifications.svg', title: 'Уведомления'),
+            icon: 'assets/icons/ic_notifications.svg',
+            title: l.auNotificationsTitle,
+          ),
           MenuItem(
-              icon: 'assets/icons/ic_language.svg', title: 'Язык приложения'),
-          _buildPhoneNumberItem(),
+            icon: 'assets/icons/ic_language.svg',
+            title: l.auAppLanguage,
+          ),
           MenuItem(
-              icon: 'assets/icons/ic_phone.svg',
-              title: 'Переводы по номеру телефона'),
+            icon: 'assets/icons/ic_smartphone.svg',
+            title: '+7 ${formatPhone(_currentUser?.phoneNumber ?? '')}',
+            description: l.auTrustedPhone,
+          ),
+          MenuItem(
+            icon: 'assets/icons/ic_phone.svg',
+            title: l.auPhoneTransfers,
+          ),
         ],
       ),
     ];
-
-    setState(() {});
   }
 
-  MenuItem _buildTransactionItem() {
-    final tx =
-        accountOperations?.isNotEmpty == true ? accountOperations!.first : null;
-    return tx != null
-        ? MenuItem(
-            icon: 'assets/icons/ic_transactions.svg',
-            title: 'Операции по счетам',
-            description:
-                '${getTypeText(tx.type)} ${formatCurrency(tx.amount, tx.currency, 'RU')}',
-            routeArg: '/transferHistory',
-          )
-        : MenuItem(
-            icon: 'assets/icons/ic_transactions.svg',
-            title: 'Операции по счетам',
-            description: 'Пока нет операций',
-            routeArg: '/transferHistory',
-          );
-  }
-
-  MenuItem _buildTransferItem() {
-    final tx = transferOperations?.isNotEmpty == true
-        ? transferOperations!.first
-        : null;
-    return tx != null
-        ? MenuItem(
-            icon: 'assets/icons/ic_transfers.svg',
-            title: 'Переводы',
-            description:
-                '${getTypeText(tx.type)} ${formatCurrency(tx.amount, tx.currency, 'RU')}',
-            routeArg: '/transferHistory',
-            args: {'transaction': tx},
-          )
-        : MenuItem(
-            icon: 'assets/icons/ic_transfers.svg',
-            title: 'Переводы',
-            description: 'Пока нет переводов',
-            routeArg: '/transferHistory',
-            args: {});
-  }
-
-  MenuItem _buildPaymentItem() {
-    final tx =
-        paymentOperations?.isNotEmpty == true ? paymentOperations!.first : null;
-    return tx != null
-        ? MenuItem(
-            icon: 'assets/icons/ic_payments.svg',
-            title: 'Платежи',
-            description:
-                '${getTypeText(tx.type)} ${formatCurrency(tx.amount, tx.currency, 'RU')}',
-            routeArg: '/paymentHistory')
-        : MenuItem(
-            icon: 'assets/icons/ic_payments.svg',
-            title: 'Платежи',
-            description: 'Пока нет платежей',
-            routeArg: '/paymentHistory',
-            args: {'transaction': tx},
-          );
-  }
-
-  MenuItem _buildSecurityItem() => MenuItem(
-        icon: 'assets/icons/ic_security.svg',
-        title: 'Безопасность',
-        description:
-            'Не переходите по непроверенным ссылкам и не вводите свои личные данные на неизвестных сайтах. Мошенники могут использовать поддельные ссылки и страницы для кражи информации. Всегда проверяйте источник сообщений и убедитесь, что адрес веб-сайта принадлежит вашему банку. Помните: сотрудники банка никогда не будут запрашивать ваш пароль или код из SMS.',
-      );
-
-  MenuItem _buildPhoneNumberItem() => MenuItem(
-        icon: 'assets/icons/ic_smartphone.svg',
-        title: '+7 ${formatPhone(_currentUser?.phoneNumber ?? '')}',
-        description: 'Ваш доверенный номер',
-      );
-
-  bool showNotification(String icon) {
-    return switch (icon) {
-      'assets/icons/ic_transactions.svg' => false,
-      'assets/icons/ic_transfers.svg' => false,
-      'assets/icons/ic_payments.svg' => false,
-      'assets/icons/ic_security.svg' => false,
-      'assets/icons/ic_notifications.svg' => false,
-      'assets/icons/ic_language.svg' => false,
-      'assets/icons/ic_smartphone.svg' => false,
-      'assets/icons/ic_phone.svg' => false,
-      _ => false
-    };
-  }
-
-  void handeItemClick(String icon) {
-    switch (icon) {
-      case 'assets/icons/ic_notifications.svg':
-        break;
-      case 'assets/icons/ic_language.svg':
-        break;
-      case 'assets/icons/ic_smartphone.svg':
-        break;
-      case 'assets/icons/ic_phone.svg':
-        // print('CLICKED');
-        // _authController.checkAuthStatus();
-        break;
-      case 'assets/icons/ic_transactions.svg':
-        break;
-      case 'assets/icons/ic_transfers.svg':
-        break;
-      case 'assets/icons/ic_payments.svg':
-        break;
-      case 'assets/icons/ic_security.svg':
-        break;
-      default:
-        break;
-    }
-  }
+  bool showNotification(String icon) => false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final l = AppLocalizations.of(context);
+    final txsAsync = ref.watch(transactionsHistoryProvider(null));
+    final txs = txsAsync.value ?? const <BankTransaction>[];
+    final sections = _sections(l, txs);
 
     return Scaffold(
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        appBar: buildHeader(context, 'Профиль'),
-        body: SafeArea(
-          bottom: false,
-          top: false,
-          child: RefreshIndicator(
-            edgeOffset: MediaQuery.of(context).padding.top,
-            onRefresh: () async {
-              try {
-                await _accountsCtrl.fetchTransactionHistory();
-                await _loadProfileData();
-                await Future.delayed(const Duration(milliseconds: 500));
-              } on TimeoutException {
-                print('Refresh operation timed out');
-              } catch (e) {
-                print('Error during refresh: $e');
-              }
-              return Future.value();
-            },
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0, vertical: 56 + kToolbarHeight),
-                child: Column(
-                  spacing: 16,
-                  children: [
-                    SizedBox(
-                        width: size.width / 2,
-                        child: CustomCard(
-                            child: buildUserCard(
-                                _userRepo.currentUser?.fullName ?? '',
-                                theme,
-                                size))),
-                    ...sections.map((section) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CustomCard(
-                              padding: const EdgeInsets.symmetric(vertical: 0),
-                              topRowPadding: const EdgeInsets.only(
-                                  left: 16, right: 16, top: 16),
-                              label: section.title,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ...section.items.map((item) =>
-                                      ListItem.vertical(
-                                          svgPath: item.icon,
-                                          title: item.title,
-                                          subtitle: item.description,
-                                          showNotification:
-                                              showNotification(item.icon),
-                                          onTap: item.routeArg is String
-                                              ? () {
-                                                  Get.offNamed(item.routeArg!);
-                                                }
-                                              : () {}))
-                                ],
-                              ),
-                            ),
-                          ],
-                        )),
-                    SizedBox(
-                      height: 48,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      appBar: buildHeader(context, l.auProfileTitle),
+      body: SafeArea(
+        bottom: false,
+        top: false,
+        child: RefreshIndicator(
+          edgeOffset: MediaQuery.of(context).padding.top,
+          onRefresh: () async {
+            ref.invalidate(transactionsHistoryProvider(null));
+            await _loadProfileData();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 56 + kToolbarHeight,
+              ),
+              child: Column(
+                spacing: 16,
+                children: [
+                  SizedBox(
+                    width: size.width / 2,
+                    child: CustomCard(
+                      child: buildUserCard(
+                        _currentUser?.fullName ?? '',
+                        theme,
+                        size,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  ...sections.map(
+                    (section) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomCard(
+                          padding: const EdgeInsets.symmetric(vertical: 0),
+                          topRowPadding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            top: 16,
+                          ),
+                          label: section.title,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...section.items.map(
+                                (item) => ListItem.vertical(
+                                  svgPath: item.icon,
+                                  title: item.title,
+                                  subtitle: item.description,
+                                  showNotification: showNotification(item.icon),
+                                  onTap: item.routeArg is String
+                                      ? () => context.go(item.routeArg!)
+                                      : () {},
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                ],
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }

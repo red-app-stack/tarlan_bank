@@ -312,4 +312,640 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hidePassword => 'Hide password';
+
+  @override
+  String get openApp => 'Open app';
+
+  @override
+  String get navPayments => 'Payments';
+
+  @override
+  String get navTransfers => 'Transfers';
+
+  @override
+  String get navAccounts => 'Accounts';
+
+  @override
+  String get navMenu => 'Menu';
+
+  @override
+  String get searchHint => 'Search…';
+
+  @override
+  String get transferByAccount => 'By account number';
+
+  @override
+  String get conversion => 'Conversion';
+
+  @override
+  String get mobileTransfer => 'Mobile transfer';
+
+  @override
+  String get qrTransfer => 'QR transfer';
+
+  @override
+  String get ownAccounts => 'Between my accounts';
+
+  @override
+  String get receipt => 'Receipt';
+
+  @override
+  String get transferHistory => 'Transfer history';
+
+  @override
+  String get from => 'From';
+
+  @override
+  String get to => 'To';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String get recipientAccountNumber => 'Recipient account number';
+
+  @override
+  String get enterPhoneNumber => 'Enter phone number';
+
+  @override
+  String get recipient => 'Recipient';
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get messageHint => 'Message to recipient';
+
+  @override
+  String get scan => 'Scan';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get createQrCode => 'Create QR code';
+
+  @override
+  String get qrHint =>
+      'If you don\'t specify an amount, the sender can enter it when scanning your QR code';
+
+  @override
+  String get transferVerb => 'Transfer';
+
+  @override
+  String get errorSelectCard => 'Please select a card';
+
+  @override
+  String get errorEnterAmount => 'Please enter an amount';
+
+  @override
+  String get errorEnterAccount => 'Please enter a valid account number';
+
+  @override
+  String get errorEnterPhone => 'Please enter a phone number';
+
+  @override
+  String get recipientNotFound => 'Recipient not found';
+
+  @override
+  String get transferSuccess => 'Transfer completed successfully';
+
+  @override
+  String get transferFailed => 'Transfer failed';
+
+  @override
+  String get noAccounts => 'You have no available accounts';
+
+  @override
+  String get noTransfers => 'Your transfer history will appear here';
+
+  @override
+  String today(String date) {
+    return 'Today, $date';
+  }
+
+  @override
+  String get week => 'Last week';
+
+  @override
+  String get month => 'Last month';
+
+  @override
+  String get threeMonths => 'Last 3 months';
+
+  @override
+  String get customPeriod => 'Selected period';
+
+  @override
+  String get calendarPeriod => 'Pick a period in calendar';
+
+  @override
+  String get selectPeriod => 'Select period';
+
+  @override
+  String get choose => 'Choose';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get repeat => 'Repeat';
+
+  @override
+  String get cancelTransfer => 'Cancel';
+
+  @override
+  String get addToFavorites => 'Add to favorites';
+
+  @override
+  String get removeFromFavorites => 'Remove from favorites';
+
+  @override
+  String get transactionType => 'Transaction type';
+
+  @override
+  String get transactionId => 'Transaction ID';
+
+  @override
+  String get dateTime => 'Date and time';
+
+  @override
+  String get commission => 'Commission';
+
+  @override
+  String get sender => 'Sender';
+
+  @override
+  String get senderAccount => 'Sender account';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String statusCompleted(String type) {
+    return '$type completed successfully';
+  }
+
+  @override
+  String statusPending(String type) {
+    return '$type is being processed';
+  }
+
+  @override
+  String statusFailed(String type) {
+    return '$type failed';
+  }
+
+  @override
+  String get typeDeposit => 'Deposit';
+
+  @override
+  String get typeWithdrawal => 'Withdrawal';
+
+  @override
+  String get typePhoneTransfer => 'Phone transfer';
+
+  @override
+  String get typeQrTransfer => 'QR transfer';
+
+  @override
+  String get typeCurrencyConversion => 'Currency exchange';
+
+  @override
+  String get typeInternalTransfer => 'Internal transfer';
+
+  @override
+  String get typeCardTransfer => 'Card transfer';
+
+  @override
+  String get typeSwiftTransfer => 'SWIFT transfer';
+
+  @override
+  String get typeTransfer => 'Transfer';
+
+  @override
+  String get noTransaction => 'No transaction selected';
+
+  @override
+  String get accountCurrent => 'Current';
+
+  @override
+  String get accountDeposit => 'Deposit';
+
+  @override
+  String get accountCredit => 'Credit';
+
+  @override
+  String get auSettingsTitle => 'Settings';
+
+  @override
+  String get auSettingsThemeTitle => 'App theme';
+
+  @override
+  String get auSettingsThemeSubtitle => 'Choose light, dark, or system theme';
+
+  @override
+  String get auThemeSystem => 'System';
+
+  @override
+  String get auThemeLight => 'Light';
+
+  @override
+  String get auThemeDark => 'Dark';
+
+  @override
+  String get auSettingsQuickToggleTitle => 'Quick theme switch';
+
+  @override
+  String get auSettingsQuickToggleSubtitle =>
+      'Tap to switch between light and dark';
+
+  @override
+  String get auCodeCreateTitle => 'Create an access code';
+
+  @override
+  String get auCodeRepeatTitle => 'Repeat the access code';
+
+  @override
+  String get auCodeEnterTitle => 'Enter the access code';
+
+  @override
+  String get auCodeResetButton => 'Reset access code';
+
+  @override
+  String get auCodeForgotButton => 'Forgot access code?';
+
+  @override
+  String get auBiometricAuthTitle => 'Biometric authentication';
+
+  @override
+  String get auBiometricAuthBody =>
+      'Do you want to use biometric authentication?';
+
+  @override
+  String get auBiometricSignInReason => 'Use Touch ID to sign in to the app';
+
+  @override
+  String get auBiometricSignInTitle => 'Sign in to the app';
+
+  @override
+  String get auBiometricFallbackTitle => 'Biometric authentication';
+
+  @override
+  String get auBiometricNotSupported =>
+      'Touch ID is not supported on this device';
+
+  @override
+  String get auBiometricUnavailable => 'Touch ID is unavailable';
+
+  @override
+  String get auWrongAccessCode => 'Incorrect access code';
+
+  @override
+  String get auMessageTitle => 'Message';
+
+  @override
+  String get auYes => 'Yes';
+
+  @override
+  String get auNo => 'No';
+
+  @override
+  String get auVerificationTitle => 'Enter confirmation code';
+
+  @override
+  String get auVerificationCodeLabel => 'Confirmation code';
+
+  @override
+  String get auVerificationCodeHint => '000000';
+
+  @override
+  String get auVerificationSendFailed => 'Failed to send the code';
+
+  @override
+  String get auVerificationCodeLengthInvalid => 'Code must be 6 digits';
+
+  @override
+  String get auVerificationInvalidCode => 'Invalid code';
+
+  @override
+  String get auVerificationCheckFailed =>
+      'Failed to verify the code. Please try again';
+
+  @override
+  String get auChangePassword => 'Change password';
+
+  @override
+  String get auLinkedAccounts => 'Linked accounts';
+
+  @override
+  String get auChangeAccessCode => 'Change access code';
+
+  @override
+  String get auAuthorizationTitle => 'Authorization';
+
+  @override
+  String get auBiometricLoginDesc => 'Sign in to the app with biometrics';
+
+  @override
+  String get auScreenProtectionTitle => 'Screen recording protection';
+
+  @override
+  String get auScreenProtectionDesc => 'Screenshots and screen recording';
+
+  @override
+  String get auBiometricOperationsTitle => 'Biometric operations';
+
+  @override
+  String get auBiometricOperationsDesc => 'Confirming transfers';
+
+  @override
+  String get auDeleteAccountRequest => 'Request account deletion';
+
+  @override
+  String get auBiometricUnavailableDevice =>
+      'Biometrics are not available on this device';
+
+  @override
+  String get auBiometricAuthRequired => 'Biometric confirmation required';
+
+  @override
+  String get auBiometricChangeHint => 'Changing requires authorization';
+
+  @override
+  String get auEmailConfirmationRequired => 'Email confirmation required';
+
+  @override
+  String get auConfirmationRequired => 'Confirmation required';
+
+  @override
+  String get auDeleteConfirmHint => 'Confirm account deletion.';
+
+  @override
+  String get auProfileTitle => 'Profile';
+
+  @override
+  String get auMyNotifications => 'My notifications';
+
+  @override
+  String get auNotificationsTitle => 'Notifications';
+
+  @override
+  String get auAppLanguage => 'App language';
+
+  @override
+  String get auPhoneTransfers => 'Phone transfers';
+
+  @override
+  String get auAccountOperations => 'Account operations';
+
+  @override
+  String get auNoOperations => 'No operations yet';
+
+  @override
+  String get auNoTransfers => 'No transfers yet';
+
+  @override
+  String get auNoPayments => 'No payments yet';
+
+  @override
+  String get auTrustedPhone => 'Your trusted number';
+
+  @override
+  String get auSecurityTip =>
+      'Do not follow unverified links and do not enter your personal data on unknown websites. Scammers may use fake links and pages to steal information. Always check the source of messages and make sure the website address belongs to your bank. Remember: bank employees will never ask for your password or an SMS code.';
+
+  @override
+  String get auTxDeposit => 'Deposit';
+
+  @override
+  String get auTxWithdrawal => 'Withdrawal';
+
+  @override
+  String get auTxPhoneTransfer => 'Phone transfer';
+
+  @override
+  String get auTxQrTransfer => 'QR transfer';
+
+  @override
+  String get auTxCurrencyConversion => 'Currency exchange';
+
+  @override
+  String get auTxInternalTransfer => 'Internal transfer';
+
+  @override
+  String get auTxCardTransfer => 'Card transfer';
+
+  @override
+  String get auTxSwiftTransfer => 'SWIFT transfer';
+
+  @override
+  String get auTxTransfer => 'Transfer';
+
+  @override
+  String get history => 'History';
+
+  @override
+  String get popular => 'Popular';
+
+  @override
+  String get favorites => 'Favorites';
+
+  @override
+  String get zhambylRegion => 'Zhambyl region';
+
+  @override
+  String get serviceMobile => 'Mobile';
+
+  @override
+  String get serviceInternet => 'Internet';
+
+  @override
+  String get serviceTransport => 'Transport';
+
+  @override
+  String get serviceUtilities => 'Utilities';
+
+  @override
+  String get openNewCard => 'Open a new card';
+
+  @override
+  String get creditCash => 'Get a cash loan';
+
+  @override
+  String get creditCashSubtitle => 'Online up to 7,000,000 KZT';
+
+  @override
+  String get openDepositSubtitle => 'At favorable terms';
+
+  @override
+  String get multiCurrency => 'Multi-currency';
+
+  @override
+  String get emptyAccounts => 'No accounts yet';
+
+  @override
+  String get transferByPhone => 'By phone number';
+
+  @override
+  String get transferByPhoneDesc => 'For individuals and businesses';
+
+  @override
+  String get transferBetweenOwn => 'Between my accounts';
+
+  @override
+  String get transferBetweenOwnDesc => 'Cards, accounts, deposits';
+
+  @override
+  String get transferKz => 'Within Kazakhstan';
+
+  @override
+  String get transferKzDesc => 'To a card or account number';
+
+  @override
+  String get transferInternational => 'International transfers';
+
+  @override
+  String get transferInternationalDesc => 'Anywhere in the world';
+
+  @override
+  String get conversionDesc => 'Currency exchange';
+
+  @override
+  String get bankQr => 'Bank QR';
+
+  @override
+  String get bankQrDesc => 'Create a QR to receive money';
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get cardDetails => 'Card details';
+
+  @override
+  String get cardDetailsEmpty => 'Card data is not available';
+
+  @override
+  String get totalBalance => 'Total balance';
+
+  @override
+  String get pendingAmount => 'Pending: 0.00 KZT';
+
+  @override
+  String get topUp => 'Top up';
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get withdraw => 'Withdraw';
+
+  @override
+  String get statement => 'Statement';
+
+  @override
+  String get incomeExpenses => 'Income and expenses';
+
+  @override
+  String get requisites => 'Bank details';
+
+  @override
+  String get accountNumbers => 'Account numbers';
+
+  @override
+  String get closeCard => 'Close card';
+
+  @override
+  String get renameCard => 'Rename card';
+
+  @override
+  String get manageSubscriptions => 'Manage subscriptions';
+
+  @override
+  String get orderCard => 'Order a card';
+
+  @override
+  String get setLimits => 'Set limits';
+
+  @override
+  String get getCertificate => 'Get a certificate';
+
+  @override
+  String get blocks => 'Blocks';
+
+  @override
+  String get cardSettings => 'Card settings';
+
+  @override
+  String get portfolioTenge => 'Portfolio in tenge';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get operations => 'Operations';
+
+  @override
+  String get paymentHistory => 'Payment history';
+
+  @override
+  String get paymentHistoryEmpty => 'Your payment history will appear here';
+
+  @override
+  String get periodWeek => 'Last week';
+
+  @override
+  String get periodMonth => 'Last month';
+
+  @override
+  String get period3Months => 'Last 3 months';
+
+  @override
+  String get periodCustom => 'Selected period';
+
+  @override
+  String get periodCalendar => 'Pick a period in calendar';
+
+  @override
+  String get choosePeriod => 'Choose a period';
+
+  @override
+  String get categoryThisWeek => 'This week';
+
+  @override
+  String get categoryThisMonth => 'This month';
+
+  @override
+  String get categoryEarlier => 'Earlier';
+
+  @override
+  String get txDeposit => 'Deposit';
+
+  @override
+  String get txWithdrawal => 'Withdrawal';
+
+  @override
+  String get txPhoneTransfer => 'Phone transfer';
+
+  @override
+  String get txQrTransfer => 'QR transfer';
+
+  @override
+  String get txConversion => 'Currency exchange';
+
+  @override
+  String get txInternalTransfer => 'Internal transfer';
+
+  @override
+  String get txCardTransfer => 'Card transfer';
+
+  @override
+  String get txSwiftTransfer => 'SWIFT transfer';
+
+  @override
+  String get txPayment => 'Payment';
+
+  @override
+  String get txOther => 'Transfer';
 }

@@ -35,10 +35,7 @@ class SimpleCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.all(Radius.circular(30)),
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
+        child: Padding(padding: padding, child: child),
       ),
     );
   }
@@ -99,18 +96,20 @@ class CustomCard extends StatelessWidget {
                       if (label != null) ...[
                         Padding(
                           padding: EdgeInsets.only(
-                              left: (startWidget != null ? 0 : 8.0)),
-                          child: Text(label!,
-                              style: labelStyle ??
-                                  theme.textTheme.labelLarge
-                                      ?.copyWith(fontSize: 16)),
+                            left: (startWidget != null ? 0 : 8.0),
+                          ),
+                          child: Text(
+                            label!,
+                            style:
+                                labelStyle ??
+                                theme.textTheme.labelLarge?.copyWith(
+                                  fontSize: 16,
+                                ),
+                          ),
                         ),
                       ],
-                      if (endWidget != null) endWidget!,
-                      if (endWidget == null)
-                        SizedBox(
-                          width: 8,
-                        ),
+                      ?endWidget,
+                      if (endWidget == null) SizedBox(width: 8),
                     ],
                   ),
                 ),

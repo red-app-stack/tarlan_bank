@@ -205,7 +205,15 @@ class FirebaseAuthRepository implements AuthRepository {
       // Default Firebase-hosted handler on tarlan-bank.firebaseapp.com.
       // No custom domain / ActionCodeSettings needed; Console template owns
       // the continue URL. Firebase rate-limits repeat sends server-side.
-      await user.sendEmailVerification();
+      await user.sendEmailVerification(
+        fb.ActionCodeSettings(
+          // Default Firebase Hosting domain is already authorized; NEVER set
+          // linkDomain to firebaseapp.com (Firebase rejects that).
+          url: 'https://tarlan-bank.firebaseapp.com/',
+          androidPackageName: 'com.tarlan.bank',
+          handleCodeInApp: true,
+        ),
+      );
     } catch (e) {
       throw mapFirebaseError(e);
     }
@@ -221,6 +229,16 @@ class FirebaseAuthRepository implements AuthRepository {
       throw mapFirebaseError(e);
     }
     return _auth.currentUser?.emailVerified ?? false;
+  }
+
+  @override
+  Future<void> applyEmailActionCode(String code) async {
+    try {
+      await _auth.applyActionCode(code);
+      await _auth.currentUser?.reload();
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
   }
 
   @override

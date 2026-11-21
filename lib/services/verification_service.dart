@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:tarlan_bank/services/dio_manager.dart';
 import 'package:dio/dio.dart' show DioException;
+
 import '../services/secure_store.dart';
+
 import 'package:crypto/crypto.dart';
 
 class VerificationService {
@@ -15,14 +18,15 @@ class VerificationService {
   final _countdownController = StreamController<int>.broadcast();
   Stream<int> get countdownStream => _countdownController.stream;
 
-  VerificationService(
-      {required DioManager dio, required SecureStore secureStore})
-      : _secureStore = secureStore,
-        _dio = dio;
+  VerificationService({required dio, required secureStore})
+    : _dio = dio,
+      _secureStore = secureStore;
 
   Future<void> sendCode(String email) async {
-    final resp =
-        await _dio.post('/auth/send-verification-code', data: {'email': email});
+    final resp = await _dio.post(
+      '/auth/send-verification-code',
+      data: {'email': email},
+    );
     if (resp.statusCode != 200) {
       throw DioException(requestOptions: resp.requestOptions);
     }
@@ -34,11 +38,10 @@ class VerificationService {
     bool exists,
   ) async {
     try {
-      final response = await _dio.post('/auth/verify-code', data: {
-        'code': code,
-        'email': email,
-        'exists': exists,
-      });
+      final response = await _dio.post(
+        '/auth/verify-code',
+        data: {'code': code, 'email': email, 'exists': exists},
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       if (e.response?.statusCode == 400) {

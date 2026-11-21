@@ -1,11 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'package:tarlan_bank/core/router/access_policy.dart';
+import 'package:tarlan_bank/core/router/app_navigation.dart'
+    show rootNavigatorKey;
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
-import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
 import 'package:tarlan_bank/views/auth/login_screen.dart';
-import 'package:tarlan_bank/views/main/main_screen.dart';
+import 'package:tarlan_bank/views/auth/verification_link_screen.dart';
+import 'package:tarlan_bank/views/main/home_screen.dart';
+import 'package:tarlan_bank/views/main/main_shell.dart';
+import 'package:tarlan_bank/views/main/menu_screen.dart';
+import 'package:tarlan_bank/views/main/accounts_screen.dart';
+import 'package:tarlan_bank/views/main/payments_screen.dart';
+import 'package:tarlan_bank/views/main/transfers_screen.dart';
 import 'package:tarlan_bank/views/other/card_details_screen.dart';
 import 'package:tarlan_bank/views/other/chatbot_screen.dart';
 import 'package:tarlan_bank/views/other/create_account_screen.dart';
@@ -20,23 +31,14 @@ import 'package:tarlan_bank/views/transactions/qr_transfer_screen.dart';
 import 'package:tarlan_bank/views/transactions/self_transfer_screen.dart';
 import 'package:tarlan_bank/views/transactions/transaction_details_screen.dart';
 import 'package:tarlan_bank/views/transactions/transfer_history_screen.dart';
-import 'package:material_ui/material_ui.dart';
 
-/// go_router skeleton (Week 1).
-///
-/// TRANSITIONAL: builders still point at the existing GetX screens, which read
-/// `Get.arguments` internally. Each is replaced by a migrated ConsumerWidget in
-/// Week 2. `MainScreen` keeps its internal bottom-nav for now; upgrading it to a
-/// proper `StatefulShellRoute` (kitaphub pattern) is a Week 2 task.
-///
-/// The auth `redirect` is the real win here: declarative guarding driven by
-/// [currentUserProvider], replacing GetX `AuthMiddleware`.
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthListenable();
-  ref.listen(authStateProvider, (previous, next) => notifier.notify());
+  ref.listen(authStateProvider, (_, _) => notifier.notify());
 
   final router = GoRouter(
-    initialLocation: Routes.main,
+    navigatorKey: rootNavigatorKey,
+    initialLocation: Routes.home,
     refreshListenable: notifier,
     debugLogDiagnostics: true,
     redirect: (context, state) {
@@ -49,82 +51,149 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: Routes.loading,
-        builder: (context, state) =>
+        builder: (_, _) =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
+      GoRoute(path: Routes.login, builder: (_, state) => const LoginPage()),
       GoRoute(
-        path: Routes.login,
-        builder: (context, state) => const LoginPage(),
+        path: Routes.verifyLink,
+        builder: (_, state) => const VerificationLinkScreen(),
+      ),
+      GoRoute(
+        path: Routes.verifyAction,
+        builder: (_, state) => const VerificationLinkScreen(),
       ),
       GoRoute(
         path: Routes.codeEntering,
-        builder: (context, state) => const CodeEnteringScreen(),
+        builder: (_, state) => const CodeEnteringScreen(),
       ),
-      GoRoute(
-        path: Routes.main,
-        builder: (context, state) => const MainScreen(),
-      ),
-      GoRoute(
-        path: Routes.chatbot,
-        builder: (context, state) => const ChatBotScreen(),
-      ),
-      GoRoute(
-        path: Routes.profile,
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: Routes.cardDetails,
-        builder: (context, state) => const CardDetailsScreen(),
-      ),
-      GoRoute(
-        path: Routes.createAccount,
-        builder: (context, state) => CreateAccountScreen(
-          accountType: state.uri.queryParameters['type'] ?? 'card',
-        ),
-      ),
-      GoRoute(
-        path: Routes.investments,
-        builder: (context, state) => InvestmentsScreen(),
-      ),
-      GoRoute(
-        path: Routes.securitySettings,
-        builder: (context, state) => const SecuritySettingsScreen(),
-      ),
-      GoRoute(
-        path: Routes.phoneTransfer,
-        builder: (context, state) => PhoneTransferScreen(),
-      ),
-      GoRoute(
-        path: Routes.cardTransfer,
-        builder: (context, state) => CardTransferScreen(),
-      ),
-      GoRoute(
-        path: Routes.selfTransfer,
-        builder: (context, state) => SelfTransferScreen(),
-      ),
-      GoRoute(
-        path: Routes.convertation,
-        builder: (context, state) => ConvertScreen(),
-      ),
-      GoRoute(
-        path: Routes.qrTransfer,
-        builder: (context, state) => QRTransferScreen(),
-      ),
-      GoRoute(
-        path: Routes.paymentHistory,
-        builder: (context, state) => PaymentHistoryScreen(),
-      ),
-      GoRoute(
-        path: Routes.transferHistory,
-        builder: (context, state) => TransferHistoryScreen(),
-      ),
-      GoRoute(
-        path: Routes.transferDetails,
-        builder: (context, state) => TransactionDetailsScreen(),
+      StatefulShellRoute(
+        builder: (context, state, navigationShell) =>
+            MainShell(navigationShell: navigationShell),
+        navigatorContainerBuilder: (context, navigationShell, children) =>
+            Stack(
+              children: List.generate(children.length, (index) {
+                return AnimatedOpacity(
+                  opacity: index == navigationShell.currentIndex ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: index != navigationShell.currentIndex,
+                    child: children[index],
+                  ),
+                );
+              }),
+            ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.payments,
+                builder: (_, state) => PaymentsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'history',
+                    builder: (_, state) => PaymentHistoryScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.transfers,
+                builder: (_, state) => TransfersScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'phone',
+                    builder: (_, state) => PhoneTransferScreen(),
+                  ),
+                  GoRoute(
+                    path: 'self',
+                    builder: (_, state) => SelfTransferScreen(),
+                  ),
+                  GoRoute(
+                    path: 'card',
+                    builder: (_, state) => CardTransferScreen(),
+                  ),
+                  GoRoute(
+                    path: 'convert',
+                    builder: (_, state) => ConvertScreen(),
+                  ),
+                  GoRoute(
+                    path: 'qr',
+                    builder: (_, state) => QRTransferScreen(),
+                  ),
+                  GoRoute(
+                    path: 'history',
+                    builder: (_, state) => TransferHistoryScreen(),
+                  ),
+                  GoRoute(
+                    path: 'details',
+                    builder: (_, state) => TransactionDetailsScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            preload: true,
+            routes: [
+              GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.accounts,
+                builder: (_, state) => AccountsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'create',
+                    builder: (_, state) => CreateAccountScreen(
+                      accountType: state.uri.queryParameters['type'] ?? 'card',
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'details',
+                    builder: (_, state) => CardDetailsScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: Routes.menu,
+                builder: (_, _) => const MenuScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'security',
+                    builder: (_, _) => const SecuritySettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'investments',
+                    builder: (_, _) => InvestmentsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'profile',
+                    builder: (_, _) => const ProfileScreen(),
+                  ),
+                  GoRoute(
+                    path: 'chatbot',
+                    builder: (_, _) => const ChatBotScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     ],
-    errorBuilder: (context, state) =>
-        Scaffold(body: Center(child: Text(state.error.toString()))),
+    errorBuilder: (context, state) => Scaffold(
+      body: Center(child: Text(AppLocalizations.of(context).errorGeneric)),
+    ),
   );
 
   ref.onDispose(router.dispose);

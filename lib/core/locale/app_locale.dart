@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Locale state, copied from kitaphub (polished, reused verbatim in shape):
 /// null = system locale, otherwise a persisted language code in prefs.
-/// `ref.watch(localeProvider)` is passed straight to GetMaterialApp/MaterialApp.
+/// `ref.watch(localeProvider)` is passed straight to MaterialApp.router.
 final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(
   LocaleNotifier.new,
 );

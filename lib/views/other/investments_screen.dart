@@ -1,22 +1,16 @@
-import 'dart:async';
-import 'package:tarlan_bank/utils/themes/theme_extension.dart';
-import 'package:tarlan_bank/views/shared/list_item.dart';
-import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
-import '../shared/custom_card.dart';
-import '../shared/service_item.dart';
+
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/utils/themes/theme_extension.dart';
+import 'package:tarlan_bank/views/shared/custom_card.dart';
+import 'package:tarlan_bank/views/shared/list_item.dart';
+import 'package:tarlan_bank/views/shared/service_item.dart';
+import 'package:tarlan_bank/views/shared/widgets.dart';
 
 class ItemData {
-  final String path;
-  final String title;
-  final String subtitle;
-  final String price;
-  final String priceChange;
-  final bool chageUp;
-
-  ItemData({
+  const ItemData({
     required this.path,
     required this.title,
     required this.subtitle,
@@ -24,16 +18,19 @@ class ItemData {
     required this.priceChange,
     required this.chageUp,
   });
+
+  final String path;
+  final String title;
+  final String subtitle;
+  final String price;
+  final String priceChange;
+  final bool chageUp;
 }
 
-class InvestmentsController extends GetxController {
-  final List<ServiceItemData> portfolioIconPaths = [
-    ServiceItemData('assets/icons/ic_deposit.svg', 'Пополнить', 'deposit'),
-    ServiceItemData('assets/icons/ic_transfer.svg', 'Перевести', 'transfer'),
-    ServiceItemData('assets/icons/ic_convert.svg', 'Конвертация', 'convert'),
-  ];
+class InvestmentsScreen extends ConsumerWidget {
+  const InvestmentsScreen({super.key});
 
-  final List<ItemData> itemsData = [
+  static const List<ItemData> _items = [
     ItemData(
       path: 'assets/images/google.png',
       title: 'ALPHABET INC',
@@ -59,65 +56,60 @@ class InvestmentsController extends GetxController {
       chageUp: false,
     ),
   ];
-}
-
-class InvestmentsScreen extends StatelessWidget {
-  final InvestmentsController controller = Get.put(InvestmentsController());
-
-  InvestmentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
+    final portfolio = [
+      ServiceItemData('assets/icons/ic_deposit.svg', l.topUp, 'deposit'),
+      ServiceItemData('assets/icons/ic_transfer.svg', l.transfer, 'transfer'),
+      ServiceItemData('assets/icons/ic_convert.svg', l.conversion, 'convert'),
+    ];
 
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
           edgeOffset: MediaQuery.of(context).padding.top,
-          onRefresh: () async {
-            try {
-              await Future.delayed(const Duration(milliseconds: 500));
-            } on TimeoutException {
-              print('Refresh operation timed out');
-            } catch (e) {
-              print('Error during refresh: $e');
-            }
-          },
+          onRefresh: () async =>
+              Future<void>.delayed(const Duration(milliseconds: 500)),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 12,
+              ),
               child: Column(
                 spacing: 24,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  buildHeader(context, 'Инвестиции'),
+                  buildHeader(context, l.investments),
                   CustomCard(
-                    label: 'Портфель в тенге',
+                    label: l.portfolioTenge,
                     labelStyle: theme.textTheme.bodySmall,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           '200 000,00 KZT',
                           style: theme.textTheme.headlineLarge?.copyWith(
-                              color: theme.colorScheme.secondary,
-                              fontWeight: FontWeight.w700),
+                            color: theme.colorScheme.secondary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         Row(
                           children: [
-                            ...controller.portfolioIconPaths.map(
-                              (e) {
-                                return ServiceItem(
-                                  label: e.label,
-                                  svgPath: e.iconPath,
-                                  iconSize: 36,
-                                );
-                              },
-                            )
+                            for (final e in portfolio)
+                              ServiceItem(
+                                label: e.label,
+                                svgPath: e.iconPath,
+                                iconSize: 36,
+                              ),
                           ],
                         ),
                       ],
@@ -128,43 +120,45 @@ class InvestmentsScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: CustomCard(
-                          label: 'Статистика',
-                          startWidget:
-                              SvgPicture.asset('assets/icons/ic_time.svg'),
+                          label: l.statistics,
+                          startWidget: SvgPicture.asset(
+                            'assets/icons/ic_time.svg',
+                          ),
                           labelStyle: theme.textTheme.titleMedium,
                         ),
                       ),
-                      SizedBox(
-                        width: 24,
-                      ),
+                      const SizedBox(width: 24),
                       Expanded(
                         child: CustomCard(
-                          label: 'Операции',
-                          startWidget:
-                              SvgPicture.asset('assets/icons/ic_document.svg'),
+                          label: l.operations,
+                          startWidget: SvgPicture.asset(
+                            'assets/icons/ic_document.svg',
+                          ),
                           labelStyle: theme.textTheme.titleMedium,
                         ),
                       ),
                     ],
                   ),
                   CustomCard(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           height: 48,
-                          margin: EdgeInsets.symmetric(horizontal: 12),
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.surfaceContainer,
-                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(30),
+                            ),
                           ),
                           child: TextField(
                             textAlignVertical: TextAlignVertical.center,
                             textInputAction: TextInputAction.search,
                             style: TextStyle(
-                                color:
-                                    theme.extension<Extra>()!.secondaryText!),
+                              color: theme.extension<Extra>()!.secondaryText,
+                            ),
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
@@ -183,31 +177,35 @@ class InvestmentsScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              prefixIconConstraints: BoxConstraints(
+                              prefixIconConstraints: const BoxConstraints(
                                 minWidth: 48,
                                 minHeight: 48,
                               ),
-                              hintText: 'Поиск...',
+                              hintText: l.searchHint,
                               hintStyle: TextStyle(
-                                  color: theme
-                                      .extension<Extra>()!
-                                      .secondaryText!
-                                      .withValues(alpha: 0.7)),
-                              contentPadding:
-                                  EdgeInsets.only(left: 48, right: 16),
+                                color: theme
+                                    .extension<Extra>()!
+                                    .secondaryText!
+                                    .withValues(alpha: 0.7),
+                              ),
+                              contentPadding: const EdgeInsets.only(
+                                left: 48,
+                                right: 16,
+                              ),
                             ),
                           ),
                         ),
-                        ...controller.itemsData
-                            .map((item) => _buildFavoriteItem(
-                                  imagePath: item.path,
-                                  title: item.title,
-                                  subtitle: item.subtitle,
-                                  theme: theme,
-                                  price: item.price,
-                                  priceChange: item.priceChange,
-                                  changeUp: item.chageUp,
-                                ))
+                        ..._items.map(
+                          (item) => _buildFavoriteItem(
+                            imagePath: item.path,
+                            title: item.title,
+                            subtitle: item.subtitle,
+                            theme: theme,
+                            price: item.price,
+                            priceChange: item.priceChange,
+                            changeUp: item.chageUp,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -231,30 +229,30 @@ class InvestmentsScreen extends StatelessWidget {
     double iconSize = 36,
   }) {
     return ListItem(
-        direction: ListItemDirection.vertical,
-        imagePath: imagePath,
-        title: title,
-        subtitle: subtitle,
-        iconSize: iconSize,
-        borderRadius: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(price, style: theme.textTheme.titleLarge),
-            SizedBox(
-              height: 6,
+      direction: ListItemDirection.vertical,
+      imagePath: imagePath,
+      title: title,
+      subtitle: subtitle,
+      iconSize: iconSize,
+      borderRadius: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(price, style: theme.textTheme.titleLarge),
+          const SizedBox(height: 6),
+          Text(
+            priceChange,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: changeUp
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.error,
+              fontWeight: FontWeight.w200,
             ),
-            Text(
-              priceChange,
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: changeUp
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.error,
-                  fontWeight: FontWeight.w200),
-            ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }

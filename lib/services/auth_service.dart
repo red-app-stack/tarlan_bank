@@ -3,16 +3,21 @@ import 'package:tarlan_bank/services/auth_state_service.dart';
 import 'package:tarlan_bank/services/dio_manager.dart';
 import 'package:tarlan_bank/services/user_repository.dart';
 import 'package:dio/dio.dart' show Options, DioException;
-import 'package:get/instance_manager.dart';
+
 import '../models/user_model.dart';
 import 'secure_store.dart';
 
 class AuthService {
   final DioManager dio;
   final SecureStore secureStore;
-  final AuthStateService state = Get.find();
-  final UserRepository userRepo = Get.find();
-  AuthService({required this.dio, required this.secureStore});
+  final AuthStateService state;
+  final UserRepository userRepo;
+  AuthService({
+    required this.dio,
+    required this.secureStore,
+    required this.state,
+    required this.userRepo,
+  });
 
   /// Login → returns token & user data
   Future<Map<String, dynamic>> login({
@@ -20,10 +25,10 @@ class AuthService {
     required String password,
   }) async {
     state.setChecking(true);
-    final resp = await dio.post('/auth/login', data: {
-      'email': email.trim(),
-      'password': password.trim(),
-    });
+    final resp = await dio.post(
+      '/auth/login',
+      data: {'email': email.trim(), 'password': password.trim()},
+    );
     if (resp.statusCode == 200) {
       await _storeCredentials(resp.data['token'], resp.data['user']);
       state.setAuthenticated(true);
@@ -44,12 +49,15 @@ class AuthService {
     required String phoneNumber,
   }) async {
     state.setChecking(true);
-    final resp = await dio.post('/auth/register', data: {
-      'email': email.trim(),
-      'password': password.trim(),
-      'fullName': fullName.trim(),
-      'phoneNumber': phoneNumber.trim(),
-    });
+    final resp = await dio.post(
+      '/auth/register',
+      data: {
+        'email': email.trim(),
+        'password': password.trim(),
+        'fullName': fullName.trim(),
+        'phoneNumber': phoneNumber.trim(),
+      },
+    );
     if (resp.statusCode == 201) {
       await _storeCredentials(resp.data['token'], resp.data['user']);
       state.setAuthenticated(true);
@@ -70,8 +78,9 @@ class AuthService {
       await dio.post(
         '/auth/logout',
         options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            validateStatus: (s) => s! < 500),
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (s) => s! < 500,
+        ),
       );
       await deleteToken();
       await userRepo.clearUser();
@@ -89,8 +98,9 @@ class AuthService {
       await dio.delete(
         '/auth/delete-user',
         options: Options(
-            headers: {'Authorization': 'Bearer $token'},
-            validateStatus: (s) => s! < 500),
+          headers: {'Authorization': 'Bearer $token'},
+          validateStatus: (s) => s! < 500,
+        ),
       );
     }
     await userRepo.clearAll();
@@ -127,10 +137,10 @@ class AuthService {
     String? phoneNumber,
   }) async {
     state.setChecking(true);
-    final resp = await dio.post('/auth/check-user', data: {
-      if (email != null) 'email': email,
-      if (phoneNumber != null) 'phoneNumber': phoneNumber,
-    });
+    final resp = await dio.post(
+      '/auth/check-user',
+      data: {'email': ?email, 'phoneNumber': ?phoneNumber},
+    );
     state.setChecking(false);
     return resp.data;
   }
@@ -140,16 +150,18 @@ class AuthService {
     required String obfuscatedEmail,
   }) async {
     state.setChecking(true);
-    final resp = await dio.post('/auth/check-partial-email', data: {
-      'enteredEmail': enteredEmail,
-      'obfuscatedEmail': obfuscatedEmail,
-    });
+    final resp = await dio.post(
+      '/auth/check-partial-email',
+      data: {'enteredEmail': enteredEmail, 'obfuscatedEmail': obfuscatedEmail},
+    );
     state.setChecking(false);
     return resp.statusCode == 200;
   }
 
   Future<void> _storeCredentials(
-      String token, Map<String, dynamic> userData) async {
+    String token,
+    Map<String, dynamic> userData,
+  ) async {
     await secureStore.write('auth_token', token);
     final user = UserModel.fromJson(userData);
     await userRepo.storeUser(user);

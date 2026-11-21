@@ -1,9 +1,10 @@
 import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:get/get.dart';
+
 import '../views/shared/user_settings.dart';
 
-class SecureStore extends GetxController {
+class SecureStore {
   static const String settingsKey = 'user_settings';
   static const String favoritesKey = 'favorite_transfers';
   final FlutterSecureStorage secureStorage;

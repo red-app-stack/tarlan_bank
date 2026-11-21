@@ -1,357 +1,323 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/accounts/data/account_model.dart';
+import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
+import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
+import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
+import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
+import 'package:tarlan_bank/features/transactions/widgets/account_dropdown.dart';
+import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
+import 'package:tarlan_bank/features/transactions/widgets/transfer_amount_controller.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/shared/amount_input.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
-import 'package:tarlan_bank/views/shared/widgets.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:get/get.dart';
-import '../../models/account_model.dart';
-import '../../models/transaction_model.dart';
-import '../../controllers/accounts_controller.dart';
-import '../shared/animated_dropdown.dart';
 
-class CardTransferController extends GetxController {
-  final AccountsController accountsController = Get.find<AccountsController>();
+class CardTransferScreen extends ConsumerStatefulWidget {
+  const CardTransferScreen({super.key, this.transaction});
 
-  final Rx<AccountModel?> selectedAccount = Rx<AccountModel?>(null);
-  final RxString accountNumber = ''.obs;
-  final RxString formattedAccountNumber = ''.obs;
-  final RxString amount = ''.obs;
-  String previousNumber = '';
-  Transaction? transaction;
-  final RxString formattedAmount = ''.obs;
-  final RxBool isAccountDropdownExpanded = false.obs;
-
-  final TextEditingController accountController = TextEditingController();
-  final TextEditingController amountController = TextEditingController();
-  final FocusNode amountFocusNode = FocusNode();
+  /// Optional prefill. go_router builds this screen with no arguments; when
+  /// null the screen simply starts empty (never crashes).
+  final BankTransaction? transaction;
 
   @override
-  void onInit() {
-    super.onInit();
-    _initializeSelectedAccount();
-    amountController.text = '0';
-    updateAmount('0');
-    transaction = Get.arguments;
-    if (transaction != null) {
-      updateAccountNumber(transaction?.toAccount ?? '');
-      updateAmount(transaction?.amount.toString() ?? '');
+  ConsumerState<CardTransferScreen> createState() => _CardTransferScreenState();
+}
+
+class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
+  final TransferAmountController amountCtl = TransferAmountController();
+  final TextEditingController accountController = TextEditingController();
+
+  Account? selectedAccount;
+  bool isAccountDropdownExpanded = false;
+  bool _initialized = false;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    amountCtl.initialize();
+    _applyInitialTransaction();
+  }
+
+  void _applyInitialTransaction() {
+    final initial = widget.transaction ?? ref.read(selectedTransactionProvider);
+    ref.read(selectedTransactionProvider.notifier).clear();
+    if (initial == null) return;
+    if (initial.amount > 0) {
+      amountCtl.update(initial.amount.toString(), () {});
+    }
+    final target = initial.toAccountId;
+    if (target != null && target.isNotEmpty) {
+      accountController.text = _formatAccount(target);
     }
   }
 
-  void _initializeSelectedAccount() {
-    if (accountsController.accounts.isNotEmpty) {
-      final cards = accountsController.accounts
-          .where((account) => account.accountType == 'card')
-          .toList()
-        ..sort((a, b) => b.balance.compareTo(a.balance));
-
-      selectedAccount.value = cards.isNotEmpty ? cards.first : null;
-    }
+  @override
+  void dispose() {
+    amountCtl.dispose();
+    accountController.dispose();
+    ref.read(transferRecipientProvider.notifier).clear();
+    super.dispose();
   }
 
-  void refreshCards() {
-    accountsController
-        .fetchAccounts()
-        .then((_) => _initializeSelectedAccount());
+  String _formatAccount(String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && i % 4 == 0) buffer.write(' ');
+      buffer.write(digits[i]);
+    }
+    return buffer.toString();
   }
 
-  void updateAccountNumber(String value) {
-    String digitsOnly = value.replaceAll(RegExp(r'\D'), '');
-    String formatted = '';
-
-    for (int i = 0; i < digitsOnly.length; i++) {
-      if (i > 0 && i % 4 == 0) {
-        formatted += ' ';
-      }
-      formatted += digitsOnly[i];
-    }
-
+  void _onAccountChanged(String raw) {
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    final formatted = _formatAccount(digits);
     accountController.value = TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );
-
-    if (formatted.replaceAll(' ', '').length == 16) {
-      accountsController.lookupAccount(
-          accountNumber: formatted.replaceAll(' ', ''));
+    if (digits.length == 16) {
+      _lookupRecipient(digits);
     } else {
-      accountsController.recipientAccount.value = null;
+      ref.read(transferRecipientProvider.notifier).clear();
+    }
+    setState(() {});
+  }
+
+  Future<void> _lookupRecipient(String number) async {
+    try {
+      final account = await ref
+          .read(accountsRepositoryProvider)
+          .lookupAccount(accountNumber: number);
+      if (!mounted || accountController.text.replaceAll(' ', '') != number) {
+        return;
+      }
+      ref.read(transferRecipientProvider.notifier).set(account);
+    } on Object {
+      if (mounted) ref.read(transferRecipientProvider.notifier).clear();
     }
   }
 
-  void updateAmount(String value) {
-    const int maxTransferAmount = 2000000;
-    String normalizedValue = value.replaceAll('.', ',');
+  List<Account> _sourceAccounts(List<Account> all) {
+    final current =
+        all
+            .where(
+              (a) =>
+                  a.type == AccountType.current &&
+                  a.status == AccountStatus.active,
+            )
+            .toList()
+          ..sort((a, b) => b.balance.compareTo(a.balance));
+    return current;
+  }
 
-    List<String> parts = normalizedValue.split(',');
-    String integerPart = parts[0].replaceAll(RegExp(r'\D'), '');
-    String decimalPart =
-        parts.length > 1 ? parts[1].replaceAll(RegExp(r'\D'), '') : '';
-
-    if (decimalPart.length > 2) {
-      decimalPart = decimalPart.substring(0, 2);
+  void _syncSelection(List<Account> accounts) {
+    final source = _sourceAccounts(accounts);
+    if (source.isEmpty) {
+      if (selectedAccount != null) setState(() => selectedAccount = null);
+      return;
     }
+    if (selectedAccount == null ||
+        !source.any((a) => a.number == selectedAccount!.number)) {
+      setState(() => selectedAccount = source.first);
+    }
+  }
 
-    if (integerPart.isEmpty) {
-      amount.value = '';
-      formattedAmount.value = '0';
-      amountController.value = TextEditingValue(
-        text: '0',
-        selection: TextSelection.collapsed(offset: 1),
+  Future<void> _submit(AppLocalizations l) async {
+    if (_submitting) return;
+    if (selectedAccount == null) {
+      showAppSnackBar(
+        context,
+        endPositionOffset: 1,
+        title: l.error,
+        message: l.errorSelectCard,
+      );
+      return;
+    }
+    final digits = accountController.text.replaceAll(' ', '');
+    if (digits.length != 16) {
+      showAppSnackBar(
+        context,
+        endPositionOffset: 1,
+        title: l.error,
+        message: l.errorEnterAccount,
+      );
+      return;
+    }
+    if (amountCtl.isEmpty) {
+      showAppSnackBar(
+        context,
+        endPositionOffset: 1,
+        title: l.error,
+        message: l.errorEnterAmount,
+      );
+      return;
+    }
+    final recipient = ref.read(transferRecipientProvider);
+    if (recipient == null) {
+      showAppSnackBar(
+        context,
+        endPositionOffset: 1,
+        title: l.error,
+        message: l.recipientNotFound,
       );
       return;
     }
 
-    int number = int.tryParse(integerPart) ?? 0;
-
-    if (number > maxTransferAmount) {
-      print(number);
-      number = int.parse(previousNumber.split(',')[0]);
-      String formatted = _formatAmount(number);
-
-      if (normalizedValue.contains(',')) {
-        formatted += ',$decimalPart';
-      }
-
-      _updateControllerValue(formatted);
-      return;
-    }
-
-    String formatted = _formatAmount(number);
-    if (normalizedValue.contains(',')) {
-      formatted += ',$decimalPart';
-    }
-
-    amount.value =
-        number.toString() + (decimalPart.isNotEmpty ? ',$decimalPart' : '');
-    formattedAmount.value = formatted;
-    previousNumber = amount.value;
-
-    _updateControllerValue(formatted);
-  }
-
-  String _formatAmount(int number) {
-    return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]} ',
+    setState(() => _submitting = true);
+    try {
+      final tx = await ref
+          .read(transactionsRepositoryProvider)
+          .createTransaction(
+            fromAccountId: selectedAccount!.number,
+            toAccountId: recipient.number,
+            amount: amountCtl.parsed,
+            currency: selectedAccount!.currency,
+            type: TransactionType.cardTransfer,
+          );
+      ref.read(selectedTransactionProvider.notifier).select(tx);
+      ref.invalidate(transactionsHistoryProvider);
+      ref.invalidate(accountsProvider);
+      if (mounted) context.go(Routes.transfersDetails);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          fromTop: true,
+          endPositionOffset: 1,
+          title: l.success,
+          message: l.transferSuccess,
         );
+      }
+    } on Object {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          fromTop: true,
+          endPositionOffset: 1,
+          title: l.error,
+          message: l.transferFailed,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
-  void _updateControllerValue(String formatted) {
-    final oldCursor = amountController.selection.start;
-    final oldTextLength = amountController.text.length;
-    final distanceFromEnd = oldTextLength - oldCursor;
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final accounts = ref.watch(accountsProvider).value ?? const <Account>[];
+    final recipient = ref.watch(transferRecipientProvider);
+    final visibleAccounts = _sourceAccounts(accounts);
 
-    amountController.value = TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(
-        offset: formatted.length - distanceFromEnd,
+    if (!_initialized) {
+      _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncSelection(accounts);
+      });
+    }
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Column(
+            children: [
+              buildTransferHeader(context, l.transferByAccount),
+              SizedBox(height: size.height * 0.02),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCardSelector(theme, l, visibleAccounts),
+                      SizedBox(height: size.height * 0.02),
+                      _buildAccountInput(theme, l, recipient),
+                      SizedBox(height: size.height * 0.02),
+                      _buildAmountInput(theme, l),
+                    ],
+                  ),
+                ),
+              ),
+              AnimatedPadding(
+                duration: const Duration(milliseconds: 50),
+                curve: Curves.easeInOut,
+                padding: EdgeInsets.only(bottom: bottomInset),
+                child: ElevatedButton(
+                  onPressed: _submitting ? null : () => _submit(l),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                  ),
+                  child: Text(
+                    '${l.transferVerb} ${amountCtl.formatted} ${getCurrencySymbol(selectedAccount?.currency)}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      fontFamily: 'Roboto',
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: size.height * 0.015),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  @override
-  void onClose() {
-    accountController.dispose();
-    amountController.dispose();
-    amountFocusNode.dispose();
-    accountsController.recipientAccount.value = null;
-    super.onClose();
-  }
-}
-
-class CardTransferScreen extends StatelessWidget {
-  final CardTransferController controller = Get.put(CardTransferController());
-
-  CardTransferScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-
-    return Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: SafeArea(
-            child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: Column(children: [
-                  buildHeader(context, 'По номеру счета'),
-                  SizedBox(
-                    height: size.height * 0.02,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          buildCardSelector(theme),
-                          SizedBox(height: size.height * 0.02),
-                          _buildAccountInput(theme),
-                          SizedBox(height: size.height * 0.02),
-                          _buildAmountInput(theme),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Obx(() {
-                    double amount = controller.amount.value.isEmpty
-                        ? 0
-                        : double.parse(
-                            controller.amount.value.replaceAll(',', '.'));
-                    return AnimatedPadding(
-                        duration: const Duration(milliseconds: 50),
-                        curve: Curves.easeInOut,
-                        padding: EdgeInsets.only(bottom: bottomInset),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (controller.selectedAccount.value == null) {
-                              if (context.mounted == true) {
-                                showAppSnackBar(
-                                  context,
-                                  endPositionOffset: 1,
-                                  title: 'Ошибка',
-                                  message: 'Пожалуйста, выберите карту',
-                                );
-                              }
-                              return;
-                            }
-                            String accountNumber = controller
-                                .accountController.text
-                                .replaceAll(' ', '');
-                            if (accountNumber.length != 16) {
-                              if (context.mounted == true) {
-                                showAppSnackBar(
-                                  context,
-                                  endPositionOffset: 1,
-                                  title: 'Ошибка',
-                                  message:
-                                      'Пожалуйста, введите корректный номер счета',
-                                );
-                              }
-                              return;
-                            }
-
-                            if (controller.amount.value.isEmpty) {
-                              if (context.mounted == true) {
-                                showAppSnackBar(
-                                  context,
-                                  endPositionOffset: 1,
-                                  title: 'Ошибка',
-                                  message: 'Пожалуйста, введите сумму',
-                                );
-                              }
-                              return;
-                            }
-
-                            if (controller.accountsController.recipientAccount
-                                    .value ==
-                                null) {
-                              if (context.mounted == true) {
-                                showAppSnackBar(
-                                  context,
-                                  endPositionOffset: 1,
-                                  title: 'Ошибка',
-                                  message: 'Получатель не найден',
-                                );
-                              }
-                              return;
-                            }
-
-                            final transaction = await controller
-                                .accountsController
-                                .createTransaction(
-                                    controller
-                                        .selectedAccount.value!.accountNumber,
-                                    controller.accountsController
-                                        .recipientAccount.value!.accountNumber,
-                                    amount,
-                                    controller.selectedAccount.value!.currency,
-                                    'card_transfer');
-
-                            if (transaction != null &&
-                                transaction.status == 'completed') {
-                              Navigator.of(Get.context!).pop();
-                              Get.toNamed('/transferHistory');
-                              Get.toNamed('/transferDetails',
-                                  arguments: transaction);
-                              if (context.mounted == true) {
-                                showAppSnackBar(
-                                  context,
-                                  fromTop: true,
-                                  endPositionOffset: 1,
-                                  title: 'Успех',
-                                  message: 'Перевод успешно выполнен',
-                                );
-                              }
-                              controller.refreshCards();
-                            } else {
-                              if (context.mounted == true) {
-                                showAppSnackBar(
-                                  context,
-                                  fromTop: true,
-                                  endPositionOffset: 1,
-                                  title: 'Ошибка',
-                                  message: 'Перевод не выполнен',
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                          ),
-                          child: Text(
-                              'Перевести ${controller.formattedAmount.value} ${getCurrencySymbol(controller.selectedAccount.value?.currency)}',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: theme.colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                fontFamily: 'Roboto',
-                              )),
-                        ));
-                  }),
-                  SizedBox(
-                    height: size.height * 0.015,
-                  ),
-                ]))));
-  }
-
-  Widget buildCardSelector(ThemeData theme) {
-    return Obx(() {
-      if (controller.accountsController.accounts.isEmpty) {
-        return CustomCard(
-          label: 'У вас нет доступных счетов',
-          labelStyle: theme.textTheme.titleLarge,
-        );
-      }
-      return AnimatedCardDropdown(
-        accounts: controller.accountsController.accounts,
-        label: 'Откуда',
-        selectedAccount: controller.selectedAccount.value,
-        isExpanded: controller.isAccountDropdownExpanded.value,
-        onAccountSelected: (account) {
-          controller.selectedAccount.value = account;
-          controller.isAccountDropdownExpanded.value = false;
-        },
-        onToggle: () => controller.isAccountDropdownExpanded.toggle(),
+  Widget _buildCardSelector(
+    ThemeData theme,
+    AppLocalizations l,
+    List<Account> accounts,
+  ) {
+    if (accounts.isEmpty) {
+      return CustomCard(
+        label: l.noAccounts,
+        labelStyle: theme.textTheme.titleLarge,
       );
-    });
+    }
+    return TransferAccountDropdown(
+      accounts: accounts,
+      label: l.from,
+      selectedAccount: selectedAccount,
+      isExpanded: isAccountDropdownExpanded,
+      onAccountSelected: (account) => setState(() {
+        selectedAccount = account;
+        isAccountDropdownExpanded = false;
+      }),
+      onToggle: () => setState(
+        () => isAccountDropdownExpanded = !isAccountDropdownExpanded,
+      ),
+    );
   }
 
-  Widget _buildAccountInput(ThemeData theme) {
+  Widget _buildAccountInput(
+    ThemeData theme,
+    AppLocalizations l,
+    Account? recipient,
+  ) {
     return CustomCard(
-      label: 'Номер счета получателя',
+      label: l.recipientAccountNumber,
       labelStyle: theme.textTheme.titleLarge,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Align(
-            alignment: AlignmentGeometry.centerLeft,
+            alignment: Alignment.centerLeft,
             child: TextField(
-              controller: controller.accountController,
+              controller: accountController,
               keyboardType: TextInputType.number,
               maxLength: 19,
               style: theme.textTheme.titleLarge,
@@ -368,21 +334,17 @@ class CardTransferScreen extends StatelessWidget {
                 ),
                 contentPadding: const EdgeInsets.only(left: 16, right: 16),
               ),
-              onChanged: (raw) {
-                controller.updateAccountNumber(raw);
-              },
+              onChanged: _onAccountChanged,
             ),
           ),
-          if (controller.accountController.text.replaceAll(' ', '').length ==
-              16)
+          if (accountController.text.replaceAll(' ', '').length == 16)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Obx(
-                () => Text(
-                    controller.accountsController.recipientAccount.value
-                            ?.fullName ??
-                        'Получатель не найден',
-                    style: theme.textTheme.bodySmall),
+              child: Text(
+                recipient == null
+                    ? l.recipientNotFound
+                    : censorCardNumber(recipient.number),
+                style: theme.textTheme.bodySmall,
               ),
             ),
         ],
@@ -390,31 +352,27 @@ class CardTransferScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAmountInput(ThemeData theme) {
-    return Obx(() => GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
-            controller.amountController.selection = TextSelection.fromPosition(
-              TextPosition(offset: controller.amountController.text.length),
-            );
-            controller.amountFocusNode.requestFocus();
-          },
-          child: CustomCard(
-            label: 'Сумма',
-            labelStyle: theme.textTheme.titleLarge,
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              children: [
-                AmountNumber(
-                  theme: theme,
-                  currency: controller.selectedAccount.value?.currency ?? 'KZT',
-                  controller: controller.amountController,
-                  focusNode: controller.amountFocusNode,
-                  onChanged: controller.updateAmount,
-                ),
-              ],
+  Widget _buildAmountInput(ThemeData theme, AppLocalizations l) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: amountCtl.focusEnd,
+      child: CustomCard(
+        label: l.amount,
+        labelStyle: theme.textTheme.titleLarge,
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            AmountNumber(
+              theme: theme,
+              currency: selectedAccount?.currency ?? 'KZT',
+              controller: amountCtl.text,
+              focusNode: amountCtl.focus,
+              onChanged: (value) =>
+                  amountCtl.update(value, () => setState(() {})),
             ),
-          ),
-        ));
+          ],
+        ),
+      ),
+    );
   }
 }

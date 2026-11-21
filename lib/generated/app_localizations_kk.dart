@@ -312,4 +312,642 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get hidePassword => 'Құпия сөзді жасыру';
+
+  @override
+  String get openApp => 'Қолданбаны ашу';
+
+  @override
+  String get navPayments => 'Төлемдер';
+
+  @override
+  String get navTransfers => 'Аударымдар';
+
+  @override
+  String get navAccounts => 'Шоттар';
+
+  @override
+  String get navMenu => 'Мәзір';
+
+  @override
+  String get searchHint => 'Іздеу...';
+
+  @override
+  String get transferByAccount => 'Шот нөмірі бойынша';
+
+  @override
+  String get conversion => 'Конвертация';
+
+  @override
+  String get mobileTransfer => 'Мобильді аударым';
+
+  @override
+  String get qrTransfer => 'QR аударым';
+
+  @override
+  String get ownAccounts => 'Өз шоттарым арасында';
+
+  @override
+  String get receipt => 'Төлем қвитанциясы';
+
+  @override
+  String get transferHistory => 'Аударымдар тарихы';
+
+  @override
+  String get from => 'Қайдан';
+
+  @override
+  String get to => 'Қайда';
+
+  @override
+  String get amount => 'Сома';
+
+  @override
+  String get recipientAccountNumber => 'Алушы шотының нөмірі';
+
+  @override
+  String get enterPhoneNumber => 'Телефон нөмірін енгізіңіз';
+
+  @override
+  String get recipient => 'Алушы';
+
+  @override
+  String get message => 'Хабар';
+
+  @override
+  String get messageHint => 'Алушыға хабар';
+
+  @override
+  String get scan => 'Сканирлеу';
+
+  @override
+  String get create => 'Жасау';
+
+  @override
+  String get createQrCode => 'QR код жасау';
+
+  @override
+  String get qrHint =>
+      'Соманы көрсетпесеңіз, оны QR кодыңызды сканирлеген жіберуші енгізе алады';
+
+  @override
+  String get transferVerb => 'Аудару';
+
+  @override
+  String get errorSelectCard => 'Карточканы таңдаңыз';
+
+  @override
+  String get errorEnterAmount => 'Соманы енгізіңіз';
+
+  @override
+  String get errorEnterAccount => 'Дұрыс шот нөмірін енгізіңіз';
+
+  @override
+  String get errorEnterPhone => 'Телефон нөмірін енгізіңіз';
+
+  @override
+  String get recipientNotFound => 'Алушы табылмады';
+
+  @override
+  String get transferSuccess => 'Аударым сәтті орындалды';
+
+  @override
+  String get transferFailed => 'Аударым орындалмады';
+
+  @override
+  String get noAccounts => 'Сізде қолжетімді шоттар жоқ';
+
+  @override
+  String get noTransfers => 'Аударымдар тарихы мұнда көрсетіледі';
+
+  @override
+  String today(String date) {
+    return 'Бүгін, $date';
+  }
+
+  @override
+  String get week => 'Соңғы апта';
+
+  @override
+  String get month => 'Соңғы ай';
+
+  @override
+  String get threeMonths => 'Соңғы 3 ай';
+
+  @override
+  String get customPeriod => 'Таңдалған кезең';
+
+  @override
+  String get calendarPeriod => 'Күнтізбеден кезең таңдау';
+
+  @override
+  String get selectPeriod => 'Кезеңді таңдаңыз';
+
+  @override
+  String get choose => 'Таңдау';
+
+  @override
+  String get share => 'Бөлісу';
+
+  @override
+  String get repeat => 'Қайталау';
+
+  @override
+  String get cancelTransfer => 'Болдырмау';
+
+  @override
+  String get addToFavorites => 'Таңдаулыларға қосу';
+
+  @override
+  String get removeFromFavorites => 'Таңдаулылардан шығару';
+
+  @override
+  String get transactionType => 'Операция түрі';
+
+  @override
+  String get transactionId => 'Операция ID-сі';
+
+  @override
+  String get dateTime => 'Күні мен уақыты';
+
+  @override
+  String get commission => 'Комиссия';
+
+  @override
+  String get sender => 'Жіберуші';
+
+  @override
+  String get senderAccount => 'Жіберуші шоты';
+
+  @override
+  String get unknown => 'Белгісіз';
+
+  @override
+  String statusCompleted(String type) {
+    return '$type сәтті орындалды';
+  }
+
+  @override
+  String statusPending(String type) {
+    return '$type өңделуде';
+  }
+
+  @override
+  String statusFailed(String type) {
+    return '$type орындалмады';
+  }
+
+  @override
+  String get typeDeposit => 'Салым';
+
+  @override
+  String get typeWithdrawal => 'Шығару';
+
+  @override
+  String get typePhoneTransfer => 'Нөмір бойынша аударым';
+
+  @override
+  String get typeQrTransfer => 'QR аударым';
+
+  @override
+  String get typeCurrencyConversion => 'Валюта айырбастау';
+
+  @override
+  String get typeInternalTransfer => 'Ішкі аударым';
+
+  @override
+  String get typeCardTransfer => 'Карточкаға аудару';
+
+  @override
+  String get typeSwiftTransfer => 'SWIFT аударым';
+
+  @override
+  String get typeTransfer => 'Аударым';
+
+  @override
+  String get noTransaction => 'Операция таңдалмады';
+
+  @override
+  String get accountCurrent => 'Ағымдағы';
+
+  @override
+  String get accountDeposit => 'Депозит';
+
+  @override
+  String get accountCredit => 'Несие';
+
+  @override
+  String get auSettingsTitle => 'Параметрлер';
+
+  @override
+  String get auSettingsThemeTitle => 'Қолданба тақырыбы';
+
+  @override
+  String get auSettingsThemeSubtitle =>
+      'Жарық, қараңғы немесе жүйелік тақырыпты таңдаңыз';
+
+  @override
+  String get auThemeSystem => 'Жүйелік';
+
+  @override
+  String get auThemeLight => 'Жарық';
+
+  @override
+  String get auThemeDark => 'Қараңғы';
+
+  @override
+  String get auSettingsQuickToggleTitle => 'Тақырыпты жылдам ауыстыру';
+
+  @override
+  String get auSettingsQuickToggleSubtitle =>
+      'Жарық пен қараңғы арасында ауысу үшін түртіңіз';
+
+  @override
+  String get auCodeCreateTitle => 'Қол жеткізу кодын ойлап табыңыз';
+
+  @override
+  String get auCodeRepeatTitle => 'Қол жеткізу кодын қайталаңыз';
+
+  @override
+  String get auCodeEnterTitle => 'Қол жеткізу кодын енгізіңіз';
+
+  @override
+  String get auCodeResetButton => 'Қол жеткізу кодын қалпына келтіру';
+
+  @override
+  String get auCodeForgotButton => 'Қол жеткізу кодын ұмыттыңыз ба?';
+
+  @override
+  String get auBiometricAuthTitle => 'Биометриялық аутентификация';
+
+  @override
+  String get auBiometricAuthBody =>
+      'Биометриялық аутентификацияны пайдаланғыңыз келе ме?';
+
+  @override
+  String get auBiometricSignInReason =>
+      'Қолданбаға кіру үшін Touch ID пайдаланыңыз';
+
+  @override
+  String get auBiometricSignInTitle => 'Қолданбаға кіру';
+
+  @override
+  String get auBiometricFallbackTitle => 'Биометриялық аутентификация';
+
+  @override
+  String get auBiometricNotSupported =>
+      'Touch ID бұл құрылғыда қолдау көрсетілмейді';
+
+  @override
+  String get auBiometricUnavailable => 'Touch ID қолжетімсіз';
+
+  @override
+  String get auWrongAccessCode => 'Қол жеткізу коды дұрыс емес';
+
+  @override
+  String get auMessageTitle => 'Хабарлама';
+
+  @override
+  String get auYes => 'Иә';
+
+  @override
+  String get auNo => 'Жоқ';
+
+  @override
+  String get auVerificationTitle => 'Растау кодын енгізіңіз';
+
+  @override
+  String get auVerificationCodeLabel => 'Растау коды';
+
+  @override
+  String get auVerificationCodeHint => '000000';
+
+  @override
+  String get auVerificationSendFailed => 'Кодды жіберу мүмкін болмады';
+
+  @override
+  String get auVerificationCodeLengthInvalid => 'Код 6 цифрадан тұруы керек';
+
+  @override
+  String get auVerificationInvalidCode => 'Код дұрыс емес';
+
+  @override
+  String get auVerificationCheckFailed =>
+      'Кодды тексеру мүмкін болмады. Қайталаңыз';
+
+  @override
+  String get auChangePassword => 'Құпия сөзді өзгерту';
+
+  @override
+  String get auLinkedAccounts => 'Байланысты тіркелгілер';
+
+  @override
+  String get auChangeAccessCode => 'Қол жеткізу кодын өзгерту';
+
+  @override
+  String get auAuthorizationTitle => 'Авторизация';
+
+  @override
+  String get auBiometricLoginDesc => 'Қолданбаға биометриямен кіру';
+
+  @override
+  String get auScreenProtectionTitle => 'Экран жазудан қорғау';
+
+  @override
+  String get auScreenProtectionDesc => 'Скриншоттар және экран жазу';
+
+  @override
+  String get auBiometricOperationsTitle => 'Биометриялық операциялар';
+
+  @override
+  String get auBiometricOperationsDesc => 'Аударымдарды растау';
+
+  @override
+  String get auDeleteAccountRequest => 'Тіркелгіні жоюды сұрау';
+
+  @override
+  String get auBiometricUnavailableDevice =>
+      'Бұл құрылғыда биометрия қолжетімсіз';
+
+  @override
+  String get auBiometricAuthRequired => 'Биометриямен растау қажет';
+
+  @override
+  String get auBiometricChangeHint => 'Өзгерту авторизацияны талап етеді';
+
+  @override
+  String get auEmailConfirmationRequired => 'Поштамен растау қажет';
+
+  @override
+  String get auConfirmationRequired => 'Растау қажет';
+
+  @override
+  String get auDeleteConfirmHint => 'Тіркелгіні жоюды растаңыз.';
+
+  @override
+  String get auProfileTitle => 'Профиль';
+
+  @override
+  String get auMyNotifications => 'Менің хабарландыруларым';
+
+  @override
+  String get auNotificationsTitle => 'Хабарландырулар';
+
+  @override
+  String get auAppLanguage => 'Қолданба тілі';
+
+  @override
+  String get auPhoneTransfers => 'Телефон нөмірі бойынша аударымдар';
+
+  @override
+  String get auAccountOperations => 'Шоттар бойынша операциялар';
+
+  @override
+  String get auNoOperations => 'Әзірге операциялар жоқ';
+
+  @override
+  String get auNoTransfers => 'Әзірге аударымдар жоқ';
+
+  @override
+  String get auNoPayments => 'Әзірге төлемдер жоқ';
+
+  @override
+  String get auTrustedPhone => 'Сіздің сенімді нөміріңіз';
+
+  @override
+  String get auSecurityTip =>
+      'Тексерілмеген сілтемелерге өтпеңіз және жеке деректеріңізді бейтаныс веб-сайттарға енгізбеңіз. Алаяқтар ақпаратты ұрлау үшін жалған сілтемелер мен беттерді пайдалануы мүмкін. Хабарламалардың көзін әрдайым тексеріп, веб-сайт мекенжайының банкіңізге тиесілі екеніне көз жеткізіңіз. Есіңізде болсын: банк қызметкерлері ешқашан құпия сөзіңізді немесе SMS-кодты сұрамайды.';
+
+  @override
+  String get auTxDeposit => 'Салым';
+
+  @override
+  String get auTxWithdrawal => 'Шығару';
+
+  @override
+  String get auTxPhoneTransfer => 'Нөмір бойынша аудару';
+
+  @override
+  String get auTxQrTransfer => 'QR аудару';
+
+  @override
+  String get auTxCurrencyConversion => 'Валюта айырбастау';
+
+  @override
+  String get auTxInternalTransfer => 'Ішкі аудару';
+
+  @override
+  String get auTxCardTransfer => 'Картаға аудару';
+
+  @override
+  String get auTxSwiftTransfer => 'SWIFT аудару';
+
+  @override
+  String get auTxTransfer => 'Аудару';
+
+  @override
+  String get history => 'Тарих';
+
+  @override
+  String get popular => 'Танымал';
+
+  @override
+  String get favorites => 'Таңдаулылар';
+
+  @override
+  String get zhambylRegion => 'Жамбыл облысы';
+
+  @override
+  String get serviceMobile => 'Байланыс';
+
+  @override
+  String get serviceInternet => 'Интернет';
+
+  @override
+  String get serviceTransport => 'Көлік';
+
+  @override
+  String get serviceUtilities => 'Коммуналдық қызметтер';
+
+  @override
+  String get openNewCard => 'Жаңа карта ашу';
+
+  @override
+  String get creditCash => 'Қолма-қол несие алу';
+
+  @override
+  String get creditCashSubtitle => 'Онлайн 7 000 000 теңгеге дейін';
+
+  @override
+  String get openDepositSubtitle => 'Тиімді шарттарда';
+
+  @override
+  String get multiCurrency => 'Көп валюталы';
+
+  @override
+  String get emptyAccounts => 'Шоттар әлі жоқ';
+
+  @override
+  String get transferByPhone => 'Телефон нөмірі бойынша';
+
+  @override
+  String get transferByPhoneDesc => 'Жеке тұлғалар мен кәсіпкерлерге';
+
+  @override
+  String get transferBetweenOwn => 'Өз шоттарым арасында';
+
+  @override
+  String get transferBetweenOwnDesc => 'Карталар, шоттар, депозиттер';
+
+  @override
+  String get transferKz => 'Қазақстан ішінде';
+
+  @override
+  String get transferKzDesc => 'Картаға, шот нөміріне';
+
+  @override
+  String get transferInternational => 'Халықаралық аударымдар';
+
+  @override
+  String get transferInternationalDesc => 'Дүниежүзінің кез келген жеріне';
+
+  @override
+  String get conversionDesc => 'Валюта айырбастау';
+
+  @override
+  String get bankQr => 'Bank QR';
+
+  @override
+  String get bankQrDesc => 'Ақша алу үшін QR жасаңыз';
+
+  @override
+  String get saved => 'Сақталғандар';
+
+  @override
+  String get cardDetails => 'Карта мәліметтері';
+
+  @override
+  String get cardDetailsEmpty => 'Карта деректері қолжетімсіз';
+
+  @override
+  String get totalBalance => 'Жалпы баланс';
+
+  @override
+  String get pendingAmount => 'Өңделуде: 0,00 теңге';
+
+  @override
+  String get topUp => 'Толтыру';
+
+  @override
+  String get transfer => 'Аудару';
+
+  @override
+  String get withdraw => 'Шешу';
+
+  @override
+  String get statement => 'Үзінді';
+
+  @override
+  String get incomeExpenses => 'Кірістер мен шығыстар';
+
+  @override
+  String get requisites => 'Реквизиттер';
+
+  @override
+  String get accountNumbers => 'Шот нөмірлері';
+
+  @override
+  String get closeCard => 'Картаны жабу';
+
+  @override
+  String get renameCard => 'Карта атауын өзгерту';
+
+  @override
+  String get manageSubscriptions => 'Жазылымдарды басқару';
+
+  @override
+  String get orderCard => 'Картаға тапсырыс беру';
+
+  @override
+  String get setLimits => 'Лимиттерді орнату';
+
+  @override
+  String get getCertificate => 'Анықтама алу';
+
+  @override
+  String get blocks => 'Блокировкалар';
+
+  @override
+  String get cardSettings => 'Карта параметрлері';
+
+  @override
+  String get portfolioTenge => 'Портфель теңгеде';
+
+  @override
+  String get statistics => 'Статистика';
+
+  @override
+  String get operations => 'Операциялар';
+
+  @override
+  String get paymentHistory => 'Төлемдер тарихы';
+
+  @override
+  String get paymentHistoryEmpty => 'Төлемдер тарихыңыз мұнда көрсетіледі';
+
+  @override
+  String get periodWeek => 'Соңғы апта';
+
+  @override
+  String get periodMonth => 'Соңғы ай';
+
+  @override
+  String get period3Months => 'Соңғы 3 ай';
+
+  @override
+  String get periodCustom => 'Таңдалған кезең';
+
+  @override
+  String get periodCalendar => 'Күнтізбеден кезең таңдау';
+
+  @override
+  String get choosePeriod => 'Кезең таңдаңыз';
+
+  @override
+  String get categoryThisWeek => 'Осы аптада';
+
+  @override
+  String get categoryThisMonth => 'Осы айда';
+
+  @override
+  String get categoryEarlier => 'Бұрын';
+
+  @override
+  String get txDeposit => 'Салым';
+
+  @override
+  String get txWithdrawal => 'Шығару';
+
+  @override
+  String get txPhoneTransfer => 'Телефон бойынша аудару';
+
+  @override
+  String get txQrTransfer => 'QR аудару';
+
+  @override
+  String get txConversion => 'Валюта айырбастау';
+
+  @override
+  String get txInternalTransfer => 'Ішкі аудару';
+
+  @override
+  String get txCardTransfer => 'Картаға аудару';
+
+  @override
+  String get txSwiftTransfer => 'SWIFT аудару';
+
+  @override
+  String get txPayment => 'Төлем';
+
+  @override
+  String get txOther => 'Аудару';
 }

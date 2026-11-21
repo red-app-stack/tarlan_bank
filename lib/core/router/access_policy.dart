@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tarlan_bank/features/auth/data/auth_user.dart';
-import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 
 /// Route access policy for go_router (product decision 2026-11-20).
 ///
@@ -16,16 +16,19 @@ enum AccessLevel { loading, signedOut, guest, full }
 const Set<String> publicRoutes = {
   Routes.login,
   Routes.codeEntering,
-  Routes.loading
+  Routes.verifyLink,
+  Routes.verifyAction,
+  Routes.loading,
 };
 
 /// Guest-visible routes. "Menu" is a tab inside [Routes.main], not a route.
 /// Notifications have no route yet (currently behind profile) — add it here
 /// when the screen is promoted for guests.
 const Set<String> guestRoutes = {
-  Routes.main,
+  Routes.home,
+  Routes.menu,
   Routes.convertation,
-  ...publicRoutes
+  ...publicRoutes,
 };
 
 AccessLevel accessLevel(AsyncValue<AuthUser?> auth) {
@@ -36,10 +39,7 @@ AccessLevel accessLevel(AsyncValue<AuthUser?> auth) {
 }
 
 /// Returns the redirect target, or null when navigation may proceed.
-String? redirectFor({
-  required AccessLevel level,
-  required String location,
-}) {
+String? redirectFor({required AccessLevel level, required String location}) {
   switch (level) {
     case AccessLevel.loading:
       return null; // auth stream still resolving: don't bounce anyone
@@ -48,6 +48,6 @@ String? redirectFor({
     case AccessLevel.guest:
       return guestRoutes.contains(location) ? null : Routes.login;
     case AccessLevel.full:
-      return location == Routes.login ? Routes.main : null;
+      return location == Routes.login ? Routes.home : null;
   }
 }

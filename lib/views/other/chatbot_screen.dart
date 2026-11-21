@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math' show min;
 import 'dart:ui';
+
 import 'package:tarlan_bank/models/message.dart';
+import 'package:tarlan_bank/core/providers/service_providers.dart';
 import 'package:tarlan_bank/services/dio_manager.dart';
 import 'package:tarlan_bank/views/other/message_options_sheet.dart';
 import 'package:tarlan_bank/views/shared/horizontal_chips.dart';
@@ -10,7 +12,7 @@ import 'package:tarlan_bank/views/shared/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../services/chat_service.dart';
@@ -34,9 +36,9 @@ class _ChatMessage {
     bool isStreaming = false,
     String? thoughts,
     required this.timestamp,
-  })  : textNotifier = ValueNotifier(text),
-        isStreamingNotifier = ValueNotifier(isStreaming),
-        thoughtsNotifier = ValueNotifier(thoughts);
+  }) : textNotifier = ValueNotifier(text),
+       isStreamingNotifier = ValueNotifier(isStreaming),
+       thoughtsNotifier = ValueNotifier(thoughts);
 
   String get text => textNotifier.value;
   set text(String v) => textNotifier.value = v;
@@ -58,14 +60,14 @@ class _ChatMessage {
 // Screen
 // ---------------------------------------------------------------------------
 
-class ChatBotScreen extends StatefulWidget {
+class ChatBotScreen extends ConsumerStatefulWidget {
   const ChatBotScreen({super.key});
 
   @override
-  State<ChatBotScreen> createState() => _ChatBotScreenState();
+  ConsumerState<ChatBotScreen> createState() => _ChatBotScreenState();
 }
 
-class _ChatBotScreenState extends State<ChatBotScreen>
+class _ChatBotScreenState extends ConsumerState<ChatBotScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _headerAnimationController;
   late final ValueNotifier<double> _scrollPosition;
@@ -75,7 +77,7 @@ class _ChatBotScreenState extends State<ChatBotScreen>
   final ScrollController _scrollController = ScrollController();
   late final ValueNotifier<double> _keyboardHeight;
   late final ValueNotifier<bool> _isProcessingNotifier;
-  final ChatService chat = ChatService(dio: Get.find<DioManager>());
+  late final ChatService chat;
   final Uuid _uuid = const Uuid();
   bool _isProcessing = false;
   Timer? _scrollTimer;
@@ -195,8 +197,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     final maxScrollExtent = _scrollController.hasClients
         ? _scrollController.position.maxScrollExtent
         : 0.0;
-    final currentOffset =
-        _scrollController.hasClients ? _scrollController.offset : 0.0;
+    final currentOffset = _scrollController.hasClients
+        ? _scrollController.offset
+        : 0.0;
     const threshold = 120.0;
     _wasNearBottom = (maxScrollExtent - currentOffset) <= threshold;
     super.didChangeMetrics();
@@ -208,9 +211,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
 
   void _updateKeyboardHeight() {
     if (!mounted) return;
-    _keyboardHeight.value = MediaQueryData.fromView(
-      View.of(context),
-    ).viewInsets.bottom;
+    _keyboardHeight.value = MediaQueryData.fromView(View.of(context))
+        .viewInsets
+        .bottom;
   }
 
   void _setProcessing(bool value) {
@@ -238,12 +241,14 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     text = text.trim();
     if (text.isEmpty || _isProcessing) return;
 
-    _addMessageWithAnimation(_ChatMessage(
-      id: _uuid.v4(),
-      isBot: false,
-      text: text,
-      timestamp: DateTime.now(),
-    ));
+    _addMessageWithAnimation(
+      _ChatMessage(
+        id: _uuid.v4(),
+        isBot: false,
+        text: text,
+        timestamp: DateTime.now(),
+      ),
+    );
     _textController.clear();
     _setProcessing(true);
 
@@ -290,8 +295,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
       if (!mounted || !_scrollController.hasClients) return;
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration:
-            Duration(milliseconds: fast ? 150 : (_wasNearBottom ? 400 : 600)),
+        duration: Duration(
+          milliseconds: fast ? 150 : (_wasNearBottom ? 400 : 600),
+        ),
         curve: Curves.easeOut,
       );
     });
@@ -317,45 +323,47 @@ class _ChatBotScreenState extends State<ChatBotScreen>
     final double chipsH =
         kBottomNavigationBarHeight + 12 + 36 + 8; // input bar + chip rows
 
-// dimension isn't known here, but MediaQuery gives you the screen width
-// which is usually ≈ dimension on mobile
+    // dimension isn't known here, but MediaQuery gives you the screen width
+    // which is usually ≈ dimension on mobile
     final double dim = min(MediaQuery.of(context).size.shortestSide, 800.0);
 
     return Scaffold(
       appBar: FrostedAppBar(
         floating: true,
         leading: IconButton(
-            icon: SvgPicture.asset(
-              'assets/icons/ic_back.svg',
-              width: 36,
-              height: 36,
-              colorFilter: ColorFilter.mode(
-                Theme.of(context).colorScheme.primary,
-                BlendMode.srcIn,
-              ),
+          icon: SvgPicture.asset(
+            'assets/icons/ic_back.svg',
+            width: 36,
+            height: 36,
+            colorFilter: ColorFilter.mode(
+              Theme.of(context).colorScheme.primary,
+              BlendMode.srcIn,
             ),
-            onPressed: () {
-              FocusScope.of(context).unfocus();
-              Navigator.of(context).pop();
-            }),
+          ),
+          onPressed: () {
+            FocusScope.of(context).unfocus();
+            Navigator.of(context).pop();
+          },
+        ),
         title: Text(
           'ИИ Консультант',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 20),
         ),
         actions: [
           IconButton(
-              icon: SvgPicture.asset(
-                'assets/icons/trash.svg',
-                width: 32,
-                height: 32,
-                colorFilter: ColorFilter.mode(
-                  Theme.of(context).colorScheme.primary,
-                  BlendMode.srcIn,
-                ),
+            icon: SvgPicture.asset(
+              'assets/icons/trash.svg',
+              width: 32,
+              height: 32,
+              colorFilter: ColorFilter.mode(
+                Theme.of(context).colorScheme.primary,
+                BlendMode.srcIn,
               ),
-              onPressed: () {
-                _clearChat();
-              }),
+            ),
+            onPressed: () {
+              _clearChat();
+            },
+          ),
         ],
       ),
       extendBody: true,
@@ -390,7 +398,8 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 // Chat content — fills the whole body, scrolls UNDER the frosted bar.
                 Padding(
                   padding: const EdgeInsets.only(
-                      bottom: kBottomNavigationBarHeight + 12),
+                    bottom: kBottomNavigationBarHeight + 12,
+                  ),
                   child: Column(
                     children: [
                       AnimatedSwitcher(
@@ -410,15 +419,15 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                         ),
                         child: _messages.isEmpty
                             ? Center(
-                                child: LavaLampMetaBalls(
-                                key: ValueKey('lava'),
-                              ))
+                                child: LavaLampMetaBalls(key: ValueKey('lava')),
+                              )
                             : const SizedBox(key: ValueKey('empty')),
                       ),
                       Expanded(
                         child: NotificationListener<ScrollUpdateNotification>(
                           onNotification: (_) {
-                            _wasNearBottom = _scrollController.hasClients &&
+                            _wasNearBottom =
+                                _scrollController.hasClients &&
                                 (_scrollController.position.maxScrollExtent -
                                         _scrollController.offset) <=
                                     140;
@@ -432,8 +441,9 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                               final message = _messages[index];
                               final animCtrl = _messageAnimations[message.id];
                               return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
                                 child: _AnimatedBubble(
                                   key: ValueKey(message.id),
                                   message: message,
@@ -525,15 +535,16 @@ class _ChatBotScreenState extends State<ChatBotScreen>
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: ValueListenableBuilder<bool>(
                   valueListenable: _isProcessingNotifier,
-                  builder: (_, processing, __) => Row(
+                  builder: (_, processing, _) => Row(
                     children: [
                       Expanded(
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
                             color: cs.surfaceContainer,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(30)),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(30),
+                            ),
                           ),
                           child: TextField(
                             controller: _textController,
@@ -615,15 +626,16 @@ class _AnimatedBubble extends StatelessWidget {
       bubble = FadeTransition(
         opacity: CurvedAnimation(parent: entranceAnim!, curve: Curves.easeOut),
         child: SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset(message.isBot ? -0.06 : 0.06, 0.04),
-            end: Offset.zero,
-          ).animate(
-            CurvedAnimation(
-              parent: entranceAnim!,
-              curve: Curves.easeOutCubic,
-            ),
-          ),
+          position:
+              Tween<Offset>(
+                begin: Offset(message.isBot ? -0.06 : 0.06, 0.04),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(
+                  parent: entranceAnim!,
+                  curve: Curves.easeOutCubic,
+                ),
+              ),
           child: bubble,
         ),
       );
@@ -676,7 +688,7 @@ class _MessageBubble extends StatelessWidget {
                 if (isBot)
                   ValueListenableBuilder<String?>(
                     valueListenable: message.thoughtsNotifier,
-                    builder: (_, thoughts, __) {
+                    builder: (_, thoughts, _) {
                       if (thoughts == null || thoughts.isEmpty) {
                         return const SizedBox.shrink();
                       }
@@ -698,23 +710,26 @@ class _MessageBubble extends StatelessWidget {
                               valueListenable: message.isStreamingNotifier,
                               builder: (ctx, streaming, _) =>
                                   ValueListenableBuilder<String>(
-                                valueListenable: message.textNotifier,
-                                builder: (ctx2, text, _) {
-                                  if (text.isEmpty) {
-                                    return const SizedBox(width: 4, height: 0);
-                                  }
-                                  return _BotRichText(
-                                    text: text,
-                                    cs: cs,
-                                    tt: tt,
-                                    isStreaming: streaming,
-                                  );
-                                },
-                              ),
+                                    valueListenable: message.textNotifier,
+                                    builder: (ctx2, text, _) {
+                                      if (text.isEmpty) {
+                                        return const SizedBox(
+                                          width: 4,
+                                          height: 0,
+                                        );
+                                      }
+                                      return _BotRichText(
+                                        text: text,
+                                        cs: cs,
+                                        tt: tt,
+                                        isStreaming: streaming,
+                                      );
+                                    },
+                                  ),
                             )
                           : ValueListenableBuilder<String>(
                               valueListenable: message.textNotifier,
-                              builder: (_, text, __) => Text(
+                              builder: (_, text, _) => Text(
                                 text,
                                 style: TextStyle(
                                   color: cs.onPrimary,
@@ -728,7 +743,7 @@ class _MessageBubble extends StatelessWidget {
                     if (isBot)
                       ValueListenableBuilder<bool>(
                         valueListenable: message.isStreamingNotifier,
-                        builder: (_, streaming, __) {
+                        builder: (_, streaming, _) {
                           final showDots = streaming && message.text.isEmpty;
                           return AnimatedSize(
                             duration: const Duration(milliseconds: 400),
@@ -842,7 +857,7 @@ class _TypingDotsState extends State<_TypingDots>
         children: List.generate(3, (i) {
           return AnimatedBuilder(
             animation: _ctrl,
-            builder: (_, __) {
+            builder: (_, _) {
               final phase = (_ctrl.value - i * 0.08).clamp(0.0, 1.0);
               final scale =
                   0.6 + 0.5 * (1 - (phase - 0.4).abs() * 3).clamp(0.0, 1.0);
@@ -880,7 +895,7 @@ class _Block {
   const _Block.bullet(String c) : this._(_BlockType.bullet, c);
   const _Block.code(String c) : this._(_BlockType.code, c);
   const _Block.heading(String c, int lvl)
-      : this._(_BlockType.heading, c, level: lvl);
+    : this._(_BlockType.heading, c, level: lvl);
   const _Block.divider() : this._(_BlockType.divider, '');
 }
 
@@ -948,8 +963,10 @@ class _BotRichTextState extends State<_BotRichText> {
       if (headingMatch != null) {
         flushBuffer();
         final level = headingMatch.group(1)!.length;
-        final content =
-            headingMatch.group(2)!.replaceAll(RegExp(r'\s+#+\s*$'), '').trim();
+        final content = headingMatch
+            .group(2)!
+            .replaceAll(RegExp(r'\s+#+\s*$'), '')
+            .trim();
         blocks.add(_Block.heading(content, level));
         continue;
       }
@@ -980,24 +997,30 @@ class _BotRichTextState extends State<_BotRichText> {
     final re = RegExp(r'\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`|([^*`]+)');
     for (final m in re.allMatches(line)) {
       if (m.group(1) != null) {
-        spans.add(TextSpan(
-          text: m.group(1),
-          style: base.copyWith(fontWeight: FontWeight.w700),
-        ));
-      } else if (m.group(2) != null) {
-        spans.add(TextSpan(
-          text: m.group(2),
-          style: base.copyWith(fontStyle: FontStyle.italic),
-        ));
-      } else if (m.group(3) != null) {
-        spans.add(TextSpan(
-          text: m.group(3),
-          style: base.copyWith(
-            fontFamily: 'monospace',
-            backgroundColor: widget.cs.surfaceContainerHighest,
-            fontSize: (base.fontSize ?? 14) * 0.92,
+        spans.add(
+          TextSpan(
+            text: m.group(1),
+            style: base.copyWith(fontWeight: FontWeight.w700),
           ),
-        ));
+        );
+      } else if (m.group(2) != null) {
+        spans.add(
+          TextSpan(
+            text: m.group(2),
+            style: base.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
+      } else if (m.group(3) != null) {
+        spans.add(
+          TextSpan(
+            text: m.group(3),
+            style: base.copyWith(
+              fontFamily: 'monospace',
+              backgroundColor: widget.cs.surfaceContainerHighest,
+              fontSize: (base.fontSize ?? 14) * 0.92,
+            ),
+          ),
+        );
       } else if (m.group(4) != null) {
         spans.add(TextSpan(text: m.group(4), style: base));
       }
@@ -1050,16 +1073,14 @@ class _BotRichTextState extends State<_BotRichText> {
           fontSize: block.level == 1
               ? (base.fontSize ?? 14) * 1.22
               : block.level == 2
-                  ? (base.fontSize ?? 14) * 1.10
-                  : (base.fontSize ?? 14) * 1.00,
+              ? (base.fontSize ?? 14) * 1.10
+              : (base.fontSize ?? 14) * 1.00,
           height: 1.45,
         );
         return Padding(
           padding: EdgeInsets.only(top: block.level <= 2 ? 4 : 2),
           child: RichText(
-            text: TextSpan(
-              children: _parseInline(block.content, headingStyle),
-            ),
+            text: TextSpan(children: _parseInline(block.content, headingStyle)),
           ),
         );
 
@@ -1104,9 +1125,7 @@ class _BotRichTextState extends State<_BotRichText> {
             ),
             Flexible(
               child: RichText(
-                text: TextSpan(
-                  children: _parseInline(block.content, base),
-                ),
+                text: TextSpan(children: _parseInline(block.content, base)),
               ),
             ),
           ],
@@ -1114,9 +1133,7 @@ class _BotRichTextState extends State<_BotRichText> {
 
       case _BlockType.paragraph:
         return RichText(
-          text: TextSpan(
-            children: _parseInline(block.content, base),
-          ),
+          text: TextSpan(children: _parseInline(block.content, base)),
         );
     }
   }

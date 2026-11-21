@@ -1,61 +1,70 @@
-// lib/views/shared/history_common.dart
-import 'package:tarlan_bank/controllers/accounts_controller.dart';
-import 'package:tarlan_bank/models/transaction_model.dart';
-import 'package:tarlan_bank/views/shared/custom_card.dart';
-import 'package:tarlan_bank/views/shared/formatters.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
+// lib/views/shared/history_base.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
-/// ──────────────────────────────────────────────
-/// 1️⃣  Shared controller logic
-/// ──────────────────────────────────────────────
-class HistoryBaseController extends GetxController {
-  final AccountsController accountsController = Get.find<AccountsController>();
-  Rx<DateTimeRange?> selectedDateRange = Rx<DateTimeRange?>(null);
+import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
+import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
+import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/views/shared/custom_card.dart';
+import 'package:tarlan_bank/views/shared/formatters.dart';
 
-  // common Rx fields ---------------------------------------------------------
-  RxString selectedPeriod = 'За неделю'.obs;
-  RxString selectedPeriodDetail = ''.obs;
+/// Stable internal period keys (labels are localized by the UI).
+const String periodWeek = 'week';
+const String periodMonth = 'month';
+const String periodThreeMonths = 'threeMonths';
+const String periodCustom = 'custom';
 
-  RxMap<String, List<Transaction>> categorizedTransactions =
-      <String, List<Transaction>>{'': []}.obs;
+/// Shared, GetX-free history state used by the transfer (and payment) screens.
+/// It reads transactions through [transactionsRepositoryProvider] and reports
+/// mutations through [onChanged] so an owning ConsumerState can call setState.
+class HistoryBaseController {
+  HistoryBaseController(this.ref, {this.onChanged});
 
-  // ──────────────────────────────────────────────
-  // 2️⃣  Period handling helpers
-  // ──────────────────────────────────────────────
+  final WidgetRef ref;
+  final VoidCallback? onChanged;
+
+  DateTimeRange? selectedDateRange;
+  String selectedPeriod = periodWeek;
+  String selectedPeriodDetail = '';
+  Map<String, List<BankTransaction>> categorizedTransactions = {'': []};
+
   void updatePeriod(String period) {
-    selectedPeriod.value = period;
+    selectedPeriod = period;
     _updateSelectedDetail();
+    onChanged?.call();
   }
 
-  /// Formats the "from‑to" string that is shown on the filter card.
+  /// Formats the "from - to" string shown on the filter card.
   void _updateSelectedDetail() {
     final now = DateTime.now();
-    DateTime? start, end = now;
-
-    switch (selectedPeriod.value) {
-      case 'За неделю':
+    DateTime? start;
+    final end = now;
+    switch (selectedPeriod) {
+      case periodWeek:
         start = now.subtract(const Duration(days: 7));
-        break;
-      case 'За месяц':
+      case periodMonth:
         start = now.subtract(const Duration(days: 30));
-        break;
-      case 'За 3 месяца':
+      case periodThreeMonths:
         start = now.subtract(const Duration(days: 90));
-        break;
-      case 'Выбранный период':
-        // `selectedDateRange` lives in the TransferHistoryController.
-        // If you need it here, expose it via a callback or a shared model.
-        break;
+      case periodCustom:
+        start = selectedDateRange?.start;
     }
-
     if (start != null) {
-      selectedPeriodDetail.value =
-          '${_formatDate(start)} - ${_formatDate(end)}';
+      final endLabel = selectedPeriod == periodCustom
+          ? (selectedDateRange?.end ?? now)
+          : end;
+      selectedPeriodDetail = '${_formatDate(start)} - ${_formatDate(endLabel)}';
     }
+    onChanged?.call();
+  }
+
+  void setDateRange(DateTimeRange? range) {
+    selectedDateRange = range;
+    updatePeriod(periodCustom);
   }
 
   String _formatDate(DateTime d) {
@@ -71,7 +80,7 @@ class HistoryBaseController extends GetxController {
       'сентября',
       'октября',
       'ноября',
-      'декабря'
+      'декабря',
     ];
     final yearSuffix = d.year != DateTime.now().year
         ? " '${d.year.toString().substring(2)}"
@@ -79,196 +88,160 @@ class HistoryBaseController extends GetxController {
     return "${d.day} ${months[d.month - 1]}$yearSuffix";
   }
 
-  // ──────────────────────────────────────────────
-  // 3️⃣  Load & categorize transactions (shared)
-  // ──────────────────────────────────────────────
+  /// Loads & categorizes transactions (shared by both history screens).
   Future<void> loadAndCategorize({DateTime? start, DateTime? end}) async {
-    List<Transaction> newTxs = await accountsController.fetchTransactionHistory(
-        startDate: start?.toIso8601String(), endDate: end?.toIso8601String());
+    final txs = await ref
+        .read(transactionsRepositoryProvider)
+        .fetchHistory(
+          startDate: start?.toIso8601String(),
+          endDate: end?.toIso8601String(),
+        );
 
-    // Filter out internal transfers / deposits etc. – same rules as transfer screen
-    newTxs = newTxs.where((tx) {
-      return tx.type != 'internal_transfer' &&
-          tx.fromUserName != tx.toUserName &&
-          tx.type != 'currency_conversion' &&
-          !(tx.type == 'deposit' && tx.amount == 1000.0);
+    // Same exclusion rules as the legacy screen (internal bookkeeping only).
+    final filtered = txs.where((tx) {
+      return tx.type != TransactionType.internalTransfer &&
+          tx.type != TransactionType.currencyConversion;
     }).toList();
 
-    // Merge with existing data (deduplication logic)
-    final List<Transaction> all = [
-      ...(accountsController.transactionHistory),
-      ...newTxs
-    ];
-    all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    accountsController.transactionHistory.value = List<Transaction>.from(all);
-    accountsController.paymentHistory.value = List<Transaction>.from(all)
-        .where(
-          (element) => element.type == 'payment',
-        )
-        .toList();
-    _categorize(all);
+    _categorize(filtered);
   }
 
-  void _categorize(List<Transaction> txs) {
+  void _categorize(List<BankTransaction> txs) {
     final now = DateTime.now();
-    Map<String, List<Transaction>> map = {};
-
-    // Build categories based on the *currently selected* period
-    switch (selectedPeriod.value) {
-      case 'За неделю':
-        map['На этой неделе'] = txs
-            .where((t) =>
-                t.createdAt.isAfter(now.subtract(const Duration(days: 7))))
+    final map = <String, List<BankTransaction>>{};
+    switch (selectedPeriod) {
+      case periodWeek:
+        map['week'] = txs
+            .where(
+              (t) =>
+                  t.createdAt?.isAfter(now.subtract(const Duration(days: 7))) ??
+                  false,
+            )
             .toList();
-        break;
-      case 'За месяц':
-        map['Этот месяц'] = txs
-            .where((t) => t.createdAt.isAfter(DateTime(now.year, now.month)))
+      case periodMonth:
+        map['month'] = txs
+            .where(
+              (t) =>
+                  t.createdAt?.isAfter(DateTime(now.year, now.month)) ?? false,
+            )
             .toList();
-        break;
-      case 'За 3 месяца':
-        map['На этой неделе'] = // you can choose a different label
-            txs
-                .where((t) =>
-                    t.createdAt.isAfter(now.subtract(const Duration(days: 90))))
-                .toList();
-        break;
+      case periodThreeMonths:
+        map['threeMonths'] = txs
+            .where(
+              (t) =>
+                  t.createdAt?.isAfter(
+                    now.subtract(const Duration(days: 90)),
+                  ) ??
+                  false,
+            )
+            .toList();
       default:
-        map['Ранее'] = txs.where((t) => !txs.contains(t)).toList(); // fallback
+        map['all'] = List<BankTransaction>.from(txs);
     }
+    categorizedTransactions = map;
+    onChanged?.call();
+  }
 
-    categorizedTransactions.value = map;
+  /// All currently visible transactions (first category), newest first.
+  List<BankTransaction> get visibleTransactions {
+    if (categorizedTransactions.isEmpty) return const [];
+    final txs = categorizedTransactions.values.first;
+    final sorted = List<BankTransaction>.from(txs);
+    sorted.sort((a, b) {
+      final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bTime.compareTo(aTime);
+    });
+    return sorted;
   }
 }
 
+/// Localized label for a transaction type.
+String transactionTypeLabel(AppLocalizations l, TransactionType type) =>
+    switch (type) {
+      TransactionType.deposit => l.typeDeposit,
+      TransactionType.withdrawal => l.typeWithdrawal,
+      TransactionType.phoneTransfer => l.typePhoneTransfer,
+      TransactionType.qrTransfer => l.typeQrTransfer,
+      TransactionType.currencyConversion => l.typeCurrencyConversion,
+      TransactionType.internalTransfer => l.typeInternalTransfer,
+      TransactionType.cardTransfer => l.typeCardTransfer,
+      TransactionType.swiftTransfer => l.typeSwiftTransfer,
+    };
+
 class TransactionCard extends StatelessWidget {
-  final Transaction tx;
   const TransactionCard({required this.tx, super.key});
 
-  String getTypeText(String type) {
-    switch (type) {
-      case 'deposit':
-        return 'Вклад';
-      case 'withdrawal':
-        return 'Вывод';
-      case 'phone_transfer':
-        return 'Перевод по номеру';
-      case 'qr_transfer':
-        return 'QR перевод';
-      case 'currency_conversion':
-        return 'Обмен валюты';
-      case 'internal_transfer':
-        return 'Внутренний перевод';
-      case 'card_transfer':
-        return 'Перевод на карту';
-      case 'swift_transfer':
-        return 'SWIFT перевод';
-      default:
-        return 'Перевод';
-    }
-  }
+  final BankTransaction tx;
+
+  Color _statusColor(TransactionStatus status) => switch (status) {
+    TransactionStatus.completed => Colors.green,
+    TransactionStatus.pending => Colors.orange,
+    TransactionStatus.failed => Colors.red,
+    TransactionStatus.reversed => Colors.grey,
+  };
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(getTypeText(tx.type),
-                style: Theme.of(context).textTheme.titleMedium),
-            Text(formatCurrency(tx.amount, tx.currency, Get.locale.toString()),
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(color: _getStatusColor(tx.status))),
-          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                transactionTypeLabel(l, tx.type),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                formatCurrency(tx.amount, tx.currency, 'ru_RU'),
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(color: _statusColor(tx.status)),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
-          // From / To
-
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            if ((tx.fromUserName != null || tx.fromAccount.isNotEmpty) &&
-                tx.type == 'qr_transfer')
-              Text('От: ${tx.fromUserName ?? tx.fromAccount}',
-                  style: Theme.of(context).textTheme.bodySmall),
-            if (tx.type == 'phone_transfer')
-              Text('+7 ${formatPhone(tx.toUserPhone ?? '')}',
-                  style: Theme.of(context).textTheme.bodySmall),
-            if (tx.type == 'card_transfer')
-              Text(censorCardNumber(tx.toAccount),
-                  style: Theme.of(context).textTheme.bodySmall),
-            if (tx.type == 'card_transfer' ||
-                tx.type == 'swift_transfer' ||
-                tx.type == 'internal_transfer' ||
-                tx.type == 'currency_conversion' ||
-                tx.type == 'withdrawal' ||
-                tx.type == 'deposit')
-              Text(censorCardNumber(tx.toAccount),
-                  style: Theme.of(context).textTheme.bodySmall),
-            Text(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (tx.type == TransactionType.qrTransfer &&
+                  tx.fromAccountId != null)
+                Text(
+                  '${l.from}: ${censorCardNumber(tx.fromAccountId!)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              else if (tx.type == TransactionType.phoneTransfer ||
+                  tx.type == TransactionType.cardTransfer ||
+                  tx.type == TransactionType.swiftTransfer ||
+                  tx.type == TransactionType.deposit ||
+                  tx.type == TransactionType.withdrawal)
+                Text(
+                  censorCardNumber(tx.toAccountId ?? ''),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              if (tx.message != null && tx.message!.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    tx.message!,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              Text(
                 DateFormat('HH:mm').format(
-                    tx.createdAt.add(const Duration(hours: 5)).toLocal()),
-                style: Theme.of(context).textTheme.bodySmall),
-            // Container(
-            //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            //   decoration: BoxDecoration(
-            //       color: _getStatusColor(tx.status),
-            //       borderRadius: BorderRadius.circular(12)),
-            //   child: Text(_getStatusText(tx.status),
-            //       style: Theme.of(context)
-            //           .textTheme
-            //           .bodySmall
-            //           ?.copyWith(color: Colors.white)),
-            // ),
-          ]),
+                  (tx.createdAt ?? DateTime.now())
+                      .add(const Duration(hours: 5))
+                      .toLocal(),
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ],
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'pending':
-        return Colors.orange;
-      case 'failed':
-        return Colors.red;
-      case 'reversed':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color _getAmountColor(String status) {
-    switch (status) {
-      case 'to':
-        return Colors.green;
-      case 'pending':
-        return Colors.orange;
-      case 'from':
-        return Colors.red;
-      case 'reversed':
-        return Colors.grey;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'completed':
-        return 'завершено';
-      case 'pending':
-        return 'в обработке';
-      case 'failed':
-        return 'ошибка';
-      case 'reversed':
-        return 'отменен';
-      default:
-        return 'в обработке';
-    }
   }
 }
 
@@ -279,8 +252,9 @@ Widget buildEmptyState(ThemeData theme, Size size, String message) {
         SizedBox(height: size.height * 0.15),
         SvgPicture.asset(
           'assets/icons/ic_empty_list.svg',
-          height:
-              size.width > size.height ? size.height * 0.3 : size.width * 0.3,
+          height: size.width > size.height
+              ? size.height * 0.3
+              : size.width * 0.3,
           colorFilter: ColorFilter.mode(
             theme.colorScheme.secondaryContainer,
             BlendMode.srcIn,
@@ -304,7 +278,10 @@ Widget buildEmptyState(ThemeData theme, Size size, String message) {
 }
 
 Widget buildFilterCard(
-    BuildContext context, RxString periodDetail, VoidCallback onTap) {
+  BuildContext context,
+  String periodDetail,
+  VoidCallback onTap,
+) {
   final ThemeData theme = Theme.of(context);
   return SimpleCard(
     padding: EdgeInsets.zero,
@@ -319,10 +296,7 @@ Widget buildFilterCard(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Obx(() => Text(
-                  periodDetail.value,
-                  style: Theme.of(context).textTheme.titleMedium,
-                )),
+            Text(periodDetail, style: Theme.of(context).textTheme.titleMedium),
             SvgPicture.asset(
               'assets/icons/ic_filter.svg',
               width: 32,
@@ -336,12 +310,28 @@ Widget buildFilterCard(
 }
 
 void showFilterBottomSheet(
-    BuildContext context, HistoryBaseController history) {
+  BuildContext context,
+  HistoryBaseController history,
+) {
   final theme = Theme.of(context);
+  final l = AppLocalizations.of(context);
+  final periods = <String, String>{
+    periodWeek: l.week,
+    periodMonth: l.month,
+    periodThreeMonths: l.threeMonths,
+    periodCustom: l.calendarPeriod,
+  };
+  final icons = <String, String>{
+    periodWeek: '7',
+    periodMonth: '30',
+    periodThreeMonths: '90',
+    periodCustom: '∞',
+  };
+
   showModalBottomSheet(
     context: context,
     builder: (context) => Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -349,69 +339,62 @@ void showFilterBottomSheet(
             children: [
               IconButton(
                 icon: Transform.rotate(
-                    angle: -90 * 3.14159 / 180,
-                    child: SvgPicture.asset(
-                      'assets/icons/ic_back.svg',
-                      width: 32,
-                      height: 32,
-                      colorFilter: ColorFilter.mode(
-                        theme.colorScheme.primary,
-                        BlendMode.srcIn,
-                      ),
-                    )),
-                onPressed: () => Navigator.pop(context),
+                  angle: -90 * 3.14159 / 180,
+                  child: SvgPicture.asset(
+                    'assets/icons/ic_back.svg',
+                    width: 32,
+                    height: 32,
+                    colorFilter: ColorFilter.mode(
+                      theme.colorScheme.primary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+                onPressed: () => context.pop(),
               ),
               Expanded(
                 child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Выберите период',
-                      style: theme.textTheme.titleLarge,
-                      textAlign: TextAlign.start,
-                    )),
-              ),
-              SizedBox(width: 48),
-            ],
-          ),
-          SizedBox(height: 16),
-          ...[
-            'За неделю',
-            'За месяц',
-            'За 3 месяца',
-            'Выбрать период в календаре'
-          ].map((period) => ListTile(
-                leading: Container(
-                  height: theme.textTheme.titleMedium!.fontSize! * 2 + 8,
-                  width: theme.textTheme.titleMedium!.fontSize! * 2 + 8,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    textAlign: TextAlign.center,
-                    period == 'За неделю'
-                        ? '7'
-                        : period == 'За месяц'
-                            ? '30'
-                            : period == 'За 3 месяца'
-                                ? '90'
-                                : '∞',
-                    style: theme.textTheme.titleMedium,
+                    l.selectPeriod,
+                    style: theme.textTheme.titleLarge,
+                    textAlign: TextAlign.start,
                   ),
                 ),
-                title: Text(period),
-                onTap: () async {
-                  if (period == 'Выбрать период в календаре') {
-                    Navigator.pop(context);
-                    await selectDateRange(context, history);
-                  } else {
-                    history.updatePeriod(period);
-                    Navigator.pop(context);
-                  }
-                },
-              )),
-          SizedBox(height: 32),
+              ),
+              const SizedBox(width: 48),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...periods.entries.map(
+            (entry) => ListTile(
+              leading: Container(
+                height: theme.textTheme.titleMedium!.fontSize! * 2 + 8,
+                width: theme.textTheme.titleMedium!.fontSize! * 2 + 8,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  icons[entry.key]!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              title: Text(entry.value),
+              onTap: () async {
+                if (entry.key == periodCustom) {
+                  context.pop();
+                  await selectDateRange(context, history);
+                } else {
+                  history.updatePeriod(entry.key);
+                  context.pop();
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     ),
@@ -419,11 +402,15 @@ void showFilterBottomSheet(
 }
 
 Future<void> selectDateRange(
-    BuildContext context, HistoryBaseController history) async {
+  BuildContext context,
+  HistoryBaseController history,
+) async {
   final theme = Theme.of(context);
-  DateTimeRange tempRange = history.selectedDateRange.value ??
+  final l = AppLocalizations.of(context);
+  DateTimeRange tempRange =
+      history.selectedDateRange ??
       DateTimeRange(
-        start: DateTime.now().subtract(Duration(days: 7)),
+        start: DateTime.now().subtract(const Duration(days: 7)),
         end: DateTime.now(),
       );
 
@@ -436,10 +423,7 @@ Future<void> selectDateRange(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Text(
-              'Выберите период',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text(l.selectPeriod, style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             Expanded(
               child: SfDateRangePicker(
@@ -451,7 +435,7 @@ Future<void> selectDateRange(
                 ),
                 minDate: DateTime(2023),
                 maxDate: DateTime.now(),
-                monthViewSettings: DateRangePickerMonthViewSettings(
+                monthViewSettings: const DateRangePickerMonthViewSettings(
                   firstDayOfWeek: 1,
                   showTrailingAndLeadingDates: true,
                 ),
@@ -484,18 +468,16 @@ Future<void> selectDateRange(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => context.pop(),
                   child: Text(
-                    'Отмена',
+                    l.cancel,
                     style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, tempRange);
-                  },
+                  onPressed: () => context.pop(tempRange),
                   child: Text(
-                    'Выбрать',
+                    l.choose,
                     style: TextStyle(color: theme.colorScheme.primary),
                   ),
                 ),
@@ -507,7 +489,6 @@ Future<void> selectDateRange(
     ),
   );
   if (picked != null) {
-    history.selectedDateRange.value = picked;
-    history.updatePeriod('Выбранный период');
+    history.setDateRange(picked);
   }
 }

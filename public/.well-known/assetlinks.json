@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.tarlan.bank",
+      "sha256_cert_fingerprints": [
+        "47:E7:71:A7:FA:69:89:FF:2E:69:24:EF:D4:2B:F3:06:23:C3:EE:7F:06:10:61:CC:C3:44:E3:4C:1D:C5:D6:8D",
+        "54:08:6C:85:5F:53:38:CA:98:A4:0A:7C:5B:26:EC:AD:5F:54:22:B8:81:E6:DC:9E:9A:A9:61:5C:0E:5B:5C:7D"
+      ]
+    }
+  }
+]

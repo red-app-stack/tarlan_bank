@@ -1,167 +1,152 @@
-import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
+import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/shared/history_base.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:get/get.dart';
 
-class PaymentHistoryController extends GetxController {
-  final HistoryBaseController history = Get.put(HistoryBaseController());
-  PaymentHistoryController();
+class PaymentHistoryScreen extends ConsumerStatefulWidget {
+  const PaymentHistoryScreen({super.key});
 
   @override
-  void onInit() async {
-    super.onInit();
-    history.updatePeriod('За неделю');
-    await history.loadAndCategorize(
-        start: DateTime.now().subtract(const Duration(days: 7)),
-        end: DateTime.now());
-  }
+  ConsumerState<PaymentHistoryScreen> createState() =>
+      _PaymentHistoryScreenState();
 }
 
-class PaymentHistoryScreen extends StatelessWidget {
-  final controller = Get.put(PaymentHistoryController());
+class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
+  late final HistoryBaseController _history;
+  bool _ready = false;
+  bool _loading = false;
 
-  PaymentHistoryScreen({super.key});
+  @override
+  void initState() {
+    super.initState();
+    _history = HistoryBaseController(
+      ref,
+      onChanged: () {
+        if (_ready && mounted) setState(() {});
+      },
+    );
+    _history.updatePeriod(periodWeek);
+    _ready = true;
+    _load();
+  }
+
+  DateTime? _startFor(String period) {
+    final now = DateTime.now();
+    return switch (period) {
+      periodWeek => now.subtract(const Duration(days: 7)),
+      periodMonth => now.subtract(const Duration(days: 30)),
+      periodThreeMonths => now.subtract(const Duration(days: 90)),
+      periodCustom => _history.selectedDateRange?.start,
+      _ => now.subtract(const Duration(days: 7)),
+    };
+  }
+
+  DateTime? _endFor(String period) =>
+      period == periodCustom ? _history.selectedDateRange?.end : DateTime.now();
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      await _history.loadAndCategorize(
+        start: _startFor(_history.selectedPeriod),
+        end: _endFor(_history.selectedPeriod),
+      );
+    } catch (_) {
+      // Keep the last successful categorization visible (offline-friendly).
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _refresh() async {
+    await _load();
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+  }
+
+  String _categoryLabel(String key, AppLocalizations l) => switch (key) {
+    'week' => l.categoryThisWeek,
+    'month' => l.categoryThisMonth,
+    'threeMonths' => l.categoryThisWeek,
+    _ => l.categoryEarlier,
+  };
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
-        appBar: buildHeader(context, 'История платежей'),
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        body: SafeArea(
-            bottom: false,
-            top: false,
-            child: RefreshIndicator(
-              edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
-              onRefresh: () async {
-                try {
-                  DateTime now = DateTime.now();
-                  DateTime? start;
-                  switch (controller.history.selectedPeriod.value) {
-                    case 'За неделю':
-                      start = now.subtract(const Duration(days: 7));
-                      break;
-                    case 'За месяц':
-                      start = now.subtract(const Duration(days: 30));
-                      break;
-                    case 'За 3 месяца':
-                      start = now.subtract(const Duration(days: 90));
-                      break;
-                    case 'Выбранный период':
-                      if (controller.history.selectedDateRange.value != null) {
-                        start =
-                            controller.history.selectedDateRange.value!.start;
-                      }
-                      break;
-                  }
-
-                  await controller.history
-                      .loadAndCategorize(start: start, end: now);
-                  await Future.delayed(const Duration(milliseconds: 500));
-                } on TimeoutException {
-                  print('Refresh operation timed out');
-                } catch (e) {
-                  print('Error during refresh: $e');
-                }
-                return Future.value();
-              },
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0, vertical: 56 + kToolbarHeight),
-                    child: Column(
-                      children: [
-                        buildFilterCard(
-                          context,
-                          controller.history.selectedPeriodDetail,
-                          () => showFilterBottomSheet(
-                              context, controller.history),
-                        ),
-                        const SizedBox(height: 16),
-                        Obx(
-                          () => controller.history.accountsController
-                                  .paymentHistory.isNotEmpty
-                              ? _buildTransactionsList(context)
-                              : buildEmptyState(
-                                  theme,
-                                  size,
-                                  'Здесь будет отображаться \nистория ваших платежей',
-                                ),
-                        ),
-                      ],
+      appBar: buildHeader(context, l.paymentHistory),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: SafeArea(
+        bottom: false,
+        top: false,
+        child: RefreshIndicator(
+          edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
+          onRefresh: _refresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight:
+                    size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 56 + kToolbarHeight,
+                ),
+                child: Column(
+                  children: [
+                    buildFilterCard(
+                      context,
+                      _history.selectedPeriodDetail,
+                      () => showFilterBottomSheet(context, _history),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    if (_loading && _history.categorizedTransactions.isEmpty)
+                      const Center(child: CircularProgressIndicator())
+                    else if (_history.visibleTransactions.isEmpty)
+                      buildEmptyState(theme, size, l.paymentHistoryEmpty)
+                    else
+                      _buildTransactionsList(theme, l),
+                  ],
                 ),
               ),
-            )));
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _buildTransactionsList(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Obx(() {
-      final categories =
-          controller.history.categorizedTransactions.keys.toList();
-      return ListView.builder(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          final transactions =
-              controller.history.categorizedTransactions[category] ?? [];
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  category,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+  Widget _buildTransactionsList(ThemeData theme, AppLocalizations l) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _history.categorizedTransactions.length,
+      itemBuilder: (context, index) {
+        final entry = _history.categorizedTransactions.entries.elementAt(index);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                _categoryLabel(entry.key, l),
+                style: theme.textTheme.headlineSmall,
               ),
-              transactions.isNotEmpty
-                  ? ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: transactions.length,
-                      itemBuilder: (context, i) {
-                        final transaction = transactions[i];
-                        return TransactionCard(
-                          tx: transaction,
-                        );
-                      },
-                    )
-                  : Center(
-                      child: Padding(
-                          padding: EdgeInsets.all(size.height * 0.03),
-                          child: SvgPicture.asset(
-                            'assets/icons/ic_empty_list.svg',
-                            height: size.width > size.height
-                                ? size.height * 0.3
-                                : size.width * 0.3,
-                            colorFilter: ColorFilter.mode(
-                              Theme.of(context).colorScheme.secondaryContainer,
-                              BlendMode.srcIn,
-                            ),
-                          ))),
-            ],
-          );
-        },
-      );
-    });
+            ),
+            ...entry.value.map((tx) => TransactionCard(tx: tx)),
+          ],
+        );
+      },
+    );
   }
 }

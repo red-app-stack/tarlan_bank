@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:get/get.dart';
 
 import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/utils/phone_number.dart';
@@ -8,7 +8,7 @@ import 'package:tarlan_bank/features/auth/data/password_validation.dart';
 import 'package:tarlan_bank/features/auth/data/password_rule_labels.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
-import 'package:tarlan_bank/routes/app_routes.dart' show Routes;
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 
 import 'email_verification_dialog.dart';
 
@@ -18,8 +18,7 @@ import 'email_verification_dialog.dart';
 /// stage belonged to the retired custom-JWT server. Registration keeps the
 /// phone/fullName data but collects it in one form (Firebase owns credentials).
 ///
-/// TRANSITIONAL: navigation uses `Get.offAllNamed` because the live app still
-/// runs `GetMaterialApp`; swap to `context.go(Routes.main)` at Riverpod cutover.
+/// Navigation goes through go_router directly after a successful sign-in.
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -92,7 +91,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _done();
   }
 
-  void _done() => Get.offAllNamed(Routes.main);
+  void _done() {
+    if (context.mounted) context.go(Routes.home);
+  }
 
   Future<void> _submitEmail() async {
     final l = AppLocalizations.of(context);

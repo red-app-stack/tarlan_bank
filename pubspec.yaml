@@ -38,16 +38,9 @@ dependencies:
   flutter_svg: any
   # bcrypt: any
   # collection: any
-  cupertino_icons: any
+  # cupertino_icons: any
   dio: any
   # encrypt: any
-  # GetX 5 (material_ui-based). pub.dev's 5.0.0-release-candidate-9.3.3 still uses
-  # flutter/material; the material_ui migration exists only on GitHub master (unpublished,
-  # same version string). Pinned to master @ 2026-10-31; move to pub.dev once 5.x ships there.
-  get:
-    git:
-      url: https://github.com/jonataslaw/getx.git
-      ref: a294d2fbfc65856ca1da1bd37e5018e778e8939a
   intl: any
   shared_preferences: any
   shimmer: any
@@ -67,13 +60,13 @@ dependencies:
   # graphview: any
   syncfusion_flutter_datepicker: any
   # chat_bubbles: any
-  path_provider: any
+  # path_provider: any
   uuid: ^4.5.2
-  scroll_loop_auto_scroll: ^0.0.5
   material_ui: ^1.11.1
   cupertino_ui: ^1.1.7
   # Migration: state management + navigation (GetX -> Riverpod + go_router).
   flutter_riverpod: ^3.3.1
+  app_links: ^7.2.2 # Firebase email-verification App Links (oobCode)
   go_router: ^17.3.0
   firebase_core: ^5.2.0
   firebase_auth: ^7.1.0

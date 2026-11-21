@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Server {
@@ -18,11 +20,14 @@ class Server {
   }
 
   void recordFailure() {
-    print('$_currentBaseUrl');
+    if (kDebugMode) {
+      print(_currentBaseUrl);
+    }
     _sequentialFailures++;
     if (_sequentialFailures >= maxSequentialFailures) {
       print(
-          "⚠️ $_sequentialFailures sequential errors, resetting _currentBaseUrl");
+        "⚠️ $_sequentialFailures sequential errors, resetting _currentBaseUrl",
+      );
       _currentBaseUrl = '';
       _sequentialFailures = 0;
     }
@@ -138,13 +143,16 @@ class Server {
 
     // CRITICAL: Check if it's a Map before using string keys
     if (jsonMap is! Map<String, dynamic>) {
-      throw Exception("Expected JSON object, got ${jsonMap.runtimeType}. "
-          "Content: ${jsonMap.toString().substring(0, 100)}...");
+      throw Exception(
+        "Expected JSON object, got ${jsonMap.runtimeType}. "
+        "Content: ${jsonMap.toString().substring(0, 100)}...",
+      );
     }
 
     if (!jsonMap.containsKey('tunnelUrl')) {
       throw Exception(
-          "Missing 'tunnelUrl' key. Available keys: ${jsonMap.keys.toList()}");
+        "Missing 'tunnelUrl' key. Available keys: ${jsonMap.keys.toList()}",
+      );
     }
 
     final tunnelUrl = '${jsonMap['tunnelUrl']}';
