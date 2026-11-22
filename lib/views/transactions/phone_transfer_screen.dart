@@ -88,6 +88,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
     );
     _lookupTimer?.cancel();
     if (digits.length == 10) {
+      ref.read(transferLookupProvider.notifier).begin();
       _lookupTimer = Timer(const Duration(milliseconds: 400), () {
         if (mounted) _lookupRecipient(digits);
       });
@@ -101,7 +102,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
     try {
       await ref
           .read(transferLookupProvider.notifier)
-          .lookup(phoneNumber: number);
+          .lookup(phoneNumber: number, scheduled: true);
     } on Object {
       if (mounted) ref.read(transferLookupProvider.notifier).clear();
     }

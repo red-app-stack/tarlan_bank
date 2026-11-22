@@ -65,11 +65,24 @@ class TransferLookupNotifier extends Notifier<TransferLookupState> {
   @override
   TransferLookupState build() => const TransferLookupState();
 
-  Future<void> lookup({String? phoneNumber, String? accountNumber}) async {
-    if (state.pending || _guard.isBlocked) {
-      state = TransferLookupState(blocked: _guard.isBlocked);
+  void begin() {
+    if (_guard.isBlocked) {
+      state = TransferLookupState(blocked: true);
       return;
     }
+    state = const TransferLookupState(pending: true);
+  }
+
+  Future<void> lookup({
+    String? phoneNumber,
+    String? accountNumber,
+    bool scheduled = false,
+  }) async {
+    if (_guard.isBlocked) {
+      state = TransferLookupState(blocked: true);
+      return;
+    }
+    if (!scheduled && state.pending) return;
     state = const TransferLookupState(pending: true);
     try {
       TransferRecipient? recipient;

@@ -94,6 +94,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
     );
     _lookupTimer?.cancel();
     if (digits.length == 16) {
+      ref.read(transferLookupProvider.notifier).begin();
       _lookupTimer = Timer(const Duration(milliseconds: 400), () {
         if (mounted) _lookupRecipient(digits);
       });
@@ -107,7 +108,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
     try {
       await ref
           .read(transferLookupProvider.notifier)
-          .lookup(accountNumber: number);
+          .lookup(accountNumber: number, scheduled: true);
     } on Object {
       if (mounted) ref.read(transferLookupProvider.notifier).clear();
     }

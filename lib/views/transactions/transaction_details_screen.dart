@@ -15,6 +15,7 @@ import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/history_base.dart';
 import 'package:tarlan_bank/views/shared/service_item.dart';
 
+import 'package:tarlan_bank/features/transactions/widgets/lookup_identity_row.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
 
 class TransactionDetailsScreen extends ConsumerStatefulWidget {
@@ -37,12 +38,14 @@ class _TransactionDetailsScreenState
   bool _checkedFavorite = false;
   String? _recipientForId;
   TransferRecipient? _recipient;
+  bool _loadingRecipient = false;
 
   Future<void> _loadRecipient(BankTransaction tx) async {
     if (tx.toAccountId == null) return;
     final id = tx.id;
     if (_recipientForId == id) return;
     _recipientForId = id;
+    if (mounted) setState(() => _loadingRecipient = true);
     try {
       final recipient = await ref
           .read(recipientRepositoryProvider)
@@ -52,6 +55,10 @@ class _TransactionDetailsScreenState
       }
     } on Object {
       // Keep the masked account fallback.
+    } finally {
+      if (mounted && _recipientForId == id) {
+        setState(() => _loadingRecipient = false);
+      }
     }
   }
 
@@ -116,17 +123,6 @@ class _TransactionDetailsScreenState
     };
     if (context.canPop()) context.pop();
     context.go(route);
-  }
-
-  Widget _buildUserAvatar(ThemeData theme, String? userName) {
-    return CircleAvatar(
-      radius: 24,
-      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-      child: Text(
-        getInitials(userName ?? ''),
-        style: theme.textTheme.titleMedium,
-      ),
-    );
   }
 
   Widget _buildDetailRow(ThemeData theme, String label, String value) {
@@ -253,8 +249,6 @@ class _TransactionDetailsScreenState
                             const SizedBox(height: 24),
                             Row(
                               children: [
-                                _buildUserAvatar(theme, _recipient?.fullName),
-                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -264,12 +258,13 @@ class _TransactionDetailsScreenState
                                         l.recipient,
                                         style: theme.textTheme.titleLarge,
                                       ),
-                                      Text(
-                                        _recipient?.fullName ??
-                                            censorCardNumber(
-                                              tx.toAccountId ?? '',
-                                            ),
-                                        style: theme.textTheme.bodySmall,
+                                      LookupIdentityRow(
+                                        loading: _loadingRecipient,
+                                        fullName: _recipient?.fullName,
+                                        initials: _recipient?.initials,
+                                        fallbackText: censorCardNumber(
+                                          tx.toAccountId ?? '',
+                                        ),
                                       ),
                                     ],
                                   ),
