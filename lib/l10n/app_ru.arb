@@ -350,5 +350,16 @@
   "changePasswordTitle": "Смена пароля",
   "linkedAccountsTitle": "Связанные аккаунты",
   "featurePlaceholderBody": "Этот экран пока недоступен.",
-  "recipientLookupLimited": "Получатель не найден. Попробуйте позже"
+  "recipientLookupLimited": "Получатель не найден. Попробуйте позже",
+  "transferNetworkError": "Нет сети. Попробуйте снова.",
+  "transferServerError": "Ошибка сервера. Попробуйте позже.",
+  "transferAuthError": "Сессия истекла. Войдите снова.",
+  "transferValidationError": "Проверьте сумму и получателя и попробуйте снова.",
+  "transferInsufficientFunds": "Недостаточно средств.",
+  "transferRateUnavailable": "Курс недоступен. Попробуйте позже.",
+  "transferAccountInactive": "Счёт не активен.",
+  "transferOverpayment": "Платёж превышает задолженность.",
+  "convertedAmount": "Сумма после конвертации",
+  "exchangeRate": "Курс обмена",
+  "transferTooManyRequests": "Слишком много попыток. Попробуйте через минуту."
 }

@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../accounts/data/account_model.dart';
+import '../../../core/providers/service_providers.dart';
 import '../../accounts/providers/accounts_providers.dart';
 import '../data/transaction_model.dart';
 import '../data/recipient_lookup.dart';
 import '../data/recipient_lookup_guard.dart';
+import '../data/server_recipient_repository.dart';
 
 /// The transaction opened on the details screen.
 ///
@@ -70,12 +72,22 @@ class TransferLookupNotifier extends Notifier<TransferLookupState> {
     }
     state = const TransferLookupState(pending: true);
     try {
-      final recipient = await ref
-          .read(accountsRepositoryProvider)
-          .lookupRecipient(
-            phoneNumber: '+7$phoneNumber',
-            accountNumber: accountNumber,
-          );
+      TransferRecipient? recipient;
+      try {
+        recipient = await ref
+            .read(recipientRepositoryProvider)
+            .lookupRecipient(
+              phoneNumber: phoneNumber,
+              accountNumber: accountNumber,
+            );
+      } on Object {
+        recipient = await ref
+            .read(accountsRepositoryProvider)
+            .lookupRecipient(
+              phoneNumber: phoneNumber,
+              accountNumber: accountNumber,
+            );
+      }
       if (recipient == null) {
         _guard.registerFailure();
         state = TransferLookupState(blocked: _guard.isBlocked);
@@ -101,3 +113,7 @@ final transferLookupProvider =
     NotifierProvider<TransferLookupNotifier, TransferLookupState>(
       TransferLookupNotifier.new,
     );
+
+final recipientRepositoryProvider = Provider<ServerRecipientRepository>((ref) {
+  return ServerRecipientRepository(dioManager: ref.watch(dioManagerProvider));
+});

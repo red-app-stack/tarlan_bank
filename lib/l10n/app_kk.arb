@@ -350,5 +350,16 @@
   "changePasswordTitle": "Құпия сөзді өзгерту",
   "linkedAccountsTitle": "Байланыстық тіркелгілер",
   "featurePlaceholderBody": "Бұл экран әзірге қолжетімді емес.",
-  "recipientLookupLimited": "Алушы табылмады. Кейінірек қайталаңыз"
+  "recipientLookupLimited": "Алушы табылмады. Кейінірек қайталаңыз",
+  "transferNetworkError": "Желі қолжетімсіз. Қайталаңыз.",
+  "transferServerError": "Сервер қатесі. Кейінірек қайталаңыз.",
+  "transferAuthError": "Сеанс аяқталды. Қайта кіріңіз.",
+  "transferValidationError": "Сома мен алушыны тексеріп, қайталаңыз.",
+  "transferInsufficientFunds": "Қаражат жеткіліксіз.",
+  "transferRateUnavailable": "Бағам қолжетімсіз. Кейінірек қайталаңыз.",
+  "transferAccountInactive": "Шот белсенді емес.",
+  "transferOverpayment": "Төлем қарыздан асып кетті.",
+  "convertedAmount": "Айналдырылған сома",
+  "exchangeRate": "Айырбас бағамы",
+  "transferTooManyRequests": "Тым көп әрекет. Бір минуттан кейін қайталаңыз."
 }

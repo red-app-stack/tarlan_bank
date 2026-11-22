@@ -969,4 +969,39 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get recipientLookupLimited => 'Получатель не найден. Попробуйте позже';
+
+  @override
+  String get transferNetworkError => 'Нет сети. Попробуйте снова.';
+
+  @override
+  String get transferServerError => 'Ошибка сервера. Попробуйте позже.';
+
+  @override
+  String get transferAuthError => 'Сессия истекла. Войдите снова.';
+
+  @override
+  String get transferValidationError =>
+      'Проверьте сумму и получателя и попробуйте снова.';
+
+  @override
+  String get transferInsufficientFunds => 'Недостаточно средств.';
+
+  @override
+  String get transferRateUnavailable => 'Курс недоступен. Попробуйте позже.';
+
+  @override
+  String get transferAccountInactive => 'Счёт не активен.';
+
+  @override
+  String get transferOverpayment => 'Платёж превышает задолженность.';
+
+  @override
+  String get convertedAmount => 'Сумма после конвертации';
+
+  @override
+  String get exchangeRate => 'Курс обмена';
+
+  @override
+  String get transferTooManyRequests =>
+      'Слишком много попыток. Попробуйте через минуту.';
 }

@@ -378,5 +378,16 @@
   "changePasswordTitle": "Change password",
   "linkedAccountsTitle": "Linked accounts",
   "featurePlaceholderBody": "This screen is not available yet.",
-  "recipientLookupLimited": "Recipient not found; try again later"
+  "recipientLookupLimited": "Recipient not found; try again later",
+  "transferNetworkError": "Network unavailable. Try again.",
+  "transferServerError": "Server error. Try again later.",
+  "transferAuthError": "Session expired. Please sign in again.",
+  "transferValidationError": "Check the amount and recipient, then try again.",
+  "transferInsufficientFunds": "Insufficient balance.",
+  "transferRateUnavailable": "Exchange rate unavailable. Try again later.",
+  "transferAccountInactive": "Account is not active.",
+  "transferOverpayment": "Repayment exceeds the outstanding debt.",
+  "convertedAmount": "Converted amount",
+  "exchangeRate": "Exchange rate",
+  "transferTooManyRequests": "Too many attempts. Try again in a minute."
 }

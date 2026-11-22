@@ -9,7 +9,9 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/transactions/widgets/transfer_error_message.dart';
 import 'package:tarlan_bank/features/accounts/data/account_model.dart';
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
@@ -208,6 +210,16 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
           endPositionOffset: 1,
           title: l.success,
           message: l.transferSuccess,
+        );
+      }
+    } on AppFailure catch (e) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          fromTop: true,
+          endPositionOffset: 1,
+          title: l.error,
+          message: transferErrorMessage(e, l),
         );
       }
     } on Object {

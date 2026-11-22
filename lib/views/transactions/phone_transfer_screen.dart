@@ -8,7 +8,9 @@ import 'package:flutter_native_contact_picker/model/contact.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/transactions/widgets/transfer_error_message.dart';
 import 'package:tarlan_bank/features/accounts/data/account_model.dart';
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
@@ -208,6 +210,16 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
           endPositionOffset: 1,
           title: l.success,
           message: l.transferSuccess,
+        );
+      }
+    } on AppFailure catch (e) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          fromTop: true,
+          endPositionOffset: 1,
+          title: l.error,
+          message: transferErrorMessage(e, l),
         );
       }
     } on Object {

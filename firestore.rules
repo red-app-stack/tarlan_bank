@@ -106,62 +106,28 @@ service cloud.firestore {
         && request.resource.data.status in ['active', 'inactive', 'closed']
         && request.resource.data.createdAt == request.time
         && validTerms();
-      allow update: if isFullUser()                   // demo caveat #1
+      // Clients may only close an account. Balance movement is trusted-server
+      // only; keep the balance byte-for-byte unchanged on client updates.
+      allow update: if isFullUser()
         && request.resource.data.ownerId == resource.data.ownerId
         && request.resource.data.number == resource.data.number
         && request.resource.data.currency == resource.data.currency
         && request.resource.data.type == resource.data.type
-        && request.resource.data.balance is number
-        && request.resource.data.balance >= 0
+        && request.resource.data.balance == resource.data.balance
+        && request.resource.data.status in ['active', 'inactive', 'closed']
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['balance', 'status', 'updatedAt']);
+             .hasOnly(['status', 'updatedAt']);
       allow delete: if false;                         // close via status, never drop
     }
 
-    // ---- transactions/{txId}: create-only ledger, owner-scoped reads. ----
-    // fromOwnerId/toOwnerId are denormalized so reads need no joins; the
-    // create rule verifies them against the actual account docs via get().
+    // ---- transactions/{txId}: immutable ledger, owner-scoped reads. ----
+    // Writes are trusted-server only (Node service account).
     match /transactions/{txId} {
-      function validParties() {
-        let d = request.resource.data;
-        let hasFrom = d.fromAccountId != null;
-        let hasTo = d.toAccountId != null;
-        return (hasFrom || hasTo)
-          && d.fromAccountId != d.toAccountId
-          // deposit: money in, no sender. withdrawal: money out, no recipient.
-          && (d.type != 'deposit' || (!hasFrom && hasTo))
-          && (d.type != 'withdrawal' || (hasFrom && !hasTo))
-          && (d.type != 'internal_transfer' || d.fromOwnerId == d.toOwnerId)
-          // sender must be the caller, and match the real account owner/currency
-          && (!hasFrom || (
-               acct(d.fromAccountId).ownerId == d.fromOwnerId
-               && acct(d.fromAccountId).currency == d.currency
-               && d.fromOwnerId == request.auth.uid))
-          // recipient must exist and match; currency must agree except on
-          // conversions (where the two accounts legitimately differ)
-          && (!hasTo || (
-               acct(d.toAccountId).ownerId == d.toOwnerId
-               && (d.type == 'currency_conversion'
-                   || acct(d.toAccountId).currency == d.currency)));
-      }
-
       allow read: if isFullUser()
         && (resource.data.fromOwnerId == request.auth.uid
             || resource.data.toOwnerId == request.auth.uid);
-      allow create: if isFullUser()
-        && request.resource.data.amount is number
-        && request.resource.data.amount > 0
-        && request.resource.data.currency in accountCurrencies()
-        && request.resource.data.type in [
-             'deposit', 'withdrawal', 'phone_transfer', 'qr_transfer',
-             'currency_conversion', 'internal_transfer', 'card_transfer',
-             'swift_transfer']
-        && request.resource.data.status in ['pending', 'completed', 'failed', 'reversed']
-        && request.resource.data.createdAt == request.time
-        && (!('message' in request.resource.data)
-            || request.resource.data.message.size() <= 280)
-        && validParties();
-      allow update, delete: if false;                 // immutable ledger
+      // Ledger writes are trusted-server only (Node service account).
+      allow create, update, delete: if false;
     }
 
     // ---- config/urls: non-secret service endpoints. ----

@@ -965,4 +965,40 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get recipientLookupLimited => 'Алушы табылмады. Кейінірек қайталаңыз';
+
+  @override
+  String get transferNetworkError => 'Желі қолжетімсіз. Қайталаңыз.';
+
+  @override
+  String get transferServerError => 'Сервер қатесі. Кейінірек қайталаңыз.';
+
+  @override
+  String get transferAuthError => 'Сеанс аяқталды. Қайта кіріңіз.';
+
+  @override
+  String get transferValidationError =>
+      'Сома мен алушыны тексеріп, қайталаңыз.';
+
+  @override
+  String get transferInsufficientFunds => 'Қаражат жеткіліксіз.';
+
+  @override
+  String get transferRateUnavailable =>
+      'Бағам қолжетімсіз. Кейінірек қайталаңыз.';
+
+  @override
+  String get transferAccountInactive => 'Шот белсенді емес.';
+
+  @override
+  String get transferOverpayment => 'Төлем қарыздан асып кетті.';
+
+  @override
+  String get convertedAmount => 'Айналдырылған сома';
+
+  @override
+  String get exchangeRate => 'Айырбас бағамы';
+
+  @override
+  String get transferTooManyRequests =>
+      'Тым көп әрекет. Бір минуттан кейін қайталаңыз.';
 }

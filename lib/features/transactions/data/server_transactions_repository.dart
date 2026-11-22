@@ -60,6 +60,7 @@ class ServerTransactionsRepository implements TransactionsRepository {
     if (status == 401 || status == 403) {
       return AuthFailure('Transfer authorization failed');
     }
+    if (status == 429) return const ValidationFailure('rate_limited');
     if (status == 400) {
       return ValidationFailure(code ?? 'Transfer rejected');
     }

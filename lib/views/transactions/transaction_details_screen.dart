@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/core/providers/service_providers.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/transactions/data/recipient_lookup.dart';
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
 import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
@@ -34,6 +35,25 @@ class _TransactionDetailsScreenState
 
   bool isFavorite = false;
   bool _checkedFavorite = false;
+  String? _recipientForId;
+  TransferRecipient? _recipient;
+
+  Future<void> _loadRecipient(BankTransaction tx) async {
+    if (tx.toAccountId == null) return;
+    final id = tx.id;
+    if (_recipientForId == id) return;
+    _recipientForId = id;
+    try {
+      final recipient = await ref
+          .read(recipientRepositoryProvider)
+          .lookupRecipient(accountNumber: tx.toAccountId);
+      if (mounted && _recipientForId == id) {
+        setState(() => _recipient = recipient);
+      }
+    } on Object {
+      // Keep the masked account fallback.
+    }
+  }
 
   BankTransaction? get _transaction =>
       widget.transaction ?? ref.watch(selectedTransactionProvider);
@@ -151,9 +171,13 @@ class _TransactionDetailsScreenState
       );
     }
 
-    if (!_checkedFavorite) {
+    if (!_checkedFavorite || _recipientForId != tx.id) {
+      final transactionId = tx.id;
+      final recipientTransaction = tx;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _loadFavoriteState(tx.id);
+        if (!mounted) return;
+        if (!_checkedFavorite) _loadFavoriteState(transactionId);
+        _loadRecipient(recipientTransaction);
       });
     }
 
@@ -229,7 +253,7 @@ class _TransactionDetailsScreenState
                             const SizedBox(height: 24),
                             Row(
                               children: [
-                                _buildUserAvatar(theme, null),
+                                _buildUserAvatar(theme, _recipient?.fullName),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -241,7 +265,10 @@ class _TransactionDetailsScreenState
                                         style: theme.textTheme.titleLarge,
                                       ),
                                       Text(
-                                        censorCardNumber(tx.toAccountId ?? ''),
+                                        _recipient?.fullName ??
+                                            censorCardNumber(
+                                              tx.toAccountId ?? '',
+                                            ),
                                         style: theme.textTheme.bodySmall,
                                       ),
                                     ],
@@ -271,6 +298,22 @@ class _TransactionDetailsScreenState
                                     l.dateTime,
                                     tx.formattedCreatedAt,
                                   ),
+                                  if (tx.convertedAmount != null)
+                                    _buildDetailRow(
+                                      theme,
+                                      l.convertedAmount,
+                                      formatCurrency(
+                                        tx.convertedAmount!,
+                                        tx.toCurrency ?? tx.currency,
+                                        'ru_RU',
+                                      ),
+                                    ),
+                                  if (tx.rate != null)
+                                    _buildDetailRow(
+                                      theme,
+                                      l.exchangeRate,
+                                      tx.rate!.toStringAsFixed(6),
+                                    ),
                                   _buildDetailRow(
                                     theme,
                                     l.commission,

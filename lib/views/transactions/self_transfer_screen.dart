@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
+import 'package:tarlan_bank/features/transactions/widgets/transfer_error_message.dart';
 import 'package:tarlan_bank/features/accounts/data/account_model.dart';
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
@@ -161,6 +163,16 @@ class _SelfTransferScreenState extends ConsumerState<SelfTransferScreen> {
           endPositionOffset: 1,
           title: l.success,
           message: l.transferSuccess,
+        );
+      }
+    } on AppFailure catch (e) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          fromTop: true,
+          endPositionOffset: 1,
+          title: l.error,
+          message: transferErrorMessage(e, l),
         );
       }
     } on Object {

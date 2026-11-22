@@ -1953,6 +1953,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recipient not found; try again later'**
   String get recipientLookupLimited;
+
+  /// No description provided for @transferNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Network unavailable. Try again.'**
+  String get transferNetworkError;
+
+  /// No description provided for @transferServerError.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error. Try again later.'**
+  String get transferServerError;
+
+  /// No description provided for @transferAuthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired. Please sign in again.'**
+  String get transferAuthError;
+
+  /// No description provided for @transferValidationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the amount and recipient, then try again.'**
+  String get transferValidationError;
+
+  /// No description provided for @transferInsufficientFunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Insufficient balance.'**
+  String get transferInsufficientFunds;
+
+  /// No description provided for @transferRateUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate unavailable. Try again later.'**
+  String get transferRateUnavailable;
+
+  /// No description provided for @transferAccountInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Account is not active.'**
+  String get transferAccountInactive;
+
+  /// No description provided for @transferOverpayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayment exceeds the outstanding debt.'**
+  String get transferOverpayment;
+
+  /// No description provided for @convertedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted amount'**
+  String get convertedAmount;
+
+  /// No description provided for @exchangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate'**
+  String get exchangeRate;
+
+  /// No description provided for @transferTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in a minute.'**
+  String get transferTooManyRequests;
 }
 
 class _AppLocalizationsDelegate

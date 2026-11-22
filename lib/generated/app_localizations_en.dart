@@ -963,4 +963,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipientLookupLimited => 'Recipient not found; try again later';
+
+  @override
+  String get transferNetworkError => 'Network unavailable. Try again.';
+
+  @override
+  String get transferServerError => 'Server error. Try again later.';
+
+  @override
+  String get transferAuthError => 'Session expired. Please sign in again.';
+
+  @override
+  String get transferValidationError =>
+      'Check the amount and recipient, then try again.';
+
+  @override
+  String get transferInsufficientFunds => 'Insufficient balance.';
+
+  @override
+  String get transferRateUnavailable =>
+      'Exchange rate unavailable. Try again later.';
+
+  @override
+  String get transferAccountInactive => 'Account is not active.';
+
+  @override
+  String get transferOverpayment => 'Repayment exceeds the outstanding debt.';
+
+  @override
+  String get convertedAmount => 'Converted amount';
+
+  @override
+  String get exchangeRate => 'Exchange rate';
+
+  @override
+  String get transferTooManyRequests =>
+      'Too many attempts. Try again in a minute.';
 }
