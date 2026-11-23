@@ -264,8 +264,9 @@ class _SecuritySettingsScreenState
         MenuItem(
           icon: 'assets/icons/ic_access_code.svg',
           title: l.auChangeAccessCode,
-          routeArg: Routes.codeEntering,
-          args: const {'createCode': true},
+          routeArg:
+              '${Routes.codeEntering}?mode=create&target='
+              '${Uri.encodeQueryComponent(Routes.menuSecurity)}',
           requiresAuth: true,
         ),
         MenuItem(

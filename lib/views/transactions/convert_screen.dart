@@ -11,6 +11,7 @@ import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
 import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
 import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
 import 'package:tarlan_bank/features/transactions/widgets/account_dropdown.dart';
+import 'package:tarlan_bank/features/transactions/widgets/transfer_action_bar.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_amount_controller.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
@@ -210,12 +211,19 @@ class _ConvertScreenState extends ConsumerState<ConvertScreen> {
     return Scaffold(
       appBar: buildTransferHeader(context, l.convertTitle),
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            children: [
-              Expanded(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SafeArea(
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  12,
+                  24,
+                  bottomInset + TransferActionBar.reservedHeight,
+                ),
                 child: RefreshIndicator(
                   edgeOffset: MediaQuery.of(context).padding.top,
                   onRefresh: () async {
@@ -269,30 +277,20 @@ class _ConvertScreenState extends ConsumerState<ConvertScreen> {
                   ),
                 ),
               ),
-              AnimatedPadding(
-                duration: const Duration(milliseconds: 50),
-                curve: Curves.easeInOut,
-                padding: EdgeInsets.only(bottom: bottomInset),
-                child: ElevatedButton(
-                  onPressed: _submitting ? null : () => _submit(l),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                  ),
-                  child: Text(
-                    '${l.transferVerb} ${amountCtl.formatted} ${getCurrencySymbol(selectedAccount?.currency)}',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      fontFamily: 'Roboto',
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: size.height * 0.015),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: TransferActionBar(
+              label:
+                  '${l.transferVerb} ${amountCtl.formatted} ${getCurrencySymbol(selectedAccount?.currency)}',
+              onPressed: () => _submit(l),
+              enabled: !_submitting,
+            ),
+          ),
+        ],
       ),
     );
   }

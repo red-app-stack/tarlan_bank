@@ -35,3 +35,39 @@ PreferredSizeWidget buildTransferHeader(BuildContext context, String label) {
     ),
   );
 }
+
+SliverPersistentHeader buildFrostedSliverHeader(
+  BuildContext context,
+  String label,
+) {
+  return SliverPersistentHeader(
+    pinned: true,
+    floating: true,
+    delegate: _FrostedSliverHeaderDelegate(buildTransferHeader(context, label)),
+  );
+}
+
+class _FrostedSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _FrostedSliverHeaderDelegate(this.child);
+
+  final PreferredSizeWidget child;
+
+  @override
+  double get minExtent => child.preferredSize.height;
+
+  @override
+  double get maxExtent => child.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox(height: maxExtent, width: double.infinity, child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _FrostedSliverHeaderDelegate oldDelegate) =>
+      child != oldDelegate.child;
+}

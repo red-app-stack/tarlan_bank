@@ -8,9 +8,11 @@ import 'package:local_auth_android/local_auth_android.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
 
 import 'package:tarlan_bank/core/providers/service_providers.dart';
+import 'package:tarlan_bank/core/router/pin_gate.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/utils/verification_dialog.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
@@ -20,16 +22,18 @@ import 'package:tarlan_bank/views/shared/user_settings.dart';
 import '../shared/widgets.dart';
 
 /// Access-code gate. All dependencies arrive through Riverpod providers and
-/// navigation uses go_router. The router builds this screen with no arguments;
-/// [createCode] and [targetRoute] are optional and safely defaulted.
+/// navigation uses go_router. The router supplies [createCode], [resetCode]
+/// and [targetRoute] as query parameters; all are safely defaulted.
 class CodeEnteringScreen extends ConsumerStatefulWidget {
   const CodeEnteringScreen({
     super.key,
     this.createCode = false,
+    this.resetCode = false,
     this.targetRoute,
   });
 
   final bool createCode;
+  final bool resetCode;
   final String? targetRoute;
 
   @override
@@ -64,7 +68,13 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
       isCreatingCode = creating;
       _biometricsEnabled = store.currentSettings?.useBiometrics == true;
     });
-    if (_biometricsEnabled && !isCreatingCode) {
+    if (widget.resetCode && !isCreatingCode) {
+      // Deep link /codeEntering?mode=reset: open the old server's 6-digit
+      // email confirmation flow once the first frame is mounted.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _requestReset(_currentEmail());
+      });
+    } else if (_biometricsEnabled && !isCreatingCode) {
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) _authenticateWithBiometrics();
       });
@@ -306,23 +316,45 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
     );
   }
 
+  String _currentEmail() {
+    final profile = ref.read(userProfileProvider).value?.email;
+    return profile ?? ref.read(currentUserProvider)?.email ?? '';
+  }
+
+  /// Forgotten-PIN recovery: sends a 6-digit code through the old
+  /// server (/auth/send-verification-code -> /auth/verify-code) and
+  /// switches to creation only after that code is confirmed.
+  Future<void> _requestReset(String email) async {
+    if (email.trim().isEmpty) {
+      final l = AppLocalizations.of(context);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          fromTop: true,
+          endPositionOffset: 1,
+          title: l.error,
+          message: l.auEmailConfirmationRequired,
+        );
+      }
+      return;
+    }
+    final verified = await showEmailConfirmationDialog(
+      email: email,
+      context: context,
+    );
+    if (!verified || !mounted) return;
+    ref.read(pinGateProvider.notifier).relock();
+    setState(() {
+      _enteredCode = '';
+      createdCode = '';
+      isCreatingCode = true;
+      creationStage = 0;
+    });
+  }
+
   Widget _buildForgotCodeButton(ThemeData theme, String email) {
     final l = AppLocalizations.of(context);
     final isDisabled = isCreatingCode && creationStage == 0;
-
-    Future<void> handleForgot() async {
-      final verified = await showEmailConfirmationDialog(
-        email: email,
-        context: context,
-      );
-      if (!verified || !mounted) return;
-      setState(() {
-        _enteredCode = '';
-        createdCode = '';
-        isCreatingCode = true;
-        creationStage = 0;
-      });
-    }
 
     return ElevatedButton(
       style: theme.elevatedButtonTheme.style?.copyWith(
@@ -336,7 +368,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
       onPressed: isDisabled
           ? null
           : !isCreatingCode
-          ? handleForgot
+          ? () => _requestReset(email)
           : creationStage == 1
           ? () {
               setState(() {
@@ -570,6 +602,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
     final authState = ref.read(authStateServiceProvider);
     authState.setAuthenticated(true);
     authState.setIsLoggedIn(true);
+    ref.read(pinGateProvider.notifier).unlock();
     ref.invalidate(accountsProvider);
     _handleMainNavigation();
   }
@@ -586,7 +619,10 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
         setState(() => _enteredCode = '');
       } else if (creationStage == 1) {
         if (createdCode == _enteredCode) {
-          await verification.storeHashedCode(_enteredCode);
+          await verification.storeHashedCode(
+            _enteredCode,
+            uid: ref.read(currentUserProvider)?.uid,
+          );
           await _onAuthenticated();
         } else {
           setState(() => _enteredCode = '');
@@ -622,7 +658,11 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
   }
 
   void _handleMainNavigation() {
-    if (context.mounted) context.go(widget.targetRoute ?? Routes.home);
+    if (!context.mounted) return;
+    final target = widget.targetRoute == null
+        ? null
+        : resumablePinTarget(widget.targetRoute!);
+    context.go(target ?? Routes.home);
   }
 
   @override

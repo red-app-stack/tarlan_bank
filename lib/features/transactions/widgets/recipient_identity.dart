@@ -13,22 +13,28 @@ class RecipientIdentity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!show) {
-      return const SizedBox(height: LookupIdentityRow.rowHeight);
+      return const LookupIdentityRow(
+        phase: LookupPhase.empty,
+        fallbackText: '',
+      );
     }
     final l = AppLocalizations.of(context);
     final recipient = state.recipient;
 
     if (state.pending) {
-      return const LookupIdentityRow(loading: true, fallbackText: '');
+      return const LookupIdentityRow(
+        phase: LookupPhase.loading,
+        fallbackText: '',
+      );
     }
     if (state.blocked || recipient == null) {
       return LookupIdentityRow(
-        loading: false,
+        phase: LookupPhase.notFound,
         fallbackText: l.recipientLookupLimited,
       );
     }
     return LookupIdentityRow(
-      loading: false,
+      phase: LookupPhase.found,
       fullName: recipient.fullName,
       initials: recipient.initials,
       fallbackText: '',

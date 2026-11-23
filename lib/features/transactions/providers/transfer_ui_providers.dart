@@ -62,6 +62,9 @@ class TransferLookupNotifier extends Notifier<TransferLookupState> {
     cooldown: const Duration(minutes: 2),
   );
 
+  static const minVisibleLoading = Duration(milliseconds: 250);
+  DateTime? _pendingSince;
+
   @override
   TransferLookupState build() => const TransferLookupState();
 
@@ -70,6 +73,7 @@ class TransferLookupNotifier extends Notifier<TransferLookupState> {
       state = TransferLookupState(blocked: true);
       return;
     }
+    _pendingSince ??= DateTime.now();
     state = const TransferLookupState(pending: true);
   }
 
@@ -83,6 +87,7 @@ class TransferLookupNotifier extends Notifier<TransferLookupState> {
       return;
     }
     if (!scheduled && state.pending) return;
+    _pendingSince ??= DateTime.now();
     state = const TransferLookupState(pending: true);
     try {
       TransferRecipient? recipient;
@@ -103,21 +108,36 @@ class TransferLookupNotifier extends Notifier<TransferLookupState> {
       }
       if (recipient == null) {
         _guard.registerFailure();
-        state = TransferLookupState(blocked: _guard.isBlocked);
+        await _settle(TransferLookupState(blocked: _guard.isBlocked));
         return;
       }
       final account = await ref
           .read(accountsRepositoryProvider)
           .getAccount(recipient.accountNumber);
       _guard.registerSuccess();
-      state = TransferLookupState(recipient: recipient, account: account);
+      await _settle(
+        TransferLookupState(recipient: recipient, account: account),
+      );
     } on Object {
       _guard.registerFailure();
-      state = TransferLookupState(blocked: _guard.isBlocked);
+      await _settle(TransferLookupState(blocked: _guard.isBlocked));
     }
   }
 
+  Future<void> _settle(TransferLookupState next) async {
+    final since = _pendingSince;
+    _pendingSince = null;
+    if (since != null) {
+      final remaining = minVisibleLoading - DateTime.now().difference(since);
+      if (remaining > Duration.zero) {
+        await Future<void>.delayed(remaining);
+      }
+    }
+    if (ref.mounted) state = next;
+  }
+
   void clear() {
+    _pendingSince = null;
     state = const TransferLookupState();
   }
 }

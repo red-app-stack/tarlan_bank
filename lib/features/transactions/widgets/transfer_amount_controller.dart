@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'masked_input_value.dart';
+
 /// Plain (GetX-free) state + formatting for the transfer amount field.
 /// Owns its controllers; the owning State calls [dispose] in its own dispose.
 class TransferAmountController {
@@ -71,16 +73,10 @@ class TransferAmountController {
   );
 
   void _setControllerValue(String formattedValue) {
-    final oldCursor = text.selection.start;
-    final distanceFromEnd = text.text.length - oldCursor;
-    final offset = formattedValue.length - distanceFromEnd;
-    text.value = TextEditingValue(
-      text: formattedValue,
-      selection: TextSelection.collapsed(
-        offset: offset < 0
-            ? 0
-            : (offset > formattedValue.length ? formattedValue.length : offset),
-      ),
+    text.value = applyMaskPreservingSelection(
+      oldText: text.text,
+      newText: formattedValue,
+      selection: text.selection,
     );
   }
 

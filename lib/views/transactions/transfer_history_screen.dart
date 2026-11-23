@@ -79,48 +79,30 @@ class _TransferHistoryScreenState extends ConsumerState<TransferHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
     final transactions = history.visibleTransactions;
 
     return Scaffold(
       extendBody: true,
-      extendBodyBehindAppBar: true,
-      appBar: buildTransferHeader(context, l.transferHistory),
       body: RefreshIndicator(
-        edgeOffset: MediaQuery.of(context).padding.top + kToolbarHeight,
         key: refreshKey,
         onRefresh: _onRefresh,
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 56 + kToolbarHeight,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    size.height -
-                    MediaQuery.of(context).padding.top -
-                    MediaQuery.of(context).padding.bottom,
-              ),
-              child: Column(
-                spacing: 16,
-                children: [
-                  const SizedBox(),
-                  buildFilterCard(
-                    context,
-                    history.selectedPeriodDetail,
-                    () => showFilterBottomSheet(context, history),
-                  ),
-                  transactions.isEmpty
-                      ? buildEmptyState(theme, size, l.noTransfers)
-                      : _buildTransactionsList(context, l, transactions),
-                ],
+          slivers: [
+            buildFrostedSliverHeader(context, l.transferHistory),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              sliver: SliverToBoxAdapter(
+                child: buildFilterCard(
+                  context,
+                  history.selectedPeriodDetail,
+                  () => showFilterBottomSheet(context, history),
+                ),
               ),
             ),
-          ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            _buildTransactionsList(context, l, transactions),
+          ],
         ),
       ),
     );
@@ -143,46 +125,51 @@ class _TransferHistoryScreenState extends ConsumerState<TransferHistoryScreen> {
       byDate.putIfAbsent(key, () => []).add(tx);
     }
 
-    if (byDate.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.all(size.height * 0.03),
-          child: SvgPicture.asset(
-            'assets/icons/ic_empty_list.svg',
-            height: size.width > size.height
-                ? size.height * 0.3
-                : size.width * 0.3,
-            colorFilter: ColorFilter.mode(
-              Theme.of(context).colorScheme.secondaryContainer,
-              BlendMode.srcIn,
-            ),
-          ),
-        ),
-      );
-    }
-
+    final entries = byDate.entries.toList();
     final today = DateFormat('d MMMM', 'ru').format(now);
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: byDate.length,
-      itemBuilder: (context, index) {
-        final date = byDate.keys.elementAt(index);
-        final dayTransactions = byDate[date]!;
-        return CustomCard(
-          label: date == today ? l.today(date) : date,
-          labelStyle: Theme.of(context).textTheme.titleLarge,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 12,
-            children: [
-              ...dayTransactions.map(
-                (tx) => _buildTransactionContent(context, tx),
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      sliver: entries.isEmpty
+          ? SliverToBoxAdapter(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(size.height * 0.03),
+                  child: SvgPicture.asset(
+                    'assets/icons/ic_empty_list.svg',
+                    height: size.width > size.height
+                        ? size.height * 0.3
+                        : size.width * 0.3,
+                    colorFilter: ColorFilter.mode(
+                      Theme.of(context).colorScheme.secondaryContainer,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
               ),
-            ],
-          ),
-        );
-      },
+            )
+          : SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final date = entries[index].key;
+                final dayTransactions = entries[index].value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: CustomCard(
+                    label: date == today ? l.today(date) : date,
+                    labelStyle: Theme.of(context).textTheme.titleLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 12,
+                      children: [
+                        ...dayTransactions.map(
+                          (tx) => _buildTransactionContent(context, tx),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }, childCount: entries.length),
+            ),
     );
   }
 

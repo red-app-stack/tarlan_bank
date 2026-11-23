@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.tarlan.bank"
-    compileSdk = 36 //flutter.compileSdkVersion
+    compileSdk = 37 //flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

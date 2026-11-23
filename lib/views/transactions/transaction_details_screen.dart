@@ -145,6 +145,7 @@ class _TransactionDetailsScreenState
     );
   }
 
+  // HISTORY SCREEN BROKE.
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -259,7 +260,11 @@ class _TransactionDetailsScreenState
                                         style: theme.textTheme.titleLarge,
                                       ),
                                       LookupIdentityRow(
-                                        loading: _loadingRecipient,
+                                        phase: _loadingRecipient
+                                            ? LookupPhase.loading
+                                            : _recipient != null
+                                            ? LookupPhase.found
+                                            : LookupPhase.empty,
                                         fullName: _recipient?.fullName,
                                         initials: _recipient?.initials,
                                         fallbackText: censorCardNumber(

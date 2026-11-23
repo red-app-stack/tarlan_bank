@@ -6,10 +6,12 @@ import 'package:tarlan_bank/core/router/access_policy.dart';
 import 'package:tarlan_bank/core/router/auth_intent.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart'
     show rootNavigatorKey;
+import 'package:tarlan_bank/core/router/pin_gate.dart';
 import 'package:tarlan_bank/core/router/routes.dart'
     show Routes, isShellOverlayPush;
 import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
 import 'package:tarlan_bank/views/auth/login_screen.dart';
@@ -90,6 +92,7 @@ CustomTransitionPage<void> _fadePage({
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthListenable();
   ref.listen(authStateProvider, (_, _) => notifier.notify());
+  ref.listen(pinGateProvider, (_, _) => notifier.notify());
 
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -97,9 +100,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      final auth = ref.read(authStateProvider);
-      final level = accessLevel(auth);
+      final authLevel = accessLevel(ref.read(authStateProvider));
+      final gate = ref.read(pinGateProvider).status;
       final location = state.matchedLocation;
+      final uri = state.uri.toString();
+
+      // The internal loading route hands off once the storage check ends.
+      if (location == Routes.loading) {
+        final exit = loadingExitFor(
+          authLevel: authLevel,
+          gate: gate,
+          target: state.uri.queryParameters['target'],
+        );
+        if (exit != null) return exit;
+      }
+
+      // PIN is a feature gate, not an app gate: without it the user keeps
+      // guest routes; protected money features challenge for PIN/setup.
+      final challenge = pinRequired(authLevel, gate);
+      final level = challenge ? AccessLevel.guest : authLevel;
+      final redirect = redirectFor(level: level, location: location);
+      if (challenge && redirect == Routes.login) {
+        return pinChallengeFor(gate: gate, location: uri);
+      }
+
       // Cold/deep link to an overlay: land on the shell first, then let
       // MainShell push the overlay so the branch underneath is preserved.
       if (level == AccessLevel.full &&
@@ -108,7 +132,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ref.read(pendingOverlayRouteProvider.notifier).request(location);
         return Routes.home;
       }
-      final redirect = redirectFor(level: level, location: location);
       if (redirect == Routes.login &&
           shouldRememberAuthIntent(level, location)) {
         ref
@@ -148,8 +171,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.codeEntering,
-        pageBuilder: (_, state) =>
-            _fadePage(key: state.pageKey, child: const CodeEnteringScreen()),
+        pageBuilder: (_, state) => _fadePage(
+          key: state.pageKey,
+          child: CodeEnteringScreen(
+            createCode: state.uri.queryParameters['mode'] == 'create',
+            resetCode: state.uri.queryParameters['mode'] == 'reset',
+            targetRoute: state.uri.queryParameters['target'],
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.profile,

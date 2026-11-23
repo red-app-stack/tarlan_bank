@@ -16,8 +16,10 @@ import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart'
 import 'package:tarlan_bank/features/transactions/data/transaction_model.dart';
 import 'package:tarlan_bank/features/transactions/providers/transactions_providers.dart';
 import 'package:tarlan_bank/features/transactions/providers/transfer_ui_providers.dart';
+import 'package:tarlan_bank/features/transactions/widgets/masked_input_value.dart';
 import 'package:tarlan_bank/features/transactions/widgets/recipient_identity.dart';
 import 'package:tarlan_bank/features/transactions/widgets/account_dropdown.dart';
+import 'package:tarlan_bank/features/transactions/widgets/transfer_action_bar.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_amount_controller.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
@@ -82,9 +84,11 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
   void _onPhoneChanged(String value) {
     var digits = value.replaceAll(RegExp(r'\D'), '');
     if (digits.length > 10) digits = digits.substring(0, 10);
-    phoneController.value = TextEditingValue(
-      text: formatPhone(digits),
-      selection: TextSelection.collapsed(offset: formatPhone(digits).length),
+    final formatted = formatPhone(digits);
+    phoneController.value = applyMaskPreservingSelection(
+      oldText: phoneController.text,
+      newText: formatted,
+      selection: phoneController.selection,
     );
     _lookupTimer?.cancel();
     if (digits.length == 10) {
@@ -258,12 +262,19 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
     return Scaffold(
       appBar: buildTransferHeader(context, l.transferByPhone),
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Expanded(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SafeArea(
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  bottomInset + TransferActionBar.reservedHeight,
+                ),
                 child: RefreshIndicator(
                   edgeOffset: MediaQuery.of(context).padding.top,
                   onRefresh: () async {
@@ -286,30 +297,20 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
                   ),
                 ),
               ),
-              AnimatedPadding(
-                duration: const Duration(milliseconds: 50),
-                curve: Curves.easeInOut,
-                padding: EdgeInsets.only(bottom: bottomInset),
-                child: ElevatedButton(
-                  onPressed: _submitting ? null : () => _submit(l),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                  ),
-                  child: Text(
-                    '${l.transferVerb} ${amountCtl.formatted} ${getCurrencySymbol(selectedAccount?.currency)}',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      fontFamily: 'Roboto',
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: size.height * 0.015),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: TransferActionBar(
+              label:
+                  '${l.transferVerb} ${amountCtl.formatted} ${getCurrencySymbol(selectedAccount?.currency)}',
+              onPressed: () => _submit(l),
+              enabled: !_submitting,
+            ),
+          ),
+        ],
       ),
     );
   }
