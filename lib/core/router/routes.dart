@@ -34,6 +34,7 @@ class Routes {
 
   static const login = '/login';
   static const codeEntering = '/codeEntering';
+  static const biometricSetup = '/biometricSetup';
 
   /// Firebase App Link callbacks — registered so GetX's Nav2 delegate does
   /// not render its default 'Route not found' page for an incoming link.

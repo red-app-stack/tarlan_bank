@@ -63,6 +63,34 @@ class PinGateNotifier extends Notifier<PinGateState> {
     }
   }
 
+  /// Called right after Firebase sign-in/register. Returns true when the UI
+  /// must open PIN creation immediately (no code for this uid on device).
+  Future<bool> prepareOnLogin(AuthUser? user) async {
+    final fullUid = user != null && !user.isAnonymous ? user.uid : null;
+    if (fullUid == null) return false;
+    try {
+      final verification = ref.read(verificationServiceProvider);
+      final owner = await verification.accessCodeOwnerUid();
+      if (shouldResetCodeForLogin(ownerUid: owner, fullUserUid: fullUid)) {
+        await verification.resetCodeForUser(fullUid);
+        if (!ref.mounted) return false;
+        state = const PinGateState(PinGateStatus.needsSetup);
+        return true;
+      }
+      final exists = await verification.accessCodeExists();
+      if (!ref.mounted) return false;
+      state = PinGateState(
+        exists ? PinGateStatus.locked : PinGateStatus.needsSetup,
+      );
+      return !exists;
+    } catch (_) {
+      if (ref.mounted) {
+        state = const PinGateState(PinGateStatus.locked);
+      }
+      return false;
+    }
+  }
+
   /// Called by CodeEnteringScreen after a valid PIN, successful creation or
   /// biometric authentication.
   void unlock() => state = const PinGateState(PinGateStatus.unlocked);

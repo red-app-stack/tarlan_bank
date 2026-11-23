@@ -598,13 +598,47 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
     }
   }
 
-  Future<void> _onAuthenticated() async {
+  Future<void> _onAuthenticated({bool created = false}) async {
     final authState = ref.read(authStateServiceProvider);
     authState.setAuthenticated(true);
     authState.setIsLoggedIn(true);
     ref.read(pinGateProvider.notifier).unlock();
     ref.invalidate(accountsProvider);
-    _handleMainNavigation();
+    if (created) {
+      await _maybeShowBiometricSetup();
+    } else {
+      _handleMainNavigation();
+    }
+  }
+
+  /// One-time offer after code creation. Skipped on devices without
+  /// biometrics, and never shown twice (flag kept in secure storage).
+  Future<void> _maybeShowBiometricSetup() async {
+    final store = ref.read(secureStoreProvider);
+    try {
+      final shown = await store.read('biometric_setup_shown');
+      if (shown == '1' || !mounted) {
+        _handleMainNavigation();
+        return;
+      }
+      final supported =
+          await _auth.isDeviceSupported() && await _auth.canCheckBiometrics;
+      if (!supported || !mounted) {
+        _handleMainNavigation();
+        return;
+      }
+      await store.write('biometric_setup_shown', '1');
+      // Hold the code screen briefly before the full-screen offer.
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+      final target =
+          resumablePinTarget(widget.targetRoute ?? '') ?? Routes.home;
+      context.go(
+        '${Routes.biometricSetup}?target=${Uri.encodeQueryComponent(target)}',
+      );
+    } catch (_) {
+      if (mounted) _handleMainNavigation();
+    }
   }
 
   Future<void> _handleCodeEntry() async {
@@ -623,7 +657,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen> {
             _enteredCode,
             uid: ref.read(currentUserProvider)?.uid,
           );
-          await _onAuthenticated();
+          await _onAuthenticated(created: true);
         } else {
           setState(() => _enteredCode = '');
           if (mounted) {

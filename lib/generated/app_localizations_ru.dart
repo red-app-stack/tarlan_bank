@@ -1004,4 +1004,38 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get transferTooManyRequests =>
       'Слишком много попыток. Попробуйте через минуту.';
+
+  @override
+  String get bioSetupTitle => 'Биометрическая аутентификация теперь доступна';
+
+  @override
+  String get bioSetupBody =>
+      'Входите быстрее с помощью биометрии телефона вместо ввода кода доступа.';
+
+  @override
+  String get bioSetupEnable => 'Включить вход по биометрии';
+
+  @override
+  String get bioSetupSkip => 'Пока пропустить';
+
+  @override
+  String get bioSetupDoneTitle => 'Биометрическая аутентификация настроена';
+
+  @override
+  String get bioSetupDoneBody => 'Отключить её можно в настройках.';
+
+  @override
+  String get bioSetupContinue => 'Продолжить';
+
+  @override
+  String get bioSetupReason =>
+      'Подтвердите отпечаток пальца, чтобы включить вход по биометрии';
+
+  @override
+  String get bioSetupUnavailable =>
+      'Биометрическая аутентификация недоступна на этом устройстве';
+
+  @override
+  String get bioSetupFailed =>
+      'Не удалось включить вход по биометрии. Попробуйте ещё раз.';
 }

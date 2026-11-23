@@ -1001,4 +1001,39 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get transferTooManyRequests =>
       'Тым көп әрекет. Бір минуттан кейін қайталаңыз.';
+
+  @override
+  String get bioSetupTitle => 'Биометриялық аутентификация енді қолжетімді';
+
+  @override
+  String get bioSetupBody =>
+      'Кіру кодын енгізудің орнына телефон биометриясымен жылдам кіріңіз.';
+
+  @override
+  String get bioSetupEnable => 'Биометриялық кіруді қосу';
+
+  @override
+  String get bioSetupSkip => 'Қазір өтпей тұру';
+
+  @override
+  String get bioSetupDoneTitle => 'Биометриялық аутентификация орнатылды';
+
+  @override
+  String get bioSetupDoneBody =>
+      'Оны кез келген уақытта Параметрлерде өшіруге болады.';
+
+  @override
+  String get bioSetupContinue => 'Жалғастыру';
+
+  @override
+  String get bioSetupReason =>
+      'Биометриялық кіруді қосу үшін саусақ ізін растаңыз';
+
+  @override
+  String get bioSetupUnavailable =>
+      'Биометриялық аутентификация бұл құрылғыда қолжетімсіз';
+
+  @override
+  String get bioSetupFailed =>
+      'Биометриялық кіруді қосу мүмкін болмады. Қайталап көріңіз.';
 }

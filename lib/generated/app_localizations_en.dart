@@ -999,4 +999,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transferTooManyRequests =>
       'Too many attempts. Try again in a minute.';
+
+  @override
+  String get bioSetupTitle => 'Biometric authentication is now available';
+
+  @override
+  String get bioSetupBody =>
+      'Sign in faster with your phone\'s biometric credentials instead of typing your access code.';
+
+  @override
+  String get bioSetupEnable => 'Enable biometric login';
+
+  @override
+  String get bioSetupSkip => 'Skip for now';
+
+  @override
+  String get bioSetupDoneTitle => 'Biometric authentication is now set up';
+
+  @override
+  String get bioSetupDoneBody => 'Turn it off anytime from Settings.';
+
+  @override
+  String get bioSetupContinue => 'Continue';
+
+  @override
+  String get bioSetupReason =>
+      'Confirm your fingerprint to enable biometric login';
+
+  @override
+  String get bioSetupUnavailable =>
+      'Biometric authentication is not available on this device';
+
+  @override
+  String get bioSetupFailed =>
+      'Could not enable biometric login. Please try again.';
 }

@@ -8,6 +8,8 @@ import 'package:tarlan_bank/features/auth/data/password_validation.dart';
 import 'package:tarlan_bank/features/auth/data/password_rule_labels.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
+import 'package:tarlan_bank/core/router/pin_gate.dart' show pinRouteFor;
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/core/router/shell_index_provider.dart'
     show pendingAuthIntentProvider;
@@ -90,17 +92,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       required: register,
     );
     if (!verified && register) return; // dialog already signed out
-    _done();
+    await _done();
   }
 
-  void _done({bool anonymous = false}) {
+  Future<void> _done({bool anonymous = false}) async {
     final intent = ref.read(pendingAuthIntentProvider);
     final from = GoRouterState.of(context).uri.queryParameters['from'];
     final target = anonymous
         ? (intent?.origin ?? Routes.home)
         : (intent?.target ?? from ?? Routes.home);
     ref.read(pendingAuthIntentProvider.notifier).clear();
-    if (context.mounted) context.go(target);
+    if (!mounted) return;
+    var destination = target;
+    if (!anonymous) {
+      final needsCreation = await ref
+          .read(pinGateProvider.notifier)
+          .prepareOnLogin(ref.read(authRepositoryProvider).currentUser);
+      if (!mounted) return;
+      if (needsCreation) {
+        destination = pinRouteFor(location: target, mode: 'create');
+      }
+    }
+    if (mounted) context.go(destination);
   }
 
   Future<void> _submitEmail() async {
@@ -136,12 +149,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _submitGoogle() => _run(() async {
     await ref.read(authRepositoryProvider).signInWithGoogle();
-    _done();
+    await _done();
   });
 
   Future<void> _submitGuest() => _run(() async {
     await ref.read(authRepositoryProvider).signInAnonymously();
-    _done(anonymous: true);
+    await _done(anonymous: true);
   });
 
   @override

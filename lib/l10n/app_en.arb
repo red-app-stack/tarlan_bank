@@ -389,5 +389,15 @@
   "transferOverpayment": "Repayment exceeds the outstanding debt.",
   "convertedAmount": "Converted amount",
   "exchangeRate": "Exchange rate",
-  "transferTooManyRequests": "Too many attempts. Try again in a minute."
+  "transferTooManyRequests": "Too many attempts. Try again in a minute.",
+  "bioSetupTitle": "Biometric authentication is now available",
+  "bioSetupBody": "Sign in faster with your phone's biometric credentials instead of typing your access code.",
+  "bioSetupEnable": "Enable biometric login",
+  "bioSetupSkip": "Skip for now",
+  "bioSetupDoneTitle": "Biometric authentication is now set up",
+  "bioSetupDoneBody": "Turn it off anytime from Settings.",
+  "bioSetupContinue": "Continue",
+  "bioSetupReason": "Confirm your fingerprint to enable biometric login",
+  "bioSetupUnavailable": "Biometric authentication is not available on this device",
+  "bioSetupFailed": "Could not enable biometric login. Please try again."
 }

@@ -13,6 +13,7 @@ import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/views/auth/biometric_setup_screen.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
 import 'package:tarlan_bank/views/auth/login_screen.dart';
 import 'package:tarlan_bank/views/auth/verification_link_screen.dart';
@@ -176,6 +177,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: CodeEnteringScreen(
             createCode: state.uri.queryParameters['mode'] == 'create',
             resetCode: state.uri.queryParameters['mode'] == 'reset',
+            targetRoute: state.uri.queryParameters['target'],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.biometricSetup,
+        pageBuilder: (_, state) => _fadePage(
+          key: state.pageKey,
+          child: BiometricSetupScreen(
             targetRoute: state.uri.queryParameters['target'],
           ),
         ),

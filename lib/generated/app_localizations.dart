@@ -2019,6 +2019,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many attempts. Try again in a minute.'**
   String get transferTooManyRequests;
+
+  /// No description provided for @bioSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication is now available'**
+  String get bioSetupTitle;
+
+  /// No description provided for @bioSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in faster with your phone\'s biometric credentials instead of typing your access code.'**
+  String get bioSetupBody;
+
+  /// No description provided for @bioSetupEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable biometric login'**
+  String get bioSetupEnable;
+
+  /// No description provided for @bioSetupSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get bioSetupSkip;
+
+  /// No description provided for @bioSetupDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication is now set up'**
+  String get bioSetupDoneTitle;
+
+  /// No description provided for @bioSetupDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn it off anytime from Settings.'**
+  String get bioSetupDoneBody;
+
+  /// No description provided for @bioSetupContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get bioSetupContinue;
+
+  /// No description provided for @bioSetupReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your fingerprint to enable biometric login'**
+  String get bioSetupReason;
+
+  /// No description provided for @bioSetupUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication is not available on this device'**
+  String get bioSetupUnavailable;
+
+  /// No description provided for @bioSetupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enable biometric login. Please try again.'**
+  String get bioSetupFailed;
 }
 
 class _AppLocalizationsDelegate
