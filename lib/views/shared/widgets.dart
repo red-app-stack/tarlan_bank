@@ -41,7 +41,7 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
     final cs = Theme.of(context).colorScheme;
 
     final appBar = AppBar(
-      titleSpacing: titleSpacing,
+      titleSpacing: 0,
       actionsPadding: actionsPadding,
       title: title,
       leading: leading,
@@ -78,7 +78,16 @@ class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: DecoratedBox(
-          decoration: BoxDecoration(color: cs.surface.withValues(alpha: .35)),
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(
+              cs.primary.withValues(alpha: 0.04),
+              cs.surface.withValues(alpha: .35),
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.25),
+            ),
+          ),
           child: SafeArea(
             top: true,
             bottom: false,
@@ -465,15 +474,20 @@ PreferredSizeWidget buildHeader(BuildContext context, String label) {
   return FrostedAppBar(
     floating: true,
     leading: IconButton(
-      icon: SvgPicture.asset(
-        'assets/icons/ic_back.svg',
-        width: 36,
-        height: 36,
-        colorFilter: ColorFilter.mode(
-          Theme.of(context).colorScheme.primary,
-          BlendMode.srcIn,
-        ),
-      ),
+      icon:
+          // SvgPicture.asset(
+          //   'assets/icons/ic_back.svg',
+          //   width: 36,
+          //   height: 36,
+          //   colorFilter: ColorFilter.mode(
+          //     Theme.of(context).colorScheme.primary,
+          //     BlendMode.srcIn,
+          //   ),
+          Icon(
+            Icons.arrow_back_ios_rounded,
+            size: 24,
+            color: Theme.of(context).colorScheme.primary,
+          ),
       onPressed: () {
         FocusScope.of(context).unfocus();
         Navigator.of(context).pop();

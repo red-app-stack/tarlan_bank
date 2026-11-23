@@ -1,8 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
-import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -198,22 +196,82 @@ class _MainShellState extends ConsumerState<MainShell> {
     );
   }
 
-  CurvedNavigationBarItem _tabIcon(int index, int selected, ThemeData theme) {
+  Widget _navItem(
+    int index,
+    int selected,
+    ThemeData theme,
+    AppLocalizations l,
+    bool isFullUser,
+  ) {
     final isSelected = index == selected;
-    final color = isSelected
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.inverseSurface;
-    return CurvedNavigationBarItem(
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: isSelected ? 300 : 150),
-        curve: isSelected ? Curves.easeOutCubic : Curves.easeInOut,
-        width: isSelected ? 40 : 30,
-        height: isSelected ? 40 : 30,
-        child: SvgPicture.asset(
-          _tabs[index].icon,
-          width: isSelected ? 26 : 22,
-          height: isSelected ? 26 : 22,
-          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    final target = isSelected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return Tooltip(
+      message: _tabs[index].label(l),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          splashFactory: InkRipple.splashFactory,
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.10),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
+          onTap: () => _onTap(index, isFullUser),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 320),
+            curve: isSelected ? Curves.easeOutBack : Curves.easeInOutCubic,
+            width: 56,
+            height: 48,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(18),
+              border: isSelected
+                  ? Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.28),
+                    )
+                  : null,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AnimatedScale(
+                  scale: isSelected ? 1.12 : 1.0,
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutBack,
+                  child: TweenAnimationBuilder<Color?>(
+                    tween: ColorTween(
+                      begin: theme.colorScheme.onSurfaceVariant,
+                      end: target,
+                    ),
+                    duration: const Duration(milliseconds: 260),
+                    builder: (context, color, _) => SvgPicture.asset(
+                      _tabs[index].icon,
+                      width: 24,
+                      height: 24,
+                      colorFilter: ColorFilter.mode(
+                        color ?? target,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 4,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    width: isSelected ? 4 : 0,
+                    height: isSelected ? 4 : 0,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -273,41 +331,42 @@ class _MainShellState extends ConsumerState<MainShell> {
       extendBody: true,
       extendBodyBehindAppBar: true,
       body: SafeArea(top: false, bottom: false, child: widget.navigationShell),
-      bottomNavigationBar: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.35),
+                  color: Color.alphaBlend(
+                    theme.colorScheme.primary.withValues(alpha: 0.08),
+                    theme.colorScheme.surface.withValues(alpha: 0.35),
+                  ),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.25,
+                    ),
+                  ),
                 ),
                 child: SizedBox(
-                  width: double.infinity,
-                  height: 12 + kBottomNavigationBarHeight,
+                  height: 64,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(
+                      _tabs.length,
+                      (index) =>
+                          _navItem(index, selected, theme, l, isFullUser),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          CurvedNavigationBar(
-            color: theme.colorScheme.surfaceContainer,
-            buttonBackgroundColor: theme.colorScheme.primary,
-            backgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
-            index: selected,
-            items: List.generate(
-              _tabs.length,
-              (index) => _tabIcon(index, selected, theme),
-            ),
-            letIndexChange: (index) => true,
-            onTap: (index) => _onTap(index, isFullUser),
-            animationDuration: const Duration(milliseconds: 300),
-            animationCurve: Curves.easeInOut,
-          ),
-        ],
+        ),
       ),
     );
   }

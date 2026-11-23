@@ -309,14 +309,10 @@ class _SecuritySettingsScreenState
                 padding: const EdgeInsets.all(4),
                 mainAxisAlignment: MainAxisAlignment.start,
                 startWidget: IconButton(
-                  icon: SvgPicture.asset(
-                    'assets/icons/ic_back.svg',
-                    width: 36,
-                    height: 36,
-                    colorFilter: ColorFilter.mode(
-                      theme.colorScheme.primary,
-                      BlendMode.srcIn,
-                    ),
+                  icon: Icon(
+                    Icons.arrow_back_ios_rounded,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   onPressed: () {
                     if (context.canPop()) {

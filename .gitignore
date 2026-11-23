@@ -47,3 +47,5 @@ macos/Flutter/ephemeral/flutter_export_environment.sh
 redreem.jks
 lib.rar
 .worktrees/
+# Widget Preview related
+.widget_preview/
