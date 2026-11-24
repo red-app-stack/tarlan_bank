@@ -43,6 +43,7 @@ dependencies:
   # encrypt: any
   intl: any
   shared_preferences: any
+  url_launcher: ^6.3.3 # Call us -> tel: dialer
   shimmer: any
   local_auth: any
   flutter_native_contact_picker: 0.0.13

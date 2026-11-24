@@ -6,6 +6,7 @@ import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 const Set<String> faceGateScreens = {
   Routes.loading,
   Routes.login,
+  Routes.reauth,
   Routes.codeEntering,
   Routes.faceVerify,
 };

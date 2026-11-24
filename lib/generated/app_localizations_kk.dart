@@ -1144,4 +1144,38 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get faceSupportFailed =>
       'Сұранысты жіберу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.';
+
+  @override
+  String get auDeleteReauthNeeded =>
+      'Қайта кіріп, тіркелгіні жоюды қайталаңыз.';
+
+  @override
+  String get auDeleteFailed =>
+      'Тіркелгіні жою мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get reauthTitle => 'Бұл сіз екеніңізді растаңыз';
+
+  @override
+  String get reauthBody =>
+      'Қауіпсіздік үшін әрекетті аяқтау үшін қайта кіріңіз.';
+
+  @override
+  String get reauthConfirm => 'Растау';
+
+  @override
+  String get reauthInvalidPassword => 'Құпия сөз дұрыс емес. Қайталап көріңіз.';
+
+  @override
+  String get reauthGoogle => 'Google арқылы жалғастыру';
+
+  @override
+  String get reauthNoMethod =>
+      'Бұл кіру тәсілін мұнда растау мүмкін емес. Басынан қайта кіріңіз.';
+
+  @override
+  String get language => 'Тіл';
+
+  @override
+  String get langSys => 'Жүйелік';
 }

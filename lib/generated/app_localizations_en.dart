@@ -1142,4 +1142,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get faceSupportFailed =>
       'Could not send the request. Check your connection and try again.';
+
+  @override
+  String get auDeleteReauthNeeded =>
+      'Please sign in again, then retry account deletion.';
+
+  @override
+  String get auDeleteFailed =>
+      'Could not delete the account. Please try again.';
+
+  @override
+  String get reauthTitle => 'Confirm it\'s you';
+
+  @override
+  String get reauthBody =>
+      'For your security, sign in again to finish this action.';
+
+  @override
+  String get reauthConfirm => 'Confirm';
+
+  @override
+  String get reauthInvalidPassword => 'Incorrect password. Please try again.';
+
+  @override
+  String get reauthGoogle => 'Continue with Google';
+
+  @override
+  String get reauthNoMethod =>
+      'This sign-in method cannot be confirmed here. Please sign in again from the start.';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get langSys => 'System';
 }

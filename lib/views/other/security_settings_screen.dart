@@ -7,12 +7,16 @@ import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 import 'package:local_auth_darwin/types/auth_messages_ios.dart';
 
+import 'package:tarlan_bank/core/errors/app_failure.dart';
+import 'package:tarlan_bank/core/errors/firebase_error_mapping.dart'
+    show deleteReauthHint;
+import 'package:tarlan_bank/features/auth/providers/account_deletion.dart';
+import 'package:tarlan_bank/features/auth/providers/reauth_provider.dart';
 import 'package:tarlan_bank/core/providers/service_providers.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/core/theme/theme_settings.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
-import 'package:tarlan_bank/services/auth_service.dart';
 import 'package:tarlan_bank/services/screen_protect_service.dart';
 import 'package:tarlan_bank/services/secure_store.dart';
 import 'package:tarlan_bank/utils/themes/theme_extension.dart';
@@ -36,7 +40,6 @@ class SecuritySettingsScreen extends ConsumerStatefulWidget {
 class _SecuritySettingsScreenState
     extends ConsumerState<SecuritySettingsScreen> {
   late final SecureStore _secureStore = ref.read(secureStoreProvider);
-  late final AuthService _authService = ref.read(authServiceProvider);
   final LocalAuthentication _auth = LocalAuthentication();
 
   bool _authInProgress = false;
@@ -194,8 +197,26 @@ class _SecuritySettingsScreenState
     if (_deleting) return;
     setState(() => _deleting = true);
     try {
-      await _authService.deleteUser();
+      await deleteAccountAndReset(ref);
       if (mounted) context.go(Routes.login);
+    } on AppFailure catch (e) {
+      if (!mounted) return;
+      if (deleteReauthHint(e)) {
+        // Firebase wants a fresh credential; let the dedicated screen collect
+        // it, then finish the same pending action.
+        ref
+            .read(pendingReauthActionProvider.notifier)
+            .request(PendingReauthAction.deleteAccount);
+        context.go(Routes.reauth);
+        return;
+      }
+      showAppSnackBar(
+        context,
+        fromTop: true,
+        endPositionOffset: 1,
+        title: l.error,
+        message: l.auDeleteFailed,
+      );
     } catch (_) {
       if (mounted) {
         showAppSnackBar(
@@ -203,7 +224,7 @@ class _SecuritySettingsScreenState
           fromTop: true,
           endPositionOffset: 1,
           title: l.error,
-          message: l.auConfirmationRequired,
+          message: l.auDeleteFailed,
         );
       }
     } finally {

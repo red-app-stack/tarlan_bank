@@ -1147,4 +1147,38 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get faceSupportFailed =>
       'Не удалось отправить запрос. Проверьте соединение и попробуйте ещё раз.';
+
+  @override
+  String get auDeleteReauthNeeded =>
+      'Войдите снова, затем повторите удаление учётной записи.';
+
+  @override
+  String get auDeleteFailed =>
+      'Не удалось удалить учётную запись. Попробуйте ещё раз.';
+
+  @override
+  String get reauthTitle => 'Подтвердите, что это вы';
+
+  @override
+  String get reauthBody =>
+      'Для безопасности войдите снова, чтобы завершить действие.';
+
+  @override
+  String get reauthConfirm => 'Подтвердить';
+
+  @override
+  String get reauthInvalidPassword => 'Неверный пароль. Попробуйте ещё раз.';
+
+  @override
+  String get reauthGoogle => 'Продолжить через Google';
+
+  @override
+  String get reauthNoMethod =>
+      'Этот способ входа нельзя подтвердить здесь. Войдите заново с начала.';
+
+  @override
+  String get language => 'Язык';
+
+  @override
+  String get langSys => 'Системный';
 }

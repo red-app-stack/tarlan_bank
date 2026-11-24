@@ -15,6 +15,7 @@ enum AccessLevel { loading, signedOut, guest, full }
 
 const Set<String> publicRoutes = {
   Routes.login,
+  Routes.reauth,
   Routes.codeEntering,
   Routes.verifyLink,
   Routes.verifyAction,

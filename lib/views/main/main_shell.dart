@@ -291,6 +291,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     return Scaffold(
       appBar: showTopBar
           ? FrostedAppBar(
+              floating: true,
               leading: IconButton(
                 tooltip: l.menu,
                 icon: SizedBox(

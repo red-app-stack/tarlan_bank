@@ -440,5 +440,15 @@
   "faceErrGenericTitle": "Scan failed",
   "faceErrGenericBody": "Something went wrong with the camera. Please try again.",
   "faceSupportSent": "Request sent. Support will review it. Until then you can use the app with limited access.",
-  "faceSupportFailed": "Could not send the request. Check your connection and try again."
+  "faceSupportFailed": "Could not send the request. Check your connection and try again.",
+  "auDeleteReauthNeeded": "Please sign in again, then retry account deletion.",
+  "auDeleteFailed": "Could not delete the account. Please try again.",
+  "reauthTitle": "Confirm it's you",
+  "reauthBody": "For your security, sign in again to finish this action.",
+  "reauthConfirm": "Confirm",
+  "reauthInvalidPassword": "Incorrect password. Please try again.",
+  "reauthGoogle": "Continue with Google",
+  "reauthNoMethod": "This sign-in method cannot be confirmed here. Please sign in again from the start.",
+  "language": "Language",
+  "langSys": "System"
 }

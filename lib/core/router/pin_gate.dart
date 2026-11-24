@@ -35,7 +35,10 @@ bool pinRequired(AccessLevel authLevel, PinGateStatus gate) =>
 /// destination to resume after unlocking.
 String? resumablePinTarget(String uriString) {
   final path = Uri.tryParse(uriString)?.path ?? uriString;
-  if (path.isEmpty || path == Routes.loading || path == Routes.codeEntering) {
+  if (path.isEmpty ||
+      path == Routes.loading ||
+      path == Routes.reauth ||
+      path == Routes.codeEntering) {
     return null;
   }
   return uriString;

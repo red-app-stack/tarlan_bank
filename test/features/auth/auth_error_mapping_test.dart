@@ -131,4 +131,31 @@ void main() {
       expect(f.cause, same(e));
     });
   });
+
+  group('deleteReauthHint', () {
+    test('detects the raw Firebase code', () {
+      expect(
+        deleteReauthHint(
+          fb.FirebaseAuthException(code: 'requires-recent-login'),
+        ),
+        isTrue,
+      );
+    });
+
+    test('detects it through a mapped AppFailure cause', () {
+      final raw = fb.FirebaseAuthException(code: 'requires-recent-login');
+      expect(mapFirebaseError(raw), isA<AuthFailure>());
+      expect(deleteReauthHint(mapFirebaseError(raw)), isTrue);
+    });
+
+    test('does not fire for unrelated failures', () {
+      expect(deleteReauthHint(StateError('boom')), isFalse);
+      expect(
+        deleteReauthHint(
+          mapFirebaseError(fb.FirebaseAuthException(code: 'wrong-password')),
+        ),
+        isFalse,
+      );
+    });
+  });
 }

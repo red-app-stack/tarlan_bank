@@ -117,7 +117,10 @@ service cloud.firestore {
         && request.resource.data.status in ['active', 'inactive', 'closed']
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status', 'updatedAt']);
-      allow delete: if false;                         // close via status, never drop
+      // Account deletion is the sole legal hard delete; normal flows close
+      // via status. Owner-only and irreversible.
+      allow delete: if isFullUser()
+        && resource.data.ownerId == request.auth.uid;
     }
 
     // ---- transactions/{txId}: immutable ledger, owner-scoped reads. ----
@@ -127,7 +130,11 @@ service cloud.firestore {
         && (resource.data.fromOwnerId == request.auth.uid
             || resource.data.toOwnerId == request.auth.uid);
       // Ledger writes are trusted-server only (Node service account).
-      allow create, update, delete: if false;
+      allow create, update: if false;
+      // Account deletion removes both sides of the user's history.
+      allow delete: if isFullUser()
+        && (resource.data.fromOwnerId == request.auth.uid
+            || resource.data.toOwnerId == request.auth.uid);
     }
 
     // ---- face_verifications/{uid}: audit record of the face check. ----
@@ -151,7 +158,8 @@ service cloud.firestore {
       allow create: if isSelf(uid) && validFaceRecord();
       allow update: if isSelf(uid) && validFaceRecord()
         && resource.data.status in ['passed', 'manual_requested'];
-      allow delete: if false;
+      // Only the account-deletion flow removes an own audit record.
+      allow delete: if isSelf(uid);
     }
 
     // ---- config/urls: non-secret service endpoints. ----
@@ -190,13 +198,15 @@ service cloud.firestore {
         && resource.data.ownerId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status', 'label']);
-      allow delete: if false;
+      allow delete: if isFullUser()
+        && resource.data.ownerId == request.auth.uid;
     }
 
     // ---- recipient_index/{accountNumber}: owner-written display names. ----
     match /recipient_index/{accountNumber} {
       allow get: if isFullUser();
-      allow list: if false;
+      // Account deletion needs to find the user's own index entries.
+      allow list: if isFullUser() && resource.data.uid == request.auth.uid;
       allow create, update: if isFullUser()
         && acct(accountNumber).ownerId == request.auth.uid
         && request.resource.data.uid == request.auth.uid
@@ -204,7 +214,8 @@ service cloud.firestore {
         && request.resource.data.fullName is string
         && request.resource.data.keys().hasOnly([
              'uid', 'accountNumber', 'fullName']);
-      allow delete: if false;
+      allow delete: if isFullUser()
+        && resource.data.uid == request.auth.uid;
     }
 
     // ---- phone_index/{E164}: phone → uid + primary current account. ----
@@ -213,7 +224,8 @@ service cloud.firestore {
     // Demo caveat: knowing a phone number reveals uid + account number.
     match /phone_index/{phone} {
       allow get: if isFullUser();
-      allow list: if false;
+      // Account deletion needs to find the user's own index entries.
+      allow list: if isFullUser() && resource.data.uid == request.auth.uid;
       allow create: if isFullUser()
         && phone.matches('^\\+[0-9]{10,15}$')
         && request.resource.data.uid == request.auth.uid

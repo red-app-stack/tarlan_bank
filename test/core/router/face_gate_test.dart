@@ -68,6 +68,7 @@ void main() {
       for (final route in [
         Routes.loading,
         Routes.login,
+        Routes.reauth,
         Routes.codeEntering,
         Routes.faceVerify,
       ]) {

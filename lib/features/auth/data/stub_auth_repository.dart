@@ -4,6 +4,7 @@ import 'package:tarlan_bank/core/errors/app_failure.dart';
 
 import 'auth_repository.dart';
 import 'auth_user.dart';
+import 'reauth_method.dart';
 
 /// TEMPORARY scaffolding stub — always signed out, no backend wired yet.
 ///
@@ -73,6 +74,22 @@ class StubAuthRepository implements AuthRepository {
 
   @override
   Future<void> deleteAccount() async {}
+
+  @override
+  Future<Set<ReauthMethod>> availableReauthMethods() async => const {};
+
+  @override
+  Future<void> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
+  Future<void> reauthenticateWithGoogle() async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
 
   void dispose() => _controller.close();
 }

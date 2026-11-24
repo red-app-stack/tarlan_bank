@@ -2277,6 +2277,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not send the request. Check your connection and try again.'**
   String get faceSupportFailed;
+
+  /// No description provided for @auDeleteReauthNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in again, then retry account deletion.'**
+  String get auDeleteReauthNeeded;
+
+  /// No description provided for @auDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Please try again.'**
+  String get auDeleteFailed;
+
+  /// No description provided for @reauthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you'**
+  String get reauthTitle;
+
+  /// No description provided for @reauthBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For your security, sign in again to finish this action.'**
+  String get reauthBody;
+
+  /// No description provided for @reauthConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get reauthConfirm;
+
+  /// No description provided for @reauthInvalidPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Please try again.'**
+  String get reauthInvalidPassword;
+
+  /// No description provided for @reauthGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get reauthGoogle;
+
+  /// No description provided for @reauthNoMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in method cannot be confirmed here. Please sign in again from the start.'**
+  String get reauthNoMethod;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @langSys.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get langSys;
 }
 
 class _AppLocalizationsDelegate

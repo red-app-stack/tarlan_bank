@@ -61,5 +61,10 @@
         <intent>
             <action android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"/>
         </intent>
+        <!-- Call us: let canLaunchUrl() see the system dialer (Android 11+). -->
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
     </queries>
 </manifest>

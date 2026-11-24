@@ -379,7 +379,7 @@ class _FaceVerificationScreenState extends ConsumerState<FaceVerificationScreen>
                             ? Icons.check_circle_rounded
                             : _stage == _Stage.error
                             ? Icons.no_photography_rounded
-                            : Icons.face_retouching_natural_rounded,
+                            : Icons.face_6_rounded,
                         size: 96,
                         color: ringColor,
                       ),

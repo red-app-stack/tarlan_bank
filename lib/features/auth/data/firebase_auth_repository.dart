@@ -7,6 +7,9 @@ import 'package:tarlan_bank/core/errors/firebase_error_mapping.dart';
 import 'package:tarlan_bank/core/firebase/firestore_db.dart';
 import 'package:tarlan_bank/core/utils/phone_number.dart';
 
+import 'account_deletion_repository.dart';
+import 'reauth_method.dart';
+
 import 'auth_repository.dart';
 import 'auth_user.dart';
 
@@ -24,6 +27,9 @@ class FirebaseAuthRepository implements AuthRepository {
   final fb.FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _google;
+  late final AccountDeletionRepository _deletion = AccountDeletionRepository(
+    _firestore,
+  );
 
   /// 7.x requires exactly one initialize() call whose future completes before
   /// any other method. Reset on failure so a retry can initialize again.
@@ -261,26 +267,63 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw const AuthFailure();
+    final uid = user.uid;
     try {
-      // Clean the phone index first (best-effort: a malformed stored phone
-      // must not block account deletion; a stale index entry resolves to a
-      // missing account and reads as "no recipient").
-      final profile = await _firestore.collection('users').doc(user.uid).get();
+      final profile = await _firestore.collection('users').doc(uid).get();
       final phone = profile.data()?['phoneNumber'] as String?;
-      if (phone != null && phone.isNotEmpty) {
-        try {
-          await _firestore
-              .collection('phone_index')
-              .doc(normalizePhone(phone))
-              .delete();
-        } on AppFailure {
-          // skip index cleanup; see above
-        }
-      }
-      // Profile next: if the Auth delete then fails (requires-recent-login),
-      // the user can retry; rules allow owner delete of users/{uid}.
-      await _firestore.collection('users').doc(user.uid).delete();
+      // Firestore first: once Auth is deleted the token is gone and rules
+      // would deny every cleanup write. A requires-recent-login failure
+      // leaves an Auth account with no profile — the user can retry after
+      // signing in again.
+      await _deletion.deleteAllFor(uid, phone: phone);
       await user.delete();
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  @override
+  Future<Set<ReauthMethod>> availableReauthMethods() async {
+    final user = _auth.currentUser;
+    if (user == null) return const {};
+    return reauthMethodsFromProviderIds(
+      user.providerData.map((info) => info.providerId),
+    );
+  }
+
+  @override
+  Future<void> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) throw const AuthFailure();
+    try {
+      await user.reauthenticateWithCredential(
+        fb.EmailAuthProvider.credential(
+          email: user.email!.trim(),
+          password: password,
+        ),
+      );
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  @override
+  Future<void> reauthenticateWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthFailure();
+    try {
+      await _ensureGoogleInit();
+      final account = await _google.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null) {
+        throw const AuthFailure('Google sign-in did not return an ID token');
+      }
+      await user.reauthenticateWithCredential(
+        fb.GoogleAuthProvider.credential(idToken: idToken),
+      );
     } catch (e) {
       throw mapFirebaseError(e);
     }

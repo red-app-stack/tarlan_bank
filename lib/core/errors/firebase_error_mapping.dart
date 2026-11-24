@@ -83,3 +83,15 @@ AppFailure mapFirebaseError(Object error) {
   if (error is AppFailure) return error;
   return UnknownFailure('Unexpected error', error);
 }
+
+/// True when a mapped failure came from Firebase requiring a recent sign-in.
+/// Used by destructive flows (account deletion) to tell the user to sign in
+/// again rather than showing a generic error.
+bool deleteReauthHint(Object error) {
+  if (error is fb.FirebaseAuthException)
+    return error.code == 'requires-recent-login';
+  if (error is! AppFailure) return false;
+  final cause = error.cause;
+  return cause is fb.FirebaseAuthException &&
+      cause.code == 'requires-recent-login';
+}

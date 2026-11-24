@@ -18,6 +18,7 @@ import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/auth/biometric_setup_screen.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
 import 'package:tarlan_bank/views/auth/face_verification_screen.dart';
+import 'package:tarlan_bank/views/auth/reauth_screen.dart';
 import 'package:tarlan_bank/views/auth/login_screen.dart';
 import 'package:tarlan_bank/views/auth/verification_link_screen.dart';
 import 'package:tarlan_bank/views/main/home_screen.dart';
@@ -174,6 +175,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // and the PIN challenge keeps it as the resume target. Without this
       // redirect the post-PIN context.go('/main') hits the errorBuilder.
       GoRoute(path: Routes.main, redirect: (_, _) => Routes.home),
+      GoRoute(
+        path: Routes.reauth,
+        pageBuilder: (_, state) =>
+            _fadePage(key: state.pageKey, child: const ReauthScreen()),
+      ),
       GoRoute(
         path: Routes.login,
         pageBuilder: (_, state) =>

@@ -33,6 +33,9 @@ class Routes {
   // static const home = '/home';
 
   static const login = '/login';
+
+  /// Firebase re-confirmation for sensitive actions (e.g. account deletion).
+  static const reauth = '/reauth';
   static const codeEntering = '/codeEntering';
   static const biometricSetup = '/biometricSetup';
   static const faceVerify = '/faceVerify';

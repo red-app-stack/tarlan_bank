@@ -1,4 +1,5 @@
 import 'auth_user.dart';
+import 'reauth_method.dart';
 
 /// Auth boundary. Implementations: a temporary stub (scaffolding), then
 /// `FirebaseAuthRepository` (demo), swappable to a custom-JWT impl later.
@@ -45,4 +46,16 @@ abstract interface class AuthRepository {
   Future<void> logout();
 
   Future<void> deleteAccount();
+
+  /// Providers linked to the current user, used by the reauth screen.
+  Future<Set<ReauthMethod>> availableReauthMethods();
+
+  /// Confirm the current session with an email/password credential.
+  Future<void> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  });
+
+  /// Same, using an interactive Google sign-in.
+  Future<void> reauthenticateWithGoogle();
 }
