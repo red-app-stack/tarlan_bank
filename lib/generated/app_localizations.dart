@@ -2085,6 +2085,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not enable biometric login. Please try again.'**
   String get bioSetupFailed;
+
+  /// No description provided for @faceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Face verification'**
+  String get faceTitle;
+
+  /// No description provided for @faceIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity'**
+  String get faceIntroTitle;
+
+  /// No description provided for @faceIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We check that a real person is using this account. It takes about 10 seconds. Video is analysed on your device and is not recorded or stored.'**
+  String get faceIntroBody;
+
+  /// No description provided for @faceTipCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center your face in the oval'**
+  String get faceTipCenter;
+
+  /// No description provided for @faceTipLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Stand in good, even lighting'**
+  String get faceTipLight;
+
+  /// No description provided for @faceTipObstruct.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove glasses, mask, hat or anything covering your face'**
+  String get faceTipObstruct;
+
+  /// No description provided for @faceTipStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold still when asked'**
+  String get faceTipStill;
+
+  /// No description provided for @faceStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start scan'**
+  String get faceStart;
+
+  /// No description provided for @faceUsePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Use access code instead'**
+  String get faceUsePin;
+
+  /// No description provided for @faceContactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get faceContactSupport;
+
+  /// No description provided for @faceHintNoFace.
+  ///
+  /// In en, this message translates to:
+  /// **'Position your face in the oval'**
+  String get faceHintNoFace;
+
+  /// No description provided for @faceHintMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Only one face should be visible'**
+  String get faceHintMultiple;
+
+  /// No description provided for @faceHintCloser.
+  ///
+  /// In en, this message translates to:
+  /// **'Move a little closer'**
+  String get faceHintCloser;
+
+  /// No description provided for @faceHintFarther.
+  ///
+  /// In en, this message translates to:
+  /// **'Move a little farther'**
+  String get faceHintFarther;
+
+  /// No description provided for @faceHintCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center your face'**
+  String get faceHintCenter;
+
+  /// No description provided for @faceHintHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold still…'**
+  String get faceHintHold;
+
+  /// No description provided for @faceChallengeBlink.
+  ///
+  /// In en, this message translates to:
+  /// **'Blink slowly'**
+  String get faceChallengeBlink;
+
+  /// No description provided for @faceChallengeSmile.
+  ///
+  /// In en, this message translates to:
+  /// **'Smile'**
+  String get faceChallengeSmile;
+
+  /// No description provided for @faceChallengeTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn your head to one side, then back'**
+  String get faceChallengeTurn;
+
+  /// No description provided for @faceSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get faceSuccessTitle;
+
+  /// No description provided for @faceSuccessBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your identity check is complete.'**
+  String get faceSuccessBody;
+
+  /// No description provided for @faceErrPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is off'**
+  String get faceErrPermissionTitle;
+
+  /// No description provided for @faceErrPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access to verify your face.'**
+  String get faceErrPermissionBody;
+
+  /// No description provided for @faceOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get faceOpenSettings;
+
+  /// No description provided for @faceErrNoCameraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera found'**
+  String get faceErrNoCameraTitle;
+
+  /// No description provided for @faceErrNoCameraBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This device has no usable front camera. Use your access code or contact support.'**
+  String get faceErrNoCameraBody;
+
+  /// No description provided for @faceErrTimeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan timed out'**
+  String get faceErrTimeoutTitle;
+
+  /// No description provided for @faceErrTimeoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The check could not be completed in time. Try again in better light.'**
+  String get faceErrTimeoutBody;
+
+  /// No description provided for @faceErrGenericTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan failed'**
+  String get faceErrGenericTitle;
+
+  /// No description provided for @faceErrGenericBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong with the camera. Please try again.'**
+  String get faceErrGenericBody;
+
+  /// No description provided for @faceSupportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent. Support will review it. Until then you can use the app with limited access.'**
+  String get faceSupportSent;
+
+  /// No description provided for @faceSupportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the request. Check your connection and try again.'**
+  String get faceSupportFailed;
 }
 
 class _AppLocalizationsDelegate

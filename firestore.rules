@@ -130,6 +130,30 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // ---- face_verifications/{uid}: audit record of the face check. ----
+    // No images/templates. Client may only claim `passed` or ask for manual
+    // review; `approved`/`rejected` are set by a trusted reviewer (Admin SDK).
+    // A reviewer decision is final: clients cannot overwrite it.
+    // DEMO CAVEAT: `passed` is client-asserted (liveness runs on-device), so
+    // it is evidence, not proof. Never authorise money movement from it alone.
+    match /face_verifications/{uid} {
+      function validFaceRecord() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(
+                 ['status', 'method', 'deviceId', 'challenges', 'updatedAt'])
+          && d.status in ['passed', 'manual_requested']
+          && d.method in ['liveness', 'pin', 'support']
+          && d.deviceId is string && d.deviceId.size() <= 64
+          && d.challenges is int && d.challenges >= 0 && d.challenges <= 10
+          && d.updatedAt == request.time;
+      }
+      allow read: if isSelf(uid);
+      allow create: if isSelf(uid) && validFaceRecord();
+      allow update: if isSelf(uid) && validFaceRecord()
+        && resource.data.status in ['passed', 'manual_requested'];
+      allow delete: if false;
+    }
+
     // ---- config/urls: non-secret service endpoints. ----
     match /config/{document} {
       allow read: if true;

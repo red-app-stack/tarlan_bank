@@ -1038,4 +1038,108 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bioSetupFailed =>
       'Could not enable biometric login. Please try again.';
+
+  @override
+  String get faceTitle => 'Face verification';
+
+  @override
+  String get faceIntroTitle => 'Verify your identity';
+
+  @override
+  String get faceIntroBody =>
+      'We check that a real person is using this account. It takes about 10 seconds. Video is analysed on your device and is not recorded or stored.';
+
+  @override
+  String get faceTipCenter => 'Center your face in the oval';
+
+  @override
+  String get faceTipLight => 'Stand in good, even lighting';
+
+  @override
+  String get faceTipObstruct =>
+      'Remove glasses, mask, hat or anything covering your face';
+
+  @override
+  String get faceTipStill => 'Hold still when asked';
+
+  @override
+  String get faceStart => 'Start scan';
+
+  @override
+  String get faceUsePin => 'Use access code instead';
+
+  @override
+  String get faceContactSupport => 'Contact support';
+
+  @override
+  String get faceHintNoFace => 'Position your face in the oval';
+
+  @override
+  String get faceHintMultiple => 'Only one face should be visible';
+
+  @override
+  String get faceHintCloser => 'Move a little closer';
+
+  @override
+  String get faceHintFarther => 'Move a little farther';
+
+  @override
+  String get faceHintCenter => 'Center your face';
+
+  @override
+  String get faceHintHold => 'Hold still…';
+
+  @override
+  String get faceChallengeBlink => 'Blink slowly';
+
+  @override
+  String get faceChallengeSmile => 'Smile';
+
+  @override
+  String get faceChallengeTurn => 'Turn your head to one side, then back';
+
+  @override
+  String get faceSuccessTitle => 'Verified';
+
+  @override
+  String get faceSuccessBody => 'Your identity check is complete.';
+
+  @override
+  String get faceErrPermissionTitle => 'Camera access is off';
+
+  @override
+  String get faceErrPermissionBody =>
+      'Allow camera access to verify your face.';
+
+  @override
+  String get faceOpenSettings => 'Open settings';
+
+  @override
+  String get faceErrNoCameraTitle => 'No camera found';
+
+  @override
+  String get faceErrNoCameraBody =>
+      'This device has no usable front camera. Use your access code or contact support.';
+
+  @override
+  String get faceErrTimeoutTitle => 'Scan timed out';
+
+  @override
+  String get faceErrTimeoutBody =>
+      'The check could not be completed in time. Try again in better light.';
+
+  @override
+  String get faceErrGenericTitle => 'Scan failed';
+
+  @override
+  String get faceErrGenericBody =>
+      'Something went wrong with the camera. Please try again.';
+
+  @override
+  String get faceSupportSent =>
+      'Request sent. Support will review it. Until then you can use the app with limited access.';
+
+  @override
+  String get faceSupportFailed =>
+      'Could not send the request. Check your connection and try again.';
 }

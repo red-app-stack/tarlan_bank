@@ -6,15 +6,18 @@ import 'package:tarlan_bank/core/router/access_policy.dart';
 import 'package:tarlan_bank/core/router/auth_intent.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart'
     show rootNavigatorKey;
+import 'package:tarlan_bank/core/router/face_gate.dart';
 import 'package:tarlan_bank/core/router/pin_gate.dart';
 import 'package:tarlan_bank/core/router/routes.dart'
     show Routes, isShellOverlayPush;
 import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
+import 'package:tarlan_bank/features/auth/providers/face_gate_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/auth/biometric_setup_screen.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
+import 'package:tarlan_bank/views/auth/face_verification_screen.dart';
 import 'package:tarlan_bank/views/auth/login_screen.dart';
 import 'package:tarlan_bank/views/auth/verification_link_screen.dart';
 import 'package:tarlan_bank/views/main/home_screen.dart';
@@ -94,6 +97,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthListenable();
   ref.listen(authStateProvider, (_, _) => notifier.notify());
   ref.listen(pinGateProvider, (_, _) => notifier.notify());
+  ref.listen(faceGateProvider, (_, _) => notifier.notify());
 
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -116,9 +120,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (exit != null) return exit;
       }
 
+      // PIN comes FIRST: create it on a new device or confirm it on a new
+      // login. Only then does the face check run, so the two gates cannot
+      // bounce between /codeEntering and /faceVerify forever.
+      final challenge = pinRequired(authLevel, gate);
+      final face = ref.read(faceGateProvider);
+      final faceChallenge = faceRequired(authLevel, face.status) && !challenge;
+
+      if (location == Routes.faceVerify && !faceChallenge) {
+        return resumableFaceTarget(state.uri.queryParameters['target']) ??
+            Routes.home;
+      }
+      if (faceChallenge &&
+          !faceExempt(location, scanAfterPin: face.scanAfterPin)) {
+        return faceRouteFor(uri);
+      }
+
       // PIN is a feature gate, not an app gate: without it the user keeps
       // guest routes; protected money features challenge for PIN/setup.
-      final challenge = pinRequired(authLevel, gate);
       final level = challenge ? AccessLevel.guest : authLevel;
       final redirect = redirectFor(level: level, location: location);
       if (challenge && redirect == Routes.login) {
@@ -181,6 +200,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           child: CodeEnteringScreen(
             createCode: state.uri.queryParameters['mode'] == 'create',
             resetCode: state.uri.queryParameters['mode'] == 'reset',
+            targetRoute: state.uri.queryParameters['target'],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.faceVerify,
+        pageBuilder: (_, state) => _fadePage(
+          key: state.pageKey,
+          child: FaceVerificationScreen(
             targetRoute: state.uri.queryParameters['target'],
           ),
         ),

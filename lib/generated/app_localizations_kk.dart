@@ -1041,4 +1041,107 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get bioSetupFailed =>
       'Биометриялық кіруді қосу мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get faceTitle => 'Бетті тексеру';
+
+  @override
+  String get faceIntroTitle => 'Жеке басыңызды растаңыз';
+
+  @override
+  String get faceIntroBody =>
+      'Біз аккаунтты нақты адам пайдаланатынын тексереміз. Шамамен 10 секунд алады. Бейне құрылғыңызда талданады, жазылмайды және сақталмайды.';
+
+  @override
+  String get faceTipCenter => 'Бетіңізді сопақшаның ортасына қойыңыз';
+
+  @override
+  String get faceTipLight => 'Жарық жақсы әрі біркелкі жерде тұрыңыз';
+
+  @override
+  String get faceTipObstruct =>
+      'Көзілдірік, маска, бас киім және бетті жауып тұрған заттарды алыңыз';
+
+  @override
+  String get faceTipStill => 'Сұралғанда қозғалмай тұрыңыз';
+
+  @override
+  String get faceStart => 'Сканерлеуді бастау';
+
+  @override
+  String get faceUsePin => 'Қолжетімділік кодын пайдалану';
+
+  @override
+  String get faceContactSupport => 'Қолдау қызметіне хабарласу';
+
+  @override
+  String get faceHintNoFace => 'Бетіңізді сопақшаға келтіріңіз';
+
+  @override
+  String get faceHintMultiple => 'Кадрда тек бір бет болуы керек';
+
+  @override
+  String get faceHintCloser => 'Сәл жақынырақ келіңіз';
+
+  @override
+  String get faceHintFarther => 'Сәл алыстау тұрыңыз';
+
+  @override
+  String get faceHintCenter => 'Бетіңізді ортаға келтіріңіз';
+
+  @override
+  String get faceHintHold => 'Қозғалмай тұрыңыз…';
+
+  @override
+  String get faceChallengeBlink => 'Баяу көзіңізді жыпылықтатыңыз';
+
+  @override
+  String get faceChallengeSmile => 'Күліңіз';
+
+  @override
+  String get faceChallengeTurn => 'Басыңызды бір жаққа бұрып, кейін қайтарыңыз';
+
+  @override
+  String get faceSuccessTitle => 'Тексеру өтті';
+
+  @override
+  String get faceSuccessBody => 'Жеке басты тексеру аяқталды.';
+
+  @override
+  String get faceErrPermissionTitle => 'Камераға рұқсат жоқ';
+
+  @override
+  String get faceErrPermissionBody =>
+      'Бетті тексеру үшін камераға рұқсат беріңіз.';
+
+  @override
+  String get faceOpenSettings => 'Баптауларды ашу';
+
+  @override
+  String get faceErrNoCameraTitle => 'Камера табылмады';
+
+  @override
+  String get faceErrNoCameraBody =>
+      'Бұл құрылғыда жарамды алдыңғы камера жоқ. Қолжетімділік кодын пайдаланыңыз немесе қолдау қызметіне хабарласыңыз.';
+
+  @override
+  String get faceErrTimeoutTitle => 'Сканерлеу уақыты өтті';
+
+  @override
+  String get faceErrTimeoutBody =>
+      'Тексеруді уақытында аяқтау мүмкін болмады. Жарықтау жерде қайталап көріңіз.';
+
+  @override
+  String get faceErrGenericTitle => 'Сканерлеу сәтсіз аяқталды';
+
+  @override
+  String get faceErrGenericBody => 'Камерада ақау шықты. Қайталап көріңіз.';
+
+  @override
+  String get faceSupportSent =>
+      'Сұраныс жіберілді. Қолдау қызметі қарайды. Ол кезге дейін қолданба шектеулі қолжетімділікпен жұмыс істейді.';
+
+  @override
+  String get faceSupportFailed =>
+      'Сұранысты жіберу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.';
 }

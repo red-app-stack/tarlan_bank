@@ -56,6 +56,10 @@ dependencies:
   mobile_scanner: 7.5.0
   pretty_qr_code: any
   image_picker: any
+  # Face verification (checklist 1.1): live preview + on-device ML Kit face
+  # detection driving our own active-liveness challenges.
+  camera: ^0.12.2
+  google_mlkit_face_detection: ^1.0.3
   # photo_view: any
   # graphview: any
   syncfusion_flutter_datepicker: any

@@ -1043,4 +1043,108 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bioSetupFailed =>
       'Не удалось включить вход по биометрии. Попробуйте ещё раз.';
+
+  @override
+  String get faceTitle => 'Проверка лица';
+
+  @override
+  String get faceIntroTitle => 'Подтвердите личность';
+
+  @override
+  String get faceIntroBody =>
+      'Мы проверяем, что аккаунтом пользуется реальный человек. Это займёт около 10 секунд. Видео анализируется на вашем устройстве и не записывается и не хранится.';
+
+  @override
+  String get faceTipCenter => 'Расположите лицо по центру овала';
+
+  @override
+  String get faceTipLight => 'Встаньте при хорошем ровном освещении';
+
+  @override
+  String get faceTipObstruct =>
+      'Снимите очки, маску, головной убор и всё, что закрывает лицо';
+
+  @override
+  String get faceTipStill => 'Не двигайтесь, когда попросят';
+
+  @override
+  String get faceStart => 'Начать сканирование';
+
+  @override
+  String get faceUsePin => 'Использовать код доступа';
+
+  @override
+  String get faceContactSupport => 'Связаться с поддержкой';
+
+  @override
+  String get faceHintNoFace => 'Расположите лицо в овале';
+
+  @override
+  String get faceHintMultiple => 'В кадре должно быть только одно лицо';
+
+  @override
+  String get faceHintCloser => 'Подвиньтесь чуть ближе';
+
+  @override
+  String get faceHintFarther => 'Отодвиньтесь чуть дальше';
+
+  @override
+  String get faceHintCenter => 'Поместите лицо по центру';
+
+  @override
+  String get faceHintHold => 'Не двигайтесь…';
+
+  @override
+  String get faceChallengeBlink => 'Медленно моргните';
+
+  @override
+  String get faceChallengeSmile => 'Улыбнитесь';
+
+  @override
+  String get faceChallengeTurn => 'Поверните голову в сторону, затем обратно';
+
+  @override
+  String get faceSuccessTitle => 'Проверка пройдена';
+
+  @override
+  String get faceSuccessBody => 'Проверка личности завершена.';
+
+  @override
+  String get faceErrPermissionTitle => 'Нет доступа к камере';
+
+  @override
+  String get faceErrPermissionBody =>
+      'Разрешите доступ к камере, чтобы пройти проверку лица.';
+
+  @override
+  String get faceOpenSettings => 'Открыть настройки';
+
+  @override
+  String get faceErrNoCameraTitle => 'Камера не найдена';
+
+  @override
+  String get faceErrNoCameraBody =>
+      'На этом устройстве нет подходящей фронтальной камеры. Используйте код доступа или обратитесь в поддержку.';
+
+  @override
+  String get faceErrTimeoutTitle => 'Время сканирования истекло';
+
+  @override
+  String get faceErrTimeoutBody =>
+      'Не удалось завершить проверку вовремя. Попробуйте ещё раз при лучшем освещении.';
+
+  @override
+  String get faceErrGenericTitle => 'Сканирование не удалось';
+
+  @override
+  String get faceErrGenericBody =>
+      'Возникла проблема с камерой. Попробуйте ещё раз.';
+
+  @override
+  String get faceSupportSent =>
+      'Запрос отправлен. Поддержка рассмотрит его. До этого приложение доступно с ограничениями.';
+
+  @override
+  String get faceSupportFailed =>
+      'Не удалось отправить запрос. Проверьте соединение и попробуйте ещё раз.';
 }
