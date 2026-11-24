@@ -2337,6 +2337,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'System'**
   String get langSys;
+
+  /// No description provided for @callFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the dialer.'**
+  String get callFailed;
+
+  /// No description provided for @chatBotName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tarlan Assistant'**
+  String get chatBotName;
+
+  /// No description provided for @chatBotSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Banking support · 24/7'**
+  String get chatBotSubtitle;
+
+  /// No description provided for @chatBotThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get chatBotThinking;
+
+  /// No description provided for @chatClearConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear conversation'**
+  String get chatClearConversation;
+
+  /// No description provided for @chatGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I\'m Tarlan\'s AI assistant. Ask me about cards, payments, deposits or loans.'**
+  String get chatGreeting;
+
+  /// No description provided for @chatErrorResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorry, I couldn\'t respond. Please try again.'**
+  String get chatErrorResponse;
+
+  /// No description provided for @chatEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Tarlan AI'**
+  String get chatEmptyTitle;
+
+  /// No description provided for @chatEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards, payments, deposits and loans —\nI\'m here to help.'**
+  String get chatEmptySubtitle;
+
+  /// No description provided for @chatInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about banking…'**
+  String get chatInputHint;
+
+  /// No description provided for @chatInputHintThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a reply…'**
+  String get chatInputHintThinking;
+
+  /// No description provided for @chatCopyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get chatCopyText;
+
+  /// No description provided for @chatCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get chatCopied;
 }
 
 class _AppLocalizationsDelegate

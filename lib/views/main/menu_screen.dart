@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/svg.dart';
 
 import 'package:tarlan_bank/core/router/app_navigation.dart';
+import 'package:tarlan_bank/core/utils/phone_launcher.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
@@ -10,11 +11,14 @@ import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import '../shared/custom_card.dart';
 import '../shared/list_item.dart';
 import '../shared/shared_classes.dart';
+import '../shared/app_snack_bar.dart';
 
 /// Menu migrated to Riverpod: logout goes through AuthRepository and the
 /// guest check through currentUserProvider; no GetX controllers.
 class MenuScreen extends ConsumerWidget {
   const MenuScreen({super.key});
+
+  static const _callBankAction = '__call_bank';
 
   List<MenuSection> _sections(AppLocalizations l) => [
     MenuSection(
@@ -61,7 +65,11 @@ class MenuScreen extends ConsumerWidget {
       items: [
         MenuItem(icon: 'assets/icons/ic_atm.svg', title: l.atm),
         MenuItem(icon: 'assets/icons/ic_branch.svg', title: l.branches),
-        MenuItem(icon: 'assets/icons/ic_phone.svg', title: l.callBank),
+        MenuItem(
+          icon: 'assets/icons/ic_phone.svg',
+          title: l.callBank,
+          routeArg: _callBankAction,
+        ),
         MenuItem(icon: 'assets/icons/ic_support.svg', title: l.supportTickets),
       ],
     ),
@@ -79,8 +87,24 @@ class MenuScreen extends ConsumerWidget {
       if (context.mounted) await navigateReset(context, Routes.login);
     }
 
-    void handleItemClick(String? routeArg) {
+    Future<void> handleItemClick(String? routeArg) async {
       switch (routeArg) {
+        case _callBankAction:
+          try {
+            await launchSupportDialer();
+          } catch (e) {
+            debugPrint(e.toString());
+            if (context.mounted) {
+              showAppSnackBar(
+                context,
+                fromTop: true,
+                endPositionOffset: 1,
+                title: l.error,
+                message: l.callFailed,
+              );
+            }
+          }
+          return;
         case Routes.securitySettings:
           navigateTo(context, Routes.securitySettings);
         case Routes.investments:

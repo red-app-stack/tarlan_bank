@@ -1176,4 +1176,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get langSys => 'System';
+
+  @override
+  String get callFailed => 'Could not open the dialer.';
+
+  @override
+  String get chatBotName => 'Tarlan Assistant';
+
+  @override
+  String get chatBotSubtitle => 'Banking support · 24/7';
+
+  @override
+  String get chatBotThinking => 'Thinking…';
+
+  @override
+  String get chatClearConversation => 'Clear conversation';
+
+  @override
+  String get chatGreeting =>
+      'Hi! I\'m Tarlan\'s AI assistant. Ask me about cards, payments, deposits or loans.';
+
+  @override
+  String get chatErrorResponse =>
+      'Sorry, I couldn\'t respond. Please try again.';
+
+  @override
+  String get chatEmptyTitle => 'Ask Tarlan AI';
+
+  @override
+  String get chatEmptySubtitle =>
+      'Cards, payments, deposits and loans —\nI\'m here to help.';
+
+  @override
+  String get chatInputHint => 'Ask about banking…';
+
+  @override
+  String get chatInputHintThinking => 'Waiting for a reply…';
+
+  @override
+  String get chatCopyText => 'Copy text';
+
+  @override
+  String get chatCopied => 'Copied to clipboard';
 }

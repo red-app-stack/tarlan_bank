@@ -1181,4 +1181,46 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get langSys => 'Системный';
+
+  @override
+  String get callFailed => 'Не удалось открыть приложение телефона.';
+
+  @override
+  String get chatBotName => 'Помощник Tarlan';
+
+  @override
+  String get chatBotSubtitle => 'Банковская поддержка · 24/7';
+
+  @override
+  String get chatBotThinking => 'Думаю…';
+
+  @override
+  String get chatClearConversation => 'Очистить чат';
+
+  @override
+  String get chatGreeting =>
+      'Здравствуйте! Я ИИ-помощник Tarlan. Спросите меня о картах, платежах, вкладах или кредитах.';
+
+  @override
+  String get chatErrorResponse =>
+      'Извините, не удалось ответить. Попробуйте ещё раз.';
+
+  @override
+  String get chatEmptyTitle => 'Спросите ИИ Tarlan';
+
+  @override
+  String get chatEmptySubtitle =>
+      'Карты, платежи, вклады и кредиты —\nя рядом, чтобы помочь.';
+
+  @override
+  String get chatInputHint => 'Задайте вопрос о банке…';
+
+  @override
+  String get chatInputHintThinking => 'Ожидание ответа…';
+
+  @override
+  String get chatCopyText => 'Копировать текст';
+
+  @override
+  String get chatCopied => 'Скопировано в буфер';
 }

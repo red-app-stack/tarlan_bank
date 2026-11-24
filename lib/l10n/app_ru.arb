@@ -422,5 +422,18 @@
   "reauthGoogle": "Продолжить через Google",
   "reauthNoMethod": "Этот способ входа нельзя подтвердить здесь. Войдите заново с начала.",
   "language": "Язык",
-  "langSys": "Системный"
+  "langSys": "Системный",
+  "callFailed": "Не удалось открыть приложение телефона.",
+  "chatBotName": "Помощник Tarlan",
+  "chatBotSubtitle": "Банковская поддержка · 24/7",
+  "chatBotThinking": "Думаю…",
+  "chatClearConversation": "Очистить чат",
+  "chatGreeting": "Здравствуйте! Я ИИ-помощник Tarlan. Спросите меня о картах, платежах, вкладах или кредитах.",
+  "chatErrorResponse": "Извините, не удалось ответить. Попробуйте ещё раз.",
+  "chatEmptyTitle": "Спросите ИИ Tarlan",
+  "chatEmptySubtitle": "Карты, платежи, вклады и кредиты —\nя рядом, чтобы помочь.",
+  "chatInputHint": "Задайте вопрос о банке…",
+  "chatInputHintThinking": "Ожидание ответа…",
+  "chatCopyText": "Копировать текст",
+  "chatCopied": "Скопировано в буфер"
 }

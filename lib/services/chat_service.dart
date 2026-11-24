@@ -20,7 +20,7 @@ class ChatServiceException implements Exception {
 
 class ChatService {
   final DioManager _dio;
-  const ChatService({required this._dio});
+  const ChatService({required DioManager dio}) : _dio = dio;
 
   Future<void> warmup() async {
     ResponseBody body;

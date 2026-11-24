@@ -422,5 +422,18 @@
   "reauthGoogle": "Google арқылы жалғастыру",
   "reauthNoMethod": "Бұл кіру тәсілін мұнда растау мүмкін емес. Басынан қайта кіріңіз.",
   "language": "Тіл",
-  "langSys": "Жүйелік"
+  "langSys": "Жүйелік",
+  "callFailed": "Телефон қолданбасын ашу мүмкін болмады.",
+  "chatBotName": "Tarlan көмекшісі",
+  "chatBotSubtitle": "Банк қолдауы · 24/7",
+  "chatBotThinking": "Ойланып жатыр…",
+  "chatClearConversation": "Чатты тазалау",
+  "chatGreeting": "Сәлеметсіз бе! Мен Tarlan-дың ИИ көмекшісімін. Карталар, төлемдер, салымдар немесе несиелер туралы сұраңыз.",
+  "chatErrorResponse": "Кешіріңіз, жауап бере алмадым. Қайталап көріңіз.",
+  "chatEmptyTitle": "Tarlan ИИ-іне сұрақ қойыңыз",
+  "chatEmptySubtitle": "Карталар, төлемдер, салымдар және несиелер —\nкөмектесу үшін осындамын.",
+  "chatInputHint": "Банк туралы сұрақ қойыңыз…",
+  "chatInputHintThinking": "Жауап күтілуде…",
+  "chatCopyText": "Мәтінді көшіру",
+  "chatCopied": "Буферге көшірілді"
 }

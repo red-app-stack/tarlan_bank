@@ -450,5 +450,18 @@
   "reauthGoogle": "Continue with Google",
   "reauthNoMethod": "This sign-in method cannot be confirmed here. Please sign in again from the start.",
   "language": "Language",
-  "langSys": "System"
+  "langSys": "System",
+  "callFailed": "Could not open the dialer.",
+  "chatBotName": "Tarlan Assistant",
+  "chatBotSubtitle": "Banking support · 24/7",
+  "chatBotThinking": "Thinking…",
+  "chatClearConversation": "Clear conversation",
+  "chatGreeting": "Hi! I'm Tarlan's AI assistant. Ask me about cards, payments, deposits or loans.",
+  "chatErrorResponse": "Sorry, I couldn't respond. Please try again.",
+  "chatEmptyTitle": "Ask Tarlan AI",
+  "chatEmptySubtitle": "Cards, payments, deposits and loans —\nI'm here to help.",
+  "chatInputHint": "Ask about banking…",
+  "chatInputHintThinking": "Waiting for a reply…",
+  "chatCopyText": "Copy text",
+  "chatCopied": "Copied to clipboard"
 }

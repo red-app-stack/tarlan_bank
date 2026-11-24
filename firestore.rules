@@ -66,6 +66,13 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['fullName', 'phoneNumber', 'profilePictureUrl', 'updatedAt']);
       allow delete: if isSelf(uid);
+
+      // Server-written notification inbox (Admin SDK). Clients read their
+      // own history but cannot forge or edit entries.
+      match /notifications/{logId} {
+        allow read: if isSelf(uid);
+        allow write: if false;
+      }
     }
 
     // ---- accounts/{accountNumber}: doc ID == number → UNIQUE for free. ----

@@ -26,7 +26,7 @@ final class NetworkFailure extends AppFailure {
 /// The server responded with a non-success status.
 final class ServerFailure extends AppFailure {
   const ServerFailure(this.statusCode, [String? message, Object? cause])
-      : super(message ?? 'Server error ($statusCode)', cause);
+    : super(message ?? 'Server error ($statusCode)', cause);
 
   final int statusCode;
 }
@@ -49,4 +49,10 @@ final class NotFoundFailure extends AppFailure {
 /// Anything not yet classified.
 final class UnknownFailure extends AppFailure {
   const UnknownFailure([super.message = 'Unexpected error', super.cause]);
+}
+
+/// No app on the device can handle a `tel:` URI.
+final class DialerUnavailableFailure extends AppFailure {
+  const DialerUnavailableFailure([Object? cause])
+    : super('No app is available to make phone calls', cause);
 }

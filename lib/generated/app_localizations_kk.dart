@@ -1178,4 +1178,46 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get langSys => 'Жүйелік';
+
+  @override
+  String get callFailed => 'Телефон қолданбасын ашу мүмкін болмады.';
+
+  @override
+  String get chatBotName => 'Tarlan көмекшісі';
+
+  @override
+  String get chatBotSubtitle => 'Банк қолдауы · 24/7';
+
+  @override
+  String get chatBotThinking => 'Ойланып жатыр…';
+
+  @override
+  String get chatClearConversation => 'Чатты тазалау';
+
+  @override
+  String get chatGreeting =>
+      'Сәлеметсіз бе! Мен Tarlan-дың ИИ көмекшісімін. Карталар, төлемдер, салымдар немесе несиелер туралы сұраңыз.';
+
+  @override
+  String get chatErrorResponse =>
+      'Кешіріңіз, жауап бере алмадым. Қайталап көріңіз.';
+
+  @override
+  String get chatEmptyTitle => 'Tarlan ИИ-іне сұрақ қойыңыз';
+
+  @override
+  String get chatEmptySubtitle =>
+      'Карталар, төлемдер, салымдар және несиелер —\nкөмектесу үшін осындамын.';
+
+  @override
+  String get chatInputHint => 'Банк туралы сұрақ қойыңыз…';
+
+  @override
+  String get chatInputHintThinking => 'Жауап күтілуде…';
+
+  @override
+  String get chatCopyText => 'Мәтінді көшіру';
+
+  @override
+  String get chatCopied => 'Буферге көшірілді';
 }

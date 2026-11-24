@@ -4,24 +4,28 @@ import 'package:tarlan_bank/core/errors/app_failure.dart';
 void main() {
   group('AppFailure', () {
     test('sealed hierarchy is exhaustively switchable', () {
-      const failures = <AppFailure>[
+      final failures = <AppFailure>[
         NetworkFailure(),
         ServerFailure(500),
         AuthFailure(),
         ValidationFailure('Insufficient balance'),
         NotFoundFailure(),
         UnknownFailure(),
+        const DialerUnavailableFailure(),
       ];
 
       final labels = failures
-          .map((f) => switch (f) {
-                NetworkFailure() => 'network',
-                ServerFailure() => 'server',
-                AuthFailure() => 'auth',
-                ValidationFailure() => 'validation',
-                NotFoundFailure() => 'notFound',
-                UnknownFailure() => 'unknown',
-              })
+          .map(
+            (f) => switch (f) {
+              NetworkFailure() => 'network',
+              ServerFailure() => 'server',
+              AuthFailure() => 'auth',
+              ValidationFailure() => 'validation',
+              NotFoundFailure() => 'notFound',
+              UnknownFailure() => 'unknown',
+              DialerUnavailableFailure() => 'dialerUnavailable',
+            },
+          )
           .toList();
 
       expect(labels, [
@@ -31,6 +35,7 @@ void main() {
         'validation',
         'notFound',
         'unknown',
+        'dialerUnavailable',
       ]);
     });
 
