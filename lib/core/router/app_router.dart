@@ -151,6 +151,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
+      // Legacy alias: email-verification deep links still navigate to /main,
+      // and the PIN challenge keeps it as the resume target. Without this
+      // redirect the post-PIN context.go('/main') hits the errorBuilder.
+      GoRoute(path: Routes.main, redirect: (_, _) => Routes.home),
       GoRoute(
         path: Routes.login,
         pageBuilder: (_, state) =>

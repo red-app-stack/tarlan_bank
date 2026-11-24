@@ -1186,6 +1186,12 @@ abstract class AppLocalizations {
   /// **'Forgot access code?'**
   String get auCodeForgotButton;
 
+  /// No description provided for @auCodeLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {time}'**
+  String auCodeLocked(String time);
+
   /// No description provided for @auBiometricAuthTitle.
   ///
   /// In en, this message translates to:

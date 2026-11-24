@@ -577,6 +577,11 @@ class AppLocalizationsKk extends AppLocalizations {
   String get auCodeForgotButton => 'Қол жеткізу кодын ұмыттыңыз ба?';
 
   @override
+  String auCodeLocked(String time) {
+    return 'Тым көп әрекет. $time кейін қайталаңыз';
+  }
+
+  @override
   String get auBiometricAuthTitle => 'Биометриялық аутентификация';
 
   @override

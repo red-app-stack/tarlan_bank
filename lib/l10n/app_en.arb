@@ -251,6 +251,15 @@
   "auCodeEnterTitle": "Enter the access code",
   "auCodeResetButton": "Reset access code",
   "auCodeForgotButton": "Forgot access code?",
+  "auCodeLocked": "Too many attempts. Try again in {time}",
+  "@auCodeLocked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
   "auBiometricAuthTitle": "Biometric authentication",
   "auBiometricAuthBody": "Do you want to use biometric authentication?",
   "auBiometricSignInReason": "Use Touch ID to sign in to the app",

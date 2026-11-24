@@ -223,6 +223,15 @@
   "auCodeEnterTitle": "Введите код доступа",
   "auCodeResetButton": "Сбросить код доступа",
   "auCodeForgotButton": "Забыли код доступа?",
+  "auCodeLocked": "Слишком много попыток. Повторите через {time}",
+  "@auCodeLocked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
   "auBiometricAuthTitle": "Биометрическая аутентификация",
   "auBiometricAuthBody": "Вы хотите использовать биометрическую аутентификацию?",
   "auBiometricSignInReason": "Используйте Touch ID для входа в приложение",

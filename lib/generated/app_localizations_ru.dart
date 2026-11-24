@@ -580,6 +580,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get auCodeForgotButton => 'Забыли код доступа?';
 
   @override
+  String auCodeLocked(String time) {
+    return 'Слишком много попыток. Повторите через $time';
+  }
+
+  @override
   String get auBiometricAuthTitle => 'Биометрическая аутентификация';
 
   @override

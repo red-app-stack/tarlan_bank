@@ -223,6 +223,15 @@
   "auCodeEnterTitle": "Қол жеткізу кодын енгізіңіз",
   "auCodeResetButton": "Қол жеткізу кодын қалпына келтіру",
   "auCodeForgotButton": "Қол жеткізу кодын ұмыттыңыз ба?",
+  "auCodeLocked": "Тым көп әрекет. {time} кейін қайталаңыз",
+  "@auCodeLocked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
   "auBiometricAuthTitle": "Биометриялық аутентификация",
   "auBiometricAuthBody": "Биометриялық аутентификацияны пайдаланғыңыз келе ме?",
   "auBiometricSignInReason": "Қолданбаға кіру үшін Touch ID пайдаланыңыз",

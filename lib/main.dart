@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'core/locale/app_locale.dart';
+import 'core/security/inactivity_guard.dart';
 import 'core/providers/service_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/app_services.dart';
@@ -61,30 +62,32 @@ class _TarlanBankAppState extends ConsumerState<TarlanBankApp> {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
 
-    return MaterialApp.router(
-      onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      routerConfig: router,
-      locale: ref.watch(localeProvider),
-      localeResolutionCallback: (locale, supportedLocales) {
-        if (locale == null) return null;
-        for (final supported in supportedLocales) {
-          if (supported.languageCode == locale.languageCode) return supported;
-        }
-        return supportedLocales.first;
-      },
-      // material_ui owns MaterialLocalizations; Flutter's global delegate is
-      // a different (deprecated in 3.50) type — never mix them.
-      localizationsDelegates: [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
+    return InactivityGuard(
+      child: MaterialApp.router(
+        onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        routerConfig: router,
+        locale: ref.watch(localeProvider),
+        localeResolutionCallback: (locale, supportedLocales) {
+          if (locale == null) return null;
+          for (final supported in supportedLocales) {
+            if (supported.languageCode == locale.languageCode) return supported;
+          }
+          return supportedLocales.first;
+        },
+        // material_ui owns MaterialLocalizations; Flutter's global delegate is
+        // a different (deprecated in 3.50) type — never mix them.
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     );
   }
 }

@@ -576,6 +576,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auCodeForgotButton => 'Forgot access code?';
 
   @override
+  String auCodeLocked(String time) {
+    return 'Too many attempts. Try again in $time';
+  }
+
+  @override
   String get auBiometricAuthTitle => 'Biometric authentication';
 
   @override

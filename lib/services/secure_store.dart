@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tarlan_bank/core/services/key_value_store.dart';
 
 import '../views/shared/user_settings.dart';
 
-class SecureStore {
+class SecureStore implements KeyValueStore {
   static const String settingsKey = 'user_settings';
   static const String favoritesKey = 'favorite_transfers';
   final FlutterSecureStorage secureStorage;
@@ -12,6 +13,7 @@ class SecureStore {
 
   SecureStore(this.secureStorage);
 
+  @override
   Future<void> write(String key, String data) async {
     try {
       await secureStorage.write(key: key, value: data);
@@ -20,6 +22,7 @@ class SecureStore {
     }
   }
 
+  @override
   Future<String?> read(String key) async {
     return await secureStorage.read(key: key);
   }
@@ -28,6 +31,7 @@ class SecureStore {
     return await secureStorage.deleteAll();
   }
 
+  @override
   Future<void> delete(String key) async {
     return await secureStorage.delete(key: key);
   }
