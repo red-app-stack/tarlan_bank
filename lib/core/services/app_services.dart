@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import 'package:tarlan_bank/firebase_options.dart';
 import 'package:tarlan_bank/services/auth_service.dart';
 import 'package:tarlan_bank/services/auth_state_service.dart';
 import 'package:tarlan_bank/services/dio_manager.dart';
+import 'package:tarlan_bank/services/notification_service.dart';
 import 'package:tarlan_bank/services/screen_protect_service.dart';
 import 'package:tarlan_bank/services/secure_store.dart';
 import 'package:tarlan_bank/services/server_service.dart';
@@ -30,6 +32,7 @@ class AppServices {
   static late final AuthService authService;
   static late final VerificationService verificationService;
   static late final ThemeSettings themeSettings;
+  static late final NotificationService notificationService;
 
   static Future<void> init() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +43,15 @@ class AppServices {
 
     server = Server(resolver: ServiceUrlResolver());
     dioManager = DioManager(server: server, secureStorage: secureStorage);
+    notificationService = NotificationService(
+      messaging: FirebaseMessaging.instance,
+      dio: dioManager,
+    );
+    try {
+      await notificationService.initialize();
+    } catch (error) {
+      debugPrint('FCM setup skipped: $error');
+    }
     secureStore = SecureStore(secureStorage);
     authStateService = AuthStateService();
     userRepository = UserRepository(secureStore: secureStore);

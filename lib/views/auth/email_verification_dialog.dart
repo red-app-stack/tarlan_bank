@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/core/errors/app_failure.dart';
+import 'package:tarlan_bank/core/providers/notification_providers.dart'
+    show notificationServiceProvider;
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 
@@ -147,6 +149,8 @@ class _EmailVerificationDialogState
 
   Future<void> _cancel() async {
     if (widget.required) {
+      // Unregister while the ID-token header is still available.
+      await ref.read(notificationServiceProvider).stop();
       await ref.read(authRepositoryProvider).logout();
     }
     if (mounted) Navigator.of(context).pop();

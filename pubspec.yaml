@@ -74,6 +74,8 @@ dependencies:
   app_links: ^7.2.2 # Firebase email-verification App Links (oobCode)
   go_router: ^17.3.0
   firebase_core: ^5.2.0
+  firebase_messaging: ^17.1.0 # Core 5.x generation; 16.x needs core 4.x
+  flutter_local_notifications: ^21.0.0 # foreground notification display
   firebase_auth: ^7.1.0
   cloud_firestore: ^7.2.0
   # 7.2.0 current stable; requires Dart ^3.7, satisfied by the new ^3.14 floor.

@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/svg.dart';
 
+import 'package:tarlan_bank/core/providers/notification_providers.dart'
+    show notificationServiceProvider;
 import 'package:tarlan_bank/core/router/app_navigation.dart';
 import 'package:tarlan_bank/core/utils/phone_launcher.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
@@ -83,6 +85,9 @@ class MenuScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     Future<void> logout() async {
+      // DELETE needs the Firebase ID token, so drop the server registration
+      // before AuthInterceptor loses the signed-in user.
+      await ref.read(notificationServiceProvider).stop();
       await ref.read(authRepositoryProvider).logout();
       if (context.mounted) await navigateReset(context, Routes.login);
     }

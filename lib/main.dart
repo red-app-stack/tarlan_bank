@@ -1,14 +1,19 @@
 import 'dart:async';
 
 import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'core/notifications/background_handler.dart';
+
 import 'core/locale/app_locale.dart';
 import 'core/security/inactivity_guard.dart';
+import 'core/providers/notification_providers.dart';
 import 'core/providers/service_providers.dart';
+import 'core/router/app_navigation.dart' show rootNavigatorKey;
 import 'core/router/app_router.dart';
 import 'core/services/app_services.dart';
 import 'core/theme/theme_settings.dart';
@@ -19,6 +24,8 @@ import 'utils/themes/app_theme.dart';
 /// Boot is intentionally tiny: [AppServices.init] owns every service, this
 /// widget only wires Riverpod state (auth/router/theme/locale) into the app.
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await AppServices.init();
   runApp(
     ProviderScope(
@@ -30,6 +37,19 @@ Future<void> main() async {
   );
 }
 
+/// Text for data-only FCM messages. Notification-payload messages are shown by
+/// the system tray, and their text comes from the server payload.
+String? notificationBannerText(RemoteMessage message) {
+  final title = message.data['title']?.toString();
+  final body =
+      message.data['body']?.toString() ?? message.data['message']?.toString();
+  final parts = <String>[
+    if (title != null && title.isNotEmpty) title,
+    if (body != null && body.isNotEmpty && body != title) body,
+  ];
+  return parts.isEmpty ? null : parts.join(' · ');
+}
+
 class TarlanBankApp extends ConsumerStatefulWidget {
   const TarlanBankApp({super.key});
 
@@ -39,6 +59,7 @@ class TarlanBankApp extends ConsumerStatefulWidget {
 
 class _TarlanBankAppState extends ConsumerState<TarlanBankApp> {
   ProviderSubscription<AsyncValue<Uri>>? _emailLinkSub;
+  ProviderSubscription<AsyncValue<RemoteMessage>>? _notificationSub;
 
   @override
   void initState() {
@@ -49,16 +70,32 @@ class _TarlanBankAppState extends ConsumerState<TarlanBankApp> {
       final uri = next.value;
       if (uri != null) unawaited(handleEmailLink(ref, uri));
     });
+    // Notification-payload messages already get a system notification; show
+    // an in-app banner only for data-only messages (nothing else displays).
+    _notificationSub = ref.listenManual(notificationMessageProvider, (
+      previous,
+      next,
+    ) {
+      final message = next.value;
+      if (message == null || message.notification != null) return;
+      final text = notificationBannerText(message);
+      final context = rootNavigatorKey.currentContext;
+      if (text == null || context == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    });
   }
 
   @override
   void dispose() {
     _emailLinkSub?.close();
+    _notificationSub?.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Token registration/unregistration follows the full-user auth state.
+    ref.watch(notificationAuthBindingProvider);
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
 

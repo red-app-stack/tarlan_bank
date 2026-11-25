@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/core/router/access_policy.dart';
 import 'package:tarlan_bank/core/router/auth_intent.dart';
+import 'package:tarlan_bank/core/notifications/notification_deep_link.dart';
+import 'package:tarlan_bank/core/providers/notification_providers.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart'
-    show rootNavigatorKey;
+    show navigateToGlobal, rootNavigatorKey;
 import 'package:tarlan_bank/core/router/face_gate.dart';
 import 'package:tarlan_bank/core/router/pin_gate.dart';
 import 'package:tarlan_bank/core/router/routes.dart'
@@ -421,6 +424,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       body: Center(child: Text(AppLocalizations.of(context).errorGeneric)),
     ),
   );
+
+  // Notification taps (foreground/background/terminated) share one seam. The
+  // post-frame callback guarantees the root navigator exists on cold start.
+  void navigateToTap(RemoteMessage message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navigateToGlobal(notificationRouteFrom(message.data));
+    });
+  }
+
+  final tapNotifier = ref.read(notificationTapProvider);
+  void onTapChanged() {
+    final message = ref.read(notificationServiceProvider).consumePendingTap();
+    if (message != null) navigateToTap(message);
+  }
+
+  tapNotifier.addListener(onTapChanged);
+  ref.onDispose(() => tapNotifier.removeListener(onTapChanged));
+  final initialTap = ref.read(notificationServiceProvider).consumePendingTap();
+  if (initialTap != null) navigateToTap(initialTap);
 
   ref.onDispose(router.dispose);
   return router;

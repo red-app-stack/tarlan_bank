@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome bell used as the small notification icon (Android 5+ requires
+     an alpha-only glyph; coloured areas are ignored by the system). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2a6,6 0,0 0,-6 6v4l-2,3v1.5h16V15l-2,-3V8a6,6 0,0 0,-6 -6zM9.5,19a2.5,2.5 0,0 0,5 0h-5z" />
+</vector>
