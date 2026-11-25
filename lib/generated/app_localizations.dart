@@ -142,6 +142,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong'**
   String get errorGeneric;
 
+  /// No description provided for @dataRecoveryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your local data was cleared. Please sign in again.'**
+  String get dataRecoveryMessage;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -2415,6 +2421,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
   String get chatCopied;
+
+  /// No description provided for @topBarGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Greetings,'**
+  String get topBarGreeting;
 }
 
 class _AppLocalizationsDelegate

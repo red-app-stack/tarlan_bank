@@ -30,6 +30,11 @@ class MenuScreen extends ConsumerWidget {
           title: l.securitySettings,
           routeArg: Routes.securitySettings,
         ),
+        MenuItem(
+          icon: 'assets/icons/ic_chatbot.svg',
+          title: l.chatBotName,
+          routeArg: Routes.chatbot,
+        ),
       ],
     ),
     MenuSection(
@@ -112,6 +117,8 @@ class MenuScreen extends ConsumerWidget {
           return;
         case Routes.securitySettings:
           navigateTo(context, Routes.securitySettings);
+        case Routes.chatbot:
+          navigateTo(context, Routes.chatbot);
         case Routes.investments:
           navigateTo(context, Routes.investments);
         case null:

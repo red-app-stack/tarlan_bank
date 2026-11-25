@@ -122,6 +122,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
     final profile = ref.watch(userProfileProvider).value;
     final authUser = ref.watch(currentUserProvider);
     final fullName = profile?.fullName ?? '';
+    final photoUrl = profile?.photoUrl ?? '';
     final email = profile?.email ?? authUser?.email ?? '';
 
     return Scaffold(
@@ -129,8 +130,8 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
         child: Padding(
           padding: const EdgeInsets.only(left: 24.0, right: 24, top: 12.0),
           child: isLandscape
-              ? _buildLandscapeLayout(theme, size, fullName, email)
-              : _buildPortraitLayout(theme, size, fullName, email),
+              ? _buildLandscapeLayout(theme, size, fullName, email, photoUrl)
+              : _buildPortraitLayout(theme, size, fullName, email, photoUrl),
         ),
       ),
     );
@@ -141,6 +142,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
     Size size,
     String fullName,
     String email,
+    String photoUrl,
   ) {
     return Column(
       children: [
@@ -149,7 +151,9 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
         SizedBox(
           width: size.width / 2,
           child: CustomCard(
-            child: Center(child: buildUserCard(fullName, theme, size)),
+            child: Center(
+              child: buildUserCard(fullName, theme, size, photoUrl: photoUrl),
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -169,6 +173,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
     Size size,
     String fullName,
     String email,
+    String photoUrl,
   ) {
     return Row(
       children: [
@@ -182,7 +187,14 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
               SizedBox(
                 width: size.width / 4,
                 child: CustomCard(
-                  child: Center(child: buildUserCard(fullName, theme, size)),
+                  child: Center(
+                    child: buildUserCard(
+                      fullName,
+                      theme,
+                      size,
+                      photoUrl: photoUrl,
+                    ),
+                  ),
                 ),
               ),
               _buildForgotCodeButton(theme, email),

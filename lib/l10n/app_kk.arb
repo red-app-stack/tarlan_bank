@@ -7,6 +7,7 @@
   "success": "Сәтті",
   "error": "Қате",
   "errorGeneric": "Бір нәрсе дұрыс болмады",
+  "dataRecoveryMessage": "Жергілікті деректер тазаланды. Қайта кіріңіз.",
   "cancel": "Болдырмау",
   "confirm": "Растау",
   "retry": "Қайталау",
@@ -435,5 +436,6 @@
   "chatInputHint": "Банк туралы сұрақ қойыңыз…",
   "chatInputHintThinking": "Жауап күтілуде…",
   "chatCopyText": "Мәтінді көшіру",
-  "chatCopied": "Буферге көшірілді"
+  "chatCopied": "Буферге көшірілді",
+  "topBarGreeting": "Сәлем,"
 }

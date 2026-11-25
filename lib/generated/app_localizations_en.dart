@@ -31,6 +31,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorGeneric => 'Something went wrong';
 
   @override
+  String get dataRecoveryMessage =>
+      'Your local data was cleared. Please sign in again.';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -1218,4 +1222,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatCopied => 'Copied to clipboard';
+
+  @override
+  String get topBarGreeting => 'Greetings,';
 }

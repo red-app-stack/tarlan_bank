@@ -12,8 +12,10 @@ import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 
-import '../../utils/themes/theme_extension.dart';
+import '../../utils/themes/glass_settings.dart';
+import '../shared/formatters.dart';
 import '../shared/mesh_background.dart';
+import 'shell_top_bar.dart';
 
 class _Tab {
   final String path;
@@ -162,40 +164,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     ref.read(shellIndexProvider.notifier).setIndex(index);
   }
 
-  Widget _searchField(ThemeData theme) {
-    final extra = theme.extension<Extra>();
-    final color = extra?.secondaryText ?? theme.colorScheme.onSurfaceVariant;
-    return TextField(
-      controller: _searchController,
-      textAlignVertical: TextAlignVertical.center,
-      textInputAction: TextInputAction.search,
-      style: TextStyle(color: color),
-      decoration: InputDecoration(
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
-        filled: true,
-        fillColor: Colors.transparent,
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(14),
-          child: SvgPicture.asset(
-            'assets/icons/ic_search.svg',
-            width: 20,
-            height: 20,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          ),
-        ),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 48,
-          minHeight: 48,
-        ),
-        hintText: AppLocalizations.of(context).searchHint,
-        hintStyle: TextStyle(color: color.withValues(alpha: 0.7)),
-        contentPadding: const EdgeInsets.only(left: 48, right: 16),
-      ),
-    );
-  }
-
   Widget _navItem(
     int index,
     int selected,
@@ -282,6 +250,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
     final isFullUser = ref.watch(isFullUserProvider);
+    final profile = ref.watch(userProfileProvider).value;
+    final authUser = ref.watch(currentUserProvider);
+    final displayName = formatGreetingName(
+      profile?.fullName ?? authUser?.email ?? l.unknown,
+    );
     final selected = widget.navigationShell.currentIndex.clamp(
       0,
       _tabs.length - 1,
@@ -295,38 +268,13 @@ class _MainShellState extends ConsumerState<MainShell> {
         extendBody: true,
         extendBodyBehindAppBar: true,
         appBar: showTopBar
-            ? _GlassTopBar(
-                leading: IconButton(
-                  tooltip: l.menu,
-                  icon: SizedBox(
-                    width: 38,
-                    height: 38,
-                    child: SvgPicture.asset(
-                      'assets/icons/ic_user.svg',
-                      colorFilter: ColorFilter.mode(
-                        theme.colorScheme.primary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  onPressed: () => _pushOverlay(Routes.profile),
-                ),
-                actions: [
-                  IconButton(
-                    tooltip: l.investments,
-                    icon: SvgPicture.asset(
-                      'assets/icons/ic_chatbot.svg',
-                      width: 32,
-                      height: 32,
-                      colorFilter: ColorFilter.mode(
-                        theme.colorScheme.primary,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    onPressed: () => _pushOverlay(Routes.chatbot),
-                  ),
-                ],
-                title: _searchField(theme),
+            ? ShellTopBar(
+                searchController: _searchController,
+                displayName: displayName,
+                photoUrl: profile?.photoUrl ?? '',
+                onProfileTap: () => _pushOverlay(Routes.profile),
+                // The profile screen owns the notification settings section.
+                onNotificationsTap: () => _pushOverlay(Routes.profile),
               )
             : null,
         body: SafeArea(
@@ -342,58 +290,18 @@ class _MainShellState extends ConsumerState<MainShell> {
               width: double.infinity,
               shape: const LiquidRoundedSuperellipse(borderRadius: 24),
               padding: EdgeInsets.zero,
+              settings: themedGlassSettings(theme),
+              useOwnLayer: true,
               child: SizedBox(
                 height: 64,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(
                     _tabs.length,
-                    (index) =>
-                        _navItem(index, selected, theme, l, isFullUser),
+                    (index) => _navItem(index, selected, theme, l, isFullUser),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Our original bar layout with only the glass surface swapped to
-/// liquid_glass_widgets — no GlassAppBar / GlassTabBar structural widgets.
-class _GlassTopBar extends StatelessWidget implements PreferredSizeWidget {
-  const _GlassTopBar({
-    required this.leading,
-    required this.actions,
-    required this.title,
-  });
-
-  final Widget leading;
-  final List<Widget> actions;
-  final Widget title;
-
-  static const double _gap = 8;
-
-  @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight + _gap * 2);
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: true,
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: _gap),
-        child: GlassContainer(
-          width: double.infinity,
-          shape: const LiquidRoundedSuperellipse(borderRadius: 24),
-          padding: EdgeInsets.zero,
-          child: SizedBox(
-            height: kToolbarHeight,
-            child: Row(
-              children: [leading, Expanded(child: title), ...actions],
             ),
           ),
         ),

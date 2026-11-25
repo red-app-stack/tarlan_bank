@@ -98,6 +98,16 @@ String formatFullName(String? fullName) {
   return formattedName;
 }
 
+/// "John Doe Smith" -> "John D." — only the last name's first letter is kept.
+String formatGreetingName(String? fullName) {
+  if (fullName == null || fullName.trim().isEmpty) return '';
+  final names = fullName.trim().split(RegExp(r'\s+'));
+  if (names.length == 1) return names.first;
+  final lastInitial = names.last.isNotEmpty ? names.last[0].toUpperCase() : '';
+  final suffix = lastInitial.isEmpty ? '' : ' $lastInitial.';
+  return '${names.first}$suffix';
+}
+
 String formatCardNumber(String cardNumber) {
   if (cardNumber.length < 8) {
     return cardNumber;

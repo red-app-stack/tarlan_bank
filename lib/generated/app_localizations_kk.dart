@@ -31,6 +31,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String get errorGeneric => 'Бір нәрсе дұрыс болмады';
 
   @override
+  String get dataRecoveryMessage =>
+      'Жергілікті деректер тазаланды. Қайта кіріңіз.';
+
+  @override
   String get cancel => 'Болдырмау';
 
   @override
@@ -1220,4 +1224,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get chatCopied => 'Буферге көшірілді';
+
+  @override
+  String get topBarGreeting => 'Сәлем,';
 }

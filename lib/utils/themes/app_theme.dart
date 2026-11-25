@@ -380,14 +380,20 @@ class AppTheme {
       colorScheme: scheme,
       extensions: [
         Extra(
-          primaryText: colors.primaryText,
-          secondaryText: colors.secondaryText,
+          // LEGACY text aliases now follow the canonical on-surface colours.
+          primaryText: colors.onSurface,
+          secondaryText: colors.onSurfaceVariant,
           tertiaryText: colors.tertiaryText,
-          backgroundGradientStart: colors.primaryVariant,
-          backgroundGradientEnd: colors.onSecondary,
+          // LEGACY aliases now point at the designer scrim gradient.
+          backgroundGradientStart: colors.scrimGradientStart,
+          backgroundGradientEnd: colors.scrimGradientEnd,
           primaryVariant: colors.primaryVariant,
           // background: colors.background,
           notifications: colors.notifications,
+          accentContainer: colors.accentContainer,
+          scrimGradientStart: colors.scrimGradientStart,
+          scrimGradientEnd: colors.scrimGradientEnd,
+          glassTint: colors.glassTint,
           primaryCardBg: colors.primaryCardBg,
           primaryCardFg: colors.primaryCardFg,
           secondaryCardBg: colors.secondaryCardBg,

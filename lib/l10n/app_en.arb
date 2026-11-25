@@ -7,6 +7,7 @@
   "success": "Success",
   "error": "Error",
   "errorGeneric": "Something went wrong",
+  "dataRecoveryMessage": "Your local data was cleared. Please sign in again.",
   "cancel": "Cancel",
   "confirm": "Confirm",
   "retry": "Retry",
@@ -463,5 +464,6 @@
   "chatInputHint": "Ask about banking…",
   "chatInputHintThinking": "Waiting for a reply…",
   "chatCopyText": "Copy text",
-  "chatCopied": "Copied to clipboard"
+  "chatCopied": "Copied to clipboard",
+  "topBarGreeting": "Greetings,"
 }

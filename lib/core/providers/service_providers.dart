@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tarlan_bank/core/services/app_services.dart';
+import 'package:tarlan_bank/core/security/user_data_recovery.dart';
 import 'package:tarlan_bank/services/auth_service.dart';
 import 'package:tarlan_bank/services/auth_state_service.dart';
 import 'package:tarlan_bank/services/dio_manager.dart';
@@ -36,3 +37,10 @@ final authServiceProvider = Provider<AuthService>(
 final verificationServiceProvider = Provider<VerificationService>(
   (ref) => AppServices.verificationService,
 );
+
+final userDataRecoveryProvider = Provider<UserDataRecovery>((ref) {
+  return UserDataRecovery(
+    ref.watch(secureStoreProvider),
+    onCleared: () => ref.read(userRepositoryProvider).currentUser = null,
+  );
+});

@@ -31,6 +31,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errorGeneric => 'Что-то пошло не так';
 
   @override
+  String get dataRecoveryMessage => 'Локальные данные очищены. Войдите снова.';
+
+  @override
   String get cancel => 'Отмена';
 
   @override
@@ -1223,4 +1226,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatCopied => 'Скопировано в буфер';
+
+  @override
+  String get topBarGreeting => 'Здравствуйте,';
 }

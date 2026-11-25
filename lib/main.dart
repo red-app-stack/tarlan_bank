@@ -9,19 +9,25 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
     show LiquidGlassWidgets;
 import 'package:material_ui/material_ui.dart';
 
+import 'core/errors/app_failure.dart' show NotFoundFailure, ValidationFailure;
 import 'core/notifications/background_handler.dart';
 
 import 'core/locale/app_locale.dart';
 import 'core/security/inactivity_guard.dart';
 import 'core/providers/notification_providers.dart';
 import 'core/providers/service_providers.dart';
-import 'core/router/app_navigation.dart' show rootNavigatorKey;
+import 'core/router/app_navigation.dart'
+    show navigateResetGlobal, rootNavigatorKey;
 import 'core/router/app_router.dart';
+import 'core/router/routes.dart' show Routes;
 import 'core/services/app_services.dart';
 import 'core/theme/theme_settings.dart';
+import 'features/auth/providers/auth_providers.dart'
+    show authRepositoryProvider, userProfileProvider;
 import 'features/auth/providers/email_link_provider.dart';
 import 'generated/app_localizations.dart';
 import 'utils/themes/app_theme.dart';
+import 'views/shared/app_snack_bar.dart' show showAppSnackBar;
 
 /// Boot is intentionally tiny: [AppServices.init] owns every service, this
 /// widget only wires Riverpod state (auth/router/theme/locale) into the app.
@@ -67,6 +73,8 @@ class TarlanBankApp extends ConsumerStatefulWidget {
 class _TarlanBankAppState extends ConsumerState<TarlanBankApp> {
   ProviderSubscription<AsyncValue<Uri>>? _emailLinkSub;
   ProviderSubscription<AsyncValue<RemoteMessage>>? _notificationSub;
+  ProviderSubscription? _profileSub;
+  bool _recoveringProfile = false;
 
   @override
   void initState() {
@@ -90,10 +98,48 @@ class _TarlanBankAppState extends ConsumerState<TarlanBankApp> {
       if (text == null || context == null) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
     });
+    // Corrupt profile data: wipe the local account/PIN and restart auth.
+    _profileSub = ref.listenManual(userProfileProvider, (previous, next) {
+      final error = next.error;
+      // Only corrupt/missing profile records trigger the local wipe; an
+      // offline Firestore read must not delete a valid PIN.
+      if (!next.hasError ||
+          (error is! ValidationFailure && error is! NotFoundFailure) ||
+          _recoveringProfile) {
+        return;
+      }
+      _recoveringProfile = true;
+      unawaited(_recoverFromBadUserData());
+    });
+  }
+
+  Future<void> _recoverFromBadUserData() async {
+    try {
+      await ref.read(userDataRecoveryProvider).call();
+      await ref.read(authRepositoryProvider).logout();
+      await navigateResetGlobal(Routes.login);
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = rootNavigatorKey.currentContext;
+        if (context == null || !context.mounted) return;
+        final l = AppLocalizations.of(context);
+        showAppSnackBar(
+          context,
+          title: l.errorGeneric,
+          message: l.dataRecoveryMessage,
+          fromTop: true,
+        );
+      });
+    } catch (error) {
+      debugPrint('Profile recovery failed: $error');
+    } finally {
+      if (mounted) _recoveringProfile = false;
+    }
   }
 
   @override
   void dispose() {
+    _profileSub?.close();
     _emailLinkSub?.close();
     _notificationSub?.close();
     super.dispose();

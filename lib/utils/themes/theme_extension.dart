@@ -1,5 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
+/// Canonical designer tokens live on ColorScheme plus [accentContainer] and
+/// the [scrimGradientStart]/[scrimGradientEnd] pair. All other fields are
+/// LEGACY and kept only until their call sites are migrated.
 class Extra extends ThemeExtension<Extra> {
   final Color? primaryText;
   final Color? secondaryText;
@@ -9,6 +12,13 @@ class Extra extends ThemeExtension<Extra> {
   final Color? primaryVariant;
   // final Color? background;
   final Color? notifications;
+  /// Canonical accent container (#C3D600).
+  final Color? accentContainer;
+  /// Scrim gradient: transparent to opaque in the same hue.
+  final Color? scrimGradientStart;
+  final Color? scrimGradientEnd;
+  /// Keep for the liquid-glass effect; not part of the designer palette.
+  final Color? glassTint;
   final Color? primaryCardBg;
   final Color? primaryCardFg;
   final Color? secondaryCardBg;
@@ -35,6 +45,10 @@ class Extra extends ThemeExtension<Extra> {
     required this.primaryVariant,
     // required this.background,
     required this.notifications,
+    required this.accentContainer,
+    required this.scrimGradientStart,
+    required this.scrimGradientEnd,
+    required this.glassTint,
     required this.primaryCardBg,
     required this.primaryCardFg,
     required this.secondaryCardBg,
@@ -66,6 +80,10 @@ class Extra extends ThemeExtension<Extra> {
       primaryVariant: primaryVariant ?? primaryVariant,
       // background: background ?? background,
       notifications: notifications ?? notifications,
+      accentContainer: accentContainer,
+      scrimGradientStart: scrimGradientStart,
+      scrimGradientEnd: scrimGradientEnd,
+      glassTint: glassTint,
       primaryCardBg: primaryCardBg ?? primaryCardBg,
       primaryCardFg: primaryCardFg ?? primaryCardFg,
       secondaryCardBg: secondaryCardBg ?? secondaryCardBg,
@@ -99,6 +117,11 @@ class Extra extends ThemeExtension<Extra> {
       primaryVariant: Color.lerp(primaryVariant, other.primaryVariant, t),
       // background: Color.lerp(background, other.background, t),
       notifications: Color.lerp(notifications, other.notifications, t),
+      accentContainer: Color.lerp(accentContainer, other.accentContainer, t),
+      scrimGradientStart:
+          Color.lerp(scrimGradientStart, other.scrimGradientStart, t),
+      scrimGradientEnd: Color.lerp(scrimGradientEnd, other.scrimGradientEnd, t),
+      glassTint: Color.lerp(glassTint, other.glassTint, t),
       primaryCardBg: Color.lerp(primaryCardBg, other.primaryCardBg, t),
       primaryCardFg: Color.lerp(primaryCardFg, other.primaryCardFg, t),
       secondaryCardBg: Color.lerp(secondaryCardBg, other.secondaryCardBg, t),

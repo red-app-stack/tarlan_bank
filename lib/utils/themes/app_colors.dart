@@ -1,11 +1,24 @@
 import 'package:material_ui/material_ui.dart';
 
+/// Designer palette is: onSurface, onSurfaceVariant, primaryContainer /
+/// onPrimaryContainer (container), secondaryContainer / onSecondaryContainer
+/// (container-secondary / on-container-variant), accentContainer and the
+/// scrimGradientStart/End pair. Every other field is LEGACY: kept temporarily
+/// so existing call sites keep compiling; do not use it in new code.
 abstract class AppColors {
   final Color primary;
   final Color onPrimary;
   final Color primaryContainer;
   final Color onPrimaryContainer;
+  /// LEGACY alias of [accentContainer]; kept for existing notification call sites.
   final Color notifications;
+  /// Canonical accent container (the #C3D600 notification colour).
+  final Color accentContainer;
+  /// Scrim gradient from fully transparent to opaque, in the same hue.
+  final Color scrimGradientStart;
+  final Color scrimGradientEnd;
+  /// Keep for the glass effect; not part of the designer palette.
+  final Color glassTint;
   final Color primaryVariant;
   final Color primaryVariantHigh;
   final Color secondary;
@@ -64,6 +77,10 @@ abstract class AppColors {
       required this.primaryContainer,
       required this.onPrimaryContainer,
       required this.notifications,
+      required this.accentContainer,
+      required this.scrimGradientStart,
+      required this.scrimGradientEnd,
+      required this.glassTint,
       required this.primaryVariant,
       required this.primaryVariantHigh,
       required this.secondary,

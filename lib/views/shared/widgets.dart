@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../../utils/themes/theme_extension.dart';
+import 'cached_user_avatar.dart';
 import 'formatters.dart';
 
 class FrostedAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -202,32 +202,14 @@ Widget buildUserAvatar(
   ThemeData theme,
   String? userName, {
   double? radius = 24,
+  String photoUrl = '',
 }) {
-  return CircleAvatar(
-    radius: radius,
+  return CachedUserAvatar(
+    imageUrl: photoUrl,
+    initials: getInitials(userName ?? ''),
+    size: (radius ?? 24) * 2,
     backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-    child: Text(
-      getInitials(userName ?? ''),
-      style: radius == 16
-          ? theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            )
-          : radius == 24
-          ? theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            )
-          : radius == 48
-          ? theme.textTheme.headlineMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            )
-          : theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-    ),
+    foregroundColor: theme.colorScheme.primary,
   );
 }
 
@@ -416,37 +398,14 @@ Widget buildUserCard(
   String? subtitle,
 }) {
   final initials = getInitials(fullName);
-  final initialsWidget = Text(
-    initials,
-    style: theme.textTheme.headlineMedium?.copyWith(
-      color: theme.colorScheme.primary,
-      fontWeight: FontWeight.bold,
-    ),
-  );
-  final hasPhoto = photoUrl != null && photoUrl.trim().isNotEmpty;
-
   return Column(
     children: [
-      ClipOval(
-        child: SizedBox(
-          width: 96,
-          height: 96,
-          child: hasPhoto
-              ? Image.network(
-                  photoUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    alignment: Alignment.center,
-                    child: initialsWidget,
-                  ),
-                )
-              : Container(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  alignment: Alignment.center,
-                  child: initialsWidget,
-                ),
-        ),
+      CachedUserAvatar(
+        imageUrl: photoUrl ?? '',
+        initials: initials,
+        size: 96,
+        backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+        foregroundColor: theme.colorScheme.primary,
       ),
       SizedBox(height: size.height * 0.02),
       Text(
