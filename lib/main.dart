@@ -5,6 +5,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
+    show LiquidGlassWidgets;
 import 'package:material_ui/material_ui.dart';
 
 import 'core/notifications/background_handler.dart';
@@ -27,12 +29,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await AppServices.init();
+  await LiquidGlassWidgets.initialize();
   runApp(
-    ProviderScope(
-      overrides: [
-        themeSettingsProvider.overrideWithValue(AppServices.themeSettings),
-      ],
-      child: const TarlanBankApp(),
+    LiquidGlassWidgets.wrap(
+      adaptiveQuality: true,
+      brightnessResolver: (context) => Theme.of(context).brightness,
+      child: ProviderScope(
+        overrides: [
+          themeSettingsProvider.overrideWithValue(AppServices.themeSettings),
+        ],
+        child: const TarlanBankApp(),
+      ),
     ),
   );
 }

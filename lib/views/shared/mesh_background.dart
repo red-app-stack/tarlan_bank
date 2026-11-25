@@ -126,7 +126,7 @@ class MeshSpec {
     double accentMix = 0.0,
     int seed = 0,
     double intensity = 1.0,
-    double drift = 0.1,
+    double drift = 0.08,
   }) {
     final dark = cs.brightness == Brightness.dark;
     final p = (palette ?? (dark ? MeshPalette.dark : MeshPalette.light)).themed(
@@ -134,7 +134,7 @@ class MeshSpec {
       accentMix: accentMix,
     );
     const xs = <double>[0.0, 0.20, 0.58, 1.0];
-    const ys = <double>[0.0, 0.10, 0.22, 0.42, 1.0];
+    const ys = <double>[0.0, 0.12, 0.28, 0.50, 0.68, 1.0];
     final cols = xs.length;
     final rows = ys.length;
     final rnd = math.Random(seed * 7919 + 17);
@@ -158,8 +158,13 @@ class MeshSpec {
         p.deepForest,
       ],
       [p.midEmerald, p.midEmeraldAlt, p.deepForestAlt, p.canvas],
-      // Everything from y=0.42 down is plain canvas, no tint bleeding into
-      // the lower half of the page.
+      // Long feather: a faint wash reaches y=0.5 before the canvas takes over.
+      [
+        mix(p.deepForestAlt, p.canvas, 0.55),
+        mix(p.deepForestAlt, p.canvas, 0.75),
+        p.canvas,
+        p.canvas,
+      ],
       [p.canvas, p.canvas, p.canvas, p.canvas],
       [p.canvas, p.canvas, p.canvas, p.canvas],
     ];

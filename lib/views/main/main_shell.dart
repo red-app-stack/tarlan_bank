@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
+    show GlassContainer, LiquidRoundedSuperellipse;
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/core/router/routes.dart'
@@ -11,7 +13,6 @@ import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 
 import '../../utils/themes/theme_extension.dart';
-import '../shared/glass.dart';
 import '../shared/mesh_background.dart';
 
 class _Tab {
@@ -291,10 +292,10 @@ class _MainShellState extends ConsumerState<MainShell> {
       seed: selected,
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        extendBody: true,
+        extendBodyBehindAppBar: true,
         appBar: showTopBar
-            ? GlassAppBar(
-                mode: .live,
-                floating: true,
+            ? _GlassTopBar(
                 leading: IconButton(
                   tooltip: l.menu,
                   icon: SizedBox(
@@ -310,7 +311,6 @@ class _MainShellState extends ConsumerState<MainShell> {
                   ),
                   onPressed: () => _pushOverlay(Routes.profile),
                 ),
-                actionsPadding: const EdgeInsets.only(right: 8),
                 actions: [
                   IconButton(
                     tooltip: l.investments,
@@ -326,14 +326,9 @@ class _MainShellState extends ConsumerState<MainShell> {
                     onPressed: () => _pushOverlay(Routes.chatbot),
                   ),
                 ],
-                title: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: _searchField(theme),
-                ),
+                title: _searchField(theme),
               )
             : null,
-        extendBody: true,
-        extendBodyBehindAppBar: true,
         body: SafeArea(
           top: false,
           bottom: false,
@@ -343,20 +338,62 @@ class _MainShellState extends ConsumerState<MainShell> {
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: GlassSurface(
-              mode: .live,
+            child: GlassContainer(
+              width: double.infinity,
+              shape: const LiquidRoundedSuperellipse(borderRadius: 24),
               padding: EdgeInsets.zero,
-              elevation: 0.0,
               child: SizedBox(
                 height: 64,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: List.generate(
                     _tabs.length,
-                    (index) => _navItem(index, selected, theme, l, isFullUser),
+                    (index) =>
+                        _navItem(index, selected, theme, l, isFullUser),
                   ),
                 ),
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Our original bar layout with only the glass surface swapped to
+/// liquid_glass_widgets — no GlassAppBar / GlassTabBar structural widgets.
+class _GlassTopBar extends StatelessWidget implements PreferredSizeWidget {
+  const _GlassTopBar({
+    required this.leading,
+    required this.actions,
+    required this.title,
+  });
+
+  final Widget leading;
+  final List<Widget> actions;
+  final Widget title;
+
+  static const double _gap = 8;
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight + _gap * 2);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: true,
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: _gap),
+        child: GlassContainer(
+          width: double.infinity,
+          shape: const LiquidRoundedSuperellipse(borderRadius: 24),
+          padding: EdgeInsets.zero,
+          child: SizedBox(
+            height: kToolbarHeight,
+            child: Row(
+              children: [leading, Expanded(child: title), ...actions],
             ),
           ),
         ),
