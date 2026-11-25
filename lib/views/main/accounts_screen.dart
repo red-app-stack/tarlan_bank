@@ -151,6 +151,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     final isGuest = user == null || user.isAnonymous;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         top: false,

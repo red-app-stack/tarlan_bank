@@ -60,6 +60,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final ratesAsync = ref.watch(exchangeRatesProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         top: false,

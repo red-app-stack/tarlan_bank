@@ -21,7 +21,7 @@ class AppColorsDark extends AppColors {
           onTertiary: const Color(0xFF002015),
           tertiaryContainer: const Color(0xFF024D36),
           onTertiaryContainer: const Color(0xFFB5F3DD),
-          surface: const Color(0xFF121415),
+          surface: const Color(0xFF0A1310),
           surfaceDim: const Color(0xFF0A0B0B),
           surfaceBright: const Color(0xFF2F3230),
           onSurface: const Color(0xFFE1E3E1),

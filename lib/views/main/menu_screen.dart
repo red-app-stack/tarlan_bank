@@ -131,6 +131,7 @@ class MenuScreen extends ConsumerWidget {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         top: false,

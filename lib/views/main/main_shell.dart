@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +11,8 @@ import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 
 import '../../utils/themes/theme_extension.dart';
-import '../shared/widgets.dart';
+import '../shared/glass.dart';
+import '../shared/mesh_background.dart';
 
 class _Tab {
   final String path;
@@ -288,80 +287,73 @@ class _MainShellState extends ConsumerState<MainShell> {
     );
     final showTopBar = showShellTopBarFor(_currentPath);
 
-    return Scaffold(
-      appBar: showTopBar
-          ? FrostedAppBar(
-              floating: true,
-              leading: IconButton(
-                tooltip: l.menu,
-                icon: SizedBox(
-                  width: 38,
-                  height: 38,
-                  child: SvgPicture.asset(
-                    'assets/icons/ic_user.svg',
-                    colorFilter: ColorFilter.mode(
-                      theme.colorScheme.primary,
-                      BlendMode.srcIn,
+    return MeshBackground(
+      seed: selected,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: showTopBar
+            ? GlassAppBar(
+                mode: .live,
+                floating: true,
+                leading: IconButton(
+                  tooltip: l.menu,
+                  icon: SizedBox(
+                    width: 38,
+                    height: 38,
+                    child: SvgPicture.asset(
+                      'assets/icons/ic_user.svg',
+                      colorFilter: ColorFilter.mode(
+                        theme.colorScheme.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
+                  onPressed: () => _pushOverlay(Routes.profile),
                 ),
-                onPressed: () => _pushOverlay(Routes.profile),
-              ),
-              actionsPadding: const EdgeInsets.only(right: 8),
-              actions: [
-                IconButton(
-                  tooltip: l.investments,
-                  icon: SvgPicture.asset(
-                    'assets/icons/ic_chatbot.svg',
-                    width: 32,
-                    height: 32,
-                    colorFilter: ColorFilter.mode(
-                      theme.colorScheme.primary,
-                      BlendMode.srcIn,
+                actionsPadding: const EdgeInsets.only(right: 8),
+                actions: [
+                  IconButton(
+                    tooltip: l.investments,
+                    icon: SvgPicture.asset(
+                      'assets/icons/ic_chatbot.svg',
+                      width: 32,
+                      height: 32,
+                      colorFilter: ColorFilter.mode(
+                        theme.colorScheme.primary,
+                        BlendMode.srcIn,
+                      ),
                     ),
+                    onPressed: () => _pushOverlay(Routes.chatbot),
                   ),
-                  onPressed: () => _pushOverlay(Routes.chatbot),
+                ],
+                title: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: _searchField(theme),
                 ),
-              ],
-              title: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: _searchField(theme),
-              ),
-            )
-          : null,
-      extendBody: true,
-      extendBodyBehindAppBar: true,
-      body: SafeArea(top: false, bottom: false, child: widget.navigationShell),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Color.alphaBlend(
-                    theme.colorScheme.primary.withValues(alpha: 0.08),
-                    theme.colorScheme.surface.withValues(alpha: 0.35),
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.25,
-                    ),
-                  ),
-                ),
-                child: SizedBox(
-                  height: 64,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(
-                      _tabs.length,
-                      (index) =>
-                          _navItem(index, selected, theme, l, isFullUser),
-                    ),
+              )
+            : null,
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: widget.navigationShell,
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: GlassSurface(
+              mode: .live,
+              padding: EdgeInsets.zero,
+              elevation: 0.0,
+              child: SizedBox(
+                height: 64,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(
+                    _tabs.length,
+                    (index) => _navItem(index, selected, theme, l, isFullUser),
                   ),
                 ),
               ),

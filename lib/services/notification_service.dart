@@ -38,6 +38,7 @@ class NotificationService {
   String? _lastKnownToken;
   String? _registeredToken;
   String? _registeredUid;
+  String _language = 'en';
   Future<void>? _registrationInFlight;
 
   /// Called once from AppServices.init, after Firebase and Dio are ready.
@@ -136,6 +137,7 @@ class NotificationService {
         'Tarlan Bank';
     final body =
         message.notification?.body ?? message.data['body']?.toString() ?? '';
+    debugPrint('[FCM] showing: $title — $body');
     try {
       await _local.show(
         id:
@@ -161,12 +163,23 @@ class NotificationService {
   }
 
   /// Called by the auth binding for every newly signed-in full user.
-  Future<void> startForUser(String uid) async {
+  Future<void> startForUser(String uid, {String language = 'en'}) async {
     if (uid.isEmpty) return;
+    _language = language;
     _activeUid = uid;
     if (_registeredUid == uid && _registeredToken != null) return;
     await _requestPermissionSafely();
     await _registerCurrentToken(uid);
+  }
+
+  /// Language changed in settings: publish it to the server so future pushes
+  /// are rendered in the new language. Reuses the existing FCM token.
+  Future<void> refreshLanguage(String language) async {
+    _language = language;
+    final uid = _activeUid;
+    final token = _lastKnownToken ?? _registeredToken;
+    if (uid == null || token == null || token.isEmpty) return;
+    await _postToken(token: token, uid: uid, force: true);
   }
 
   /// Called on logout/guest transition: drops our server-side registration.
@@ -236,14 +249,18 @@ class NotificationService {
     unawaited(_postToken(token: token, uid: uid));
   }
 
-  Future<void> _postToken({required String token, required String uid}) async {
+  Future<void> _postToken({
+    required String token,
+    required String uid,
+    bool force = false,
+  }) async {
     _lastKnownToken = token;
     if (_activeUid != uid) return;
-    if (_registeredUid == uid && _registeredToken == token) return;
+    if (!force && _registeredUid == uid && _registeredToken == token) return;
     try {
       await dio.post(
         '/api/notifications/token',
-        data: {'token': token, 'platform': _platform},
+        data: {'token': token, 'platform': _platform, 'language': _language},
       );
       // The user may have logged out while the request was in flight.
       if (_activeUid != uid) return;

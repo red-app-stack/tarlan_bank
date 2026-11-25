@@ -83,6 +83,7 @@ class TransfersScreen extends ConsumerWidget {
     final favoritesAsync = ref.watch(favoriteTransfersProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         top: false,
