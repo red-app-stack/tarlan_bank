@@ -35,6 +35,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your local data was cleared. Please sign in again.';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
+  String get widgetsEdit => 'Edit';
+
+  @override
+  String get widgetsAdd => 'Add widget';
+
+  @override
+  String get navServices => 'Services';
+
+  @override
   String get cancel => 'Cancel';
 
   @override

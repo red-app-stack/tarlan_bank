@@ -103,9 +103,9 @@ class _TarlanBankAppState extends ConsumerState<TarlanBankApp> {
       final error = next.error;
       // Only corrupt/missing profile records trigger the local wipe; an
       // offline Firestore read must not delete a valid PIN.
-      if (!next.hasError ||
-          (error is! ValidationFailure && error is! NotFoundFailure) ||
-          _recoveringProfile) {
+      if (_recoveringProfile ||
+          error == null ||
+          (error is! ValidationFailure && error is! NotFoundFailure)) {
         return;
       }
       _recoveringProfile = true;

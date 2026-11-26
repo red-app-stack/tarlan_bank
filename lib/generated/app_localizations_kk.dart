@@ -35,6 +35,18 @@ class AppLocalizationsKk extends AppLocalizations {
       'Жергілікті деректер тазаланды. Қайта кіріңіз.';
 
   @override
+  String get widgetsTitle => 'Виджеттер';
+
+  @override
+  String get widgetsEdit => 'Өзгерту';
+
+  @override
+  String get widgetsAdd => 'Виджет қосу';
+
+  @override
+  String get navServices => 'Қызметтер';
+
+  @override
   String get cancel => 'Болдырмау';
 
   @override

@@ -4,6 +4,7 @@ class Routes {
   static const home = '/home';
   static const payments = '/payments';
   static const transfers = '/transfers';
+  static const qr = '/qr';
   static const accounts = '/accounts';
   static const menu = '/menu';
 
@@ -74,13 +75,10 @@ const String shellOverlayMarker = 'fromShell';
 bool isShellOverlayPush(Object? extra) =>
     extra is Map && extra[shellOverlayMarker] == true;
 
-/// Shell chrome is shown only on the five branch root locations. Every nested
-/// path (history, details, settings, placeholders, …) renders its own header.
+/// Shell chrome is shown only on the branch roots that use the split top bar.
+/// The QR tab renders its own transfer header.
 const branchRootLocations = {
-  Routes.payments,
-  Routes.transfers,
   Routes.home,
-  Routes.accounts,
   Routes.menu,
 };
 

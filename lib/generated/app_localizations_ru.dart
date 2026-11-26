@@ -34,6 +34,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dataRecoveryMessage => 'Локальные данные очищены. Войдите снова.';
 
   @override
+  String get widgetsTitle => 'Виджеты';
+
+  @override
+  String get widgetsEdit => 'Изменить';
+
+  @override
+  String get widgetsAdd => 'Добавить виджет';
+
+  @override
+  String get navServices => 'Услуги';
+
+  @override
   String get cancel => 'Отмена';
 
   @override

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tarlan_bank/core/errors/app_failure.dart';
 import 'package:tarlan_bank/core/locale/product_labels.dart';
 import 'package:tarlan_bank/core/router/app_navigation.dart';
+import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/core/utils/phone_number.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/features/accounts/data/account_model.dart';
@@ -152,7 +153,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       ref.invalidate(accountsProvider);
       _snack(true, null, product: productLabel(l, widget.accountType));
       if (mounted) {
-        await navigateToMainTab(context, '/accounts');
+        await navigateTo(context, Routes.accounts);
       }
     } on AppFailure catch (e) {
       _snack(false, e.message, product: productLabel(l, widget.accountType));

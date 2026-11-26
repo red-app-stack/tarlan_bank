@@ -148,6 +148,30 @@ abstract class AppLocalizations {
   /// **'Your local data was cleared. Please sign in again.'**
   String get dataRecoveryMessage;
 
+  /// No description provided for @widgetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get widgetsTitle;
+
+  /// No description provided for @widgetsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get widgetsEdit;
+
+  /// No description provided for @widgetsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add widget'**
+  String get widgetsAdd;
+
+  /// No description provided for @navServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get navServices;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:

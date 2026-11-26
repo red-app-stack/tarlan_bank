@@ -31,9 +31,9 @@ class MenuScreen extends ConsumerWidget {
           routeArg: Routes.securitySettings,
         ),
         MenuItem(
-          icon: 'assets/icons/ic_chatbot.svg',
-          title: l.chatBotName,
-          routeArg: Routes.chatbot,
+          icon: 'assets/icons/ic_accounts.svg',
+          title: l.navAccounts,
+          routeArg: Routes.accounts,
         ),
       ],
     ),
@@ -119,11 +119,13 @@ class MenuScreen extends ConsumerWidget {
           navigateTo(context, Routes.securitySettings);
         case Routes.chatbot:
           navigateTo(context, Routes.chatbot);
+        case Routes.accounts:
+          navigateTo(context, Routes.accounts);
         case Routes.investments:
           navigateTo(context, Routes.investments);
         case null:
         case '':
-          navigateToMainTab(context, '/accounts');
+          navigateTo(context, Routes.home);
         default:
           if (user == null || user.isAnonymous) {
             navigateTo(context, Routes.login);

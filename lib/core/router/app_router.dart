@@ -265,80 +265,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
         branches: [
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: Routes.payments,
-                builder: (_, state) => PaymentsScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'history',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: PaymentHistoryScreen(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: Routes.transfers,
-                builder: (_, state) => TransfersScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'phone',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: PhoneTransferScreen(),
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'self',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: SelfTransferScreen(),
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'card',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: CardTransferScreen(),
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'convert',
-                    pageBuilder: (_, state) =>
-                        _nestedPage(key: state.pageKey, child: ConvertScreen()),
-                  ),
-                  GoRoute(
-                    path: 'qr',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: QRTransferScreen(),
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'history',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: TransferHistoryScreen(),
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'details',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: TransactionDetailsScreen(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
             preload: true,
             routes: [
               GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
@@ -347,27 +273,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: Routes.accounts,
-                builder: (_, state) => AccountsScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'create',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: CreateAccountScreen(
-                        accountType:
-                            state.uri.queryParameters['type'] ?? 'card',
-                      ),
-                    ),
-                  ),
-                  GoRoute(
-                    path: 'details',
-                    pageBuilder: (_, state) => _nestedPage(
-                      key: state.pageKey,
-                      child: CardDetailsScreen(),
-                    ),
-                  ),
-                ],
+                path: Routes.qr,
+                builder: (_, _) => const QRTransferScreen(),
               ),
             ],
           ),
@@ -416,6 +323,80 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
             ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: Routes.payments,
+        builder: (_, _) => PaymentsScreen(),
+        routes: [
+          GoRoute(
+            path: 'history',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: PaymentHistoryScreen()),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: Routes.transfers,
+        builder: (_, _) => TransfersScreen(),
+        routes: [
+          GoRoute(
+            path: 'phone',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: PhoneTransferScreen()),
+          ),
+          GoRoute(
+            path: 'self',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: SelfTransferScreen()),
+          ),
+          GoRoute(
+            path: 'card',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: CardTransferScreen()),
+          ),
+          GoRoute(
+            path: 'convert',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: ConvertScreen()),
+          ),
+          GoRoute(
+            path: 'qr',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: QRTransferScreen()),
+          ),
+          GoRoute(
+            path: 'history',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: TransferHistoryScreen()),
+          ),
+          GoRoute(
+            path: 'details',
+            pageBuilder: (_, state) => _nestedPage(
+              key: state.pageKey,
+              child: TransactionDetailsScreen(),
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: Routes.accounts,
+        builder: (_, _) => AccountsScreen(),
+        routes: [
+          GoRoute(
+            path: 'create',
+            pageBuilder: (_, state) => _nestedPage(
+              key: state.pageKey,
+              child: CreateAccountScreen(
+                accountType: state.uri.queryParameters['type'] ?? 'card',
+              ),
+            ),
+          ),
+          GoRoute(
+            path: 'details',
+            pageBuilder: (_, state) =>
+                _nestedPage(key: state.pageKey, child: CardDetailsScreen()),
           ),
         ],
       ),

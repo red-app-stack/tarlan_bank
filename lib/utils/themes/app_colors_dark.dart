@@ -17,7 +17,7 @@ class AppColorsDark extends AppColors {
         secondary: const Color(0xFF02A173),
         onSecondary: const Color(0xFF002019),
         secondaryContainer: const Color(0x337AE2BF),
-        onSecondaryContainer: const Color(0x80FFFFFF),
+        onSecondaryContainer: const Color(0xFFFFFFFF),
         tertiary: const Color(0xFF027457),
         onTertiary: const Color(0xFF002015),
         tertiaryContainer: const Color(0xFF024D36),

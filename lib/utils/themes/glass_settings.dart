@@ -23,7 +23,6 @@ LiquidGlassSettings themedGlassSettings(
   double accentMix = 0.02,
   double? alpha,
 }) {
-  final extra = theme.extension<Extra>();
   final isDark = theme.brightness == Brightness.dark;
   final base = accent ?? theme.colorScheme.primaryContainer;
   final preset = isDark
