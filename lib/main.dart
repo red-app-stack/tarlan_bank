@@ -38,7 +38,10 @@ Future<void> main() async {
   await LiquidGlassWidgets.initialize();
   runApp(
     LiquidGlassWidgets.wrap(
-      adaptiveQuality: true,
+      // Off: the root GlassAdaptiveScope demotes ALL glass on scroll jank,
+      // which made every surface look switched off. Quality is now explicit
+      // per widget (shellGlassQuality / scrollGlassQuality).
+      adaptiveQuality: false,
       brightnessResolver: (context) => Theme.of(context).brightness,
       child: ProviderScope(
         overrides: [

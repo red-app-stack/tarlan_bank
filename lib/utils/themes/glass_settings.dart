@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show LiquidGlassSettings;
+    show GlassQuality, LiquidGlassSettings;
 import 'package:material_ui/material_ui.dart';
 
 import 'theme_extension.dart';
@@ -13,6 +13,12 @@ const Color fallbackNotificationColor = Color(0xFFC3D600);
 /// light and -pi/2 (bottom) in dark, which is why the rim only reads as a
 /// top/bottom band; this rotates rimShade/rimLight and the specular with it.
 const double diagonalGlassLightAngle = 0.75 * math.pi;
+
+/// Main-shell chrome stays full premium. Scrollable body glass uses the
+/// single-pass shader so a scroll frame never trips the 16-shape pipeline or
+/// the global adaptive quality ceiling and blanks out every glass surface.
+const GlassQuality shellGlassQuality = GlassQuality.premium;
+const GlassQuality scrollGlassQuality = GlassQuality.standard;
 
 /// Glass tint for a surface, mixed from the theme's configurable base tint and
 /// a semantic accent. Passing [accent] lets one control (e.g. notifications)

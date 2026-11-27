@@ -136,7 +136,7 @@ class _GlassWidgetGridState extends State<GlassWidgetGrid> {
         alpha: theme.brightness == Brightness.dark ? 0.28 : 0.4,
       ),
       useOwnLayer: true,
-      quality: .premium,
+      quality: scrollGlassQuality,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -281,7 +281,7 @@ class _GlassWidgetGridState extends State<GlassWidgetGrid> {
           padding: const EdgeInsets.all(12),
           settings: themedGlassSettings(theme, accent: accent, accentMix: 0.18),
           useOwnLayer: true,
-          quality: .minimal,
+          quality: scrollGlassQuality,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width =

@@ -142,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.all(16),
                         settings: themedGlassSettings(theme),
                         useOwnLayer: true,
-                        quality: .minimal,
+                        quality: scrollGlassQuality,
                         child: ratesAsync.when(
                           data: (snapshot) => CurrencyRatesCard(
                             exchangeRates: snapshot.nested,

@@ -406,7 +406,7 @@ Widget _buildGlassSelectionNav(
       const barHeight = 64.0;
       final itemWidth = constraints.maxWidth / _tabs.length;
       return GlassContainer(
-        quality: .premium,
+        quality: shellGlassQuality,
         width: double.infinity,
         height: barHeight,
         shape: const LiquidRoundedSuperellipse(borderRadius: 64),
@@ -424,7 +424,7 @@ Widget _buildGlassSelectionNav(
               bottom: 6,
               width: itemWidth - 12,
               child: GlassContainer(
-                quality: .premium,
+                quality: shellGlassQuality,
                 shape: const LiquidRoundedSuperellipse(borderRadius: 26),
                 padding: EdgeInsets.zero,
                 settings: themedGlassSettings(
@@ -488,6 +488,6 @@ Widget _buildPackageGlassNav(
     selectedLabelColor: theme.colorScheme.onPrimaryContainer,
     unselectedIconColor: theme.colorScheme.onSurfaceVariant,
     unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-    quality: .premium,
+    quality: shellGlassQuality,
   );
 }

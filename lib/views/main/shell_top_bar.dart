@@ -98,6 +98,7 @@ class ShellTopBar extends StatelessWidget implements PreferredSizeWidget {
     final iconColor = theme.colorScheme.primary;
     final badgeColor = notificationColor(theme);
     return GlassContainer(
+      quality: shellGlassQuality,
       width: _controlHeight,
       height: _controlHeight,
       shape: const LiquidOval(),
@@ -217,7 +218,7 @@ class ShellTopBar extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(width: 10),
             Expanded(
               child: GlassContainer(
-                quality: .premium,
+                quality: shellGlassQuality,
                 height: _controlHeight,
                 shape: const LiquidRoundedSuperellipse(
                   borderRadius: _controlHeight,
