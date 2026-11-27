@@ -160,6 +160,12 @@ abstract class AppLocalizations {
   /// **'Edit'**
   String get widgetsEdit;
 
+  /// No description provided for @openNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Open New'**
+  String get openNew;
+
   /// No description provided for @widgetsAdd.
   ///
   /// In en, this message translates to:

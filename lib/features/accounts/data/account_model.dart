@@ -88,6 +88,8 @@ class Account {
     this.updatedAt,
     this.depositTerms,
     this.creditTerms,
+    this.imagePath,
+    this.hideBalance = false,
   });
 
   /// 16-digit account number; also the Firestore document ID (UNIQUE).
@@ -103,6 +105,13 @@ class Account {
   final DateTime? updatedAt;
   final DepositTerms? depositTerms;
   final CreditTerms? creditTerms;
+
+  /// Optional per-account artwork override for dashboard tiles. Falls back to
+  /// a type-based accent image when absent (set by the user later).
+  final String? imagePath;
+
+  /// Per-account balance visibility on dashboard tiles.
+  final bool hideBalance;
 
   /// Credit only: undrawn portion of the limit. Never spendable cash.
   double? get availableCredit =>
@@ -126,6 +135,8 @@ class Account {
     if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
     if (depositTerms != null) 'terms': depositTerms!.toMap(),
     if (creditTerms != null) 'terms': creditTerms!.toMap(),
+    if (imagePath != null) 'imagePath': imagePath,
+    if (hideBalance) 'hideBalance': true,
   };
 
   factory Account.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -155,6 +166,8 @@ class Account {
       creditTerms: type == AccountType.credit && terms != null
           ? CreditTerms.fromMap(terms)
           : null,
+      imagePath: data['imagePath'] as String?,
+      hideBalance: data['hideBalance'] as bool? ?? false,
     );
   }
 }

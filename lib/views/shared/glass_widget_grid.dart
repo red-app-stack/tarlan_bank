@@ -6,6 +6,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
 import 'package:material_ui/material_ui.dart';
 
 import '../../utils/themes/glass_settings.dart';
+import 'section_header.dart';
 
 /// One tile in a [GlassWidgetGrid]. No glass of its own: it is a plain button
 /// living inside the shared glass surface.
@@ -123,51 +124,6 @@ class _GlassWidgetGridState extends State<GlassWidgetGrid> {
     );
   }
 
-  Widget _editButton(ThemeData theme, Color accent) {
-    return GlassContainer(
-      width: 92,
-      height: 36,
-      shape: const LiquidRoundedSuperellipse(borderRadius: 18),
-      padding: EdgeInsets.zero,
-      settings: themedGlassSettings(
-        theme,
-        accent: theme.colorScheme.secondaryContainer,
-        accentMix: 0.65,
-        alpha: theme.brightness == Brightness.dark ? 0.28 : 0.4,
-      ),
-      useOwnLayer: true,
-      quality: scrollGlassQuality,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: () => setState(() => _editing = !_editing),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SvgPicture.asset(
-                'assets/icons/ic_edit.svg',
-                width: 18,
-                height: 18,
-                colorFilter: ColorFilter.mode(
-                  theme.colorScheme.onSecondaryContainer,
-                  BlendMode.srcIn,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                widget.editLabel,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSecondaryContainer,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _tile(
     GlassGridItem item,
     int index,
@@ -267,12 +223,11 @@ class _GlassWidgetGridState extends State<GlassWidgetGrid> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 10,
       children: [
-        Row(
-          children: [
-            Text(widget.title, style: theme.textTheme.titleLarge),
-            const Spacer(),
-            _editButton(theme, accent),
-          ],
+        SectionHeader(
+          title: widget.title,
+          buttonLabel: widget.editLabel,
+          buttonIcon: 'assets/icons/ic_edit.svg',
+          onPressed: () => setState(() => _editing = !_editing),
         ),
         GlassContainer(
           width: double.infinity,

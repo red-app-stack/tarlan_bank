@@ -41,6 +41,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get widgetsEdit => 'Өзгерту';
 
   @override
+  String get openNew => 'Жаңы ашу';
+
+  @override
   String get widgetsAdd => 'Виджет қосу';
 
   @override

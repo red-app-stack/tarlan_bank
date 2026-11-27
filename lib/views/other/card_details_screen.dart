@@ -8,7 +8,7 @@ import 'package:tarlan_bank/core/router/app_navigation.dart';
 import 'package:tarlan_bank/features/accounts/providers/accounts_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/utils/themes/theme_extension.dart';
-import 'package:tarlan_bank/views/main/accounts_screen.dart';
+import 'package:tarlan_bank/views/shared/selected_card.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';

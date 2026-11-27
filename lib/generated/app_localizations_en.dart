@@ -41,6 +41,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetsEdit => 'Edit';
 
   @override
+  String get openNew => 'Open New';
+
+  @override
   String get widgetsAdd => 'Add widget';
 
   @override

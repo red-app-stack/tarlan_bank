@@ -308,10 +308,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         ),
         bottomNavigationBar: SafeArea(
           top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: _bottomNavVariant(this, theme, l, isFullUser, selected),
-          ),
+          child: _bottomNavVariant(this, theme, l, isFullUser, selected),
         ),
       ),
     );
@@ -401,55 +398,71 @@ Widget _buildGlassSelectionNav(
   bool isFullUser,
   int selected,
 ) {
-  return LayoutBuilder(
-    builder: (context, constraints) {
+  return Builder(
+    builder: (context) {
       const barHeight = 64.0;
-      final itemWidth = constraints.maxWidth / _tabs.length;
-      return GlassContainer(
-        quality: shellGlassQuality,
-        width: double.infinity,
-        height: barHeight,
-        shape: const LiquidRoundedSuperellipse(borderRadius: 64),
-        padding: EdgeInsets.zero,
-        settings: themedGlassSettings(theme),
-        useOwnLayer: true,
-        child: Stack(
-          alignment: Alignment.centerLeft,
+      final barWidth = MediaQuery.sizeOf(context).width - (32 * 2);
+      final itemWidth = barWidth / _tabs.length;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 340),
-              curve: Curves.easeOutBack,
-              left: selected * itemWidth + 6,
-              top: 6,
-              bottom: 6,
-              width: itemWidth - 12,
-              child: GlassContainer(
-                quality: shellGlassQuality,
-                shape: const LiquidRoundedSuperellipse(borderRadius: 26),
-                padding: EdgeInsets.zero,
-                settings: themedGlassSettings(
-                  theme,
-                  accent: theme.colorScheme.primaryContainer,
-                ),
-                useOwnLayer: true,
-                child: const SizedBox.expand(),
-              ),
-            ),
-            Row(
-              children: List.generate(
-                _tabs.length,
-                (index) => SizedBox(
-                  width: itemWidth,
-                  height: barHeight,
-                  child: _plainNavItem(
-                    shell,
-                    index,
-                    selected,
-                    theme,
-                    l,
-                    isFullUser,
+            SizedBox(
+              width: barWidth,
+              height: barHeight,
+              child: Stack(
+                // The sliding capsule may overshoot the bar into the 32pt empty
+                // margins on each side; do not clip it at the bar boundary.
+                clipBehavior: Clip.none,
+                alignment: Alignment.centerLeft,
+                children: [
+                  GlassContainer(
+                    quality: shellGlassQuality,
+                    width: double.infinity,
+                    height: barHeight,
+                    shape: const LiquidRoundedSuperellipse(borderRadius: 64),
+                    padding: EdgeInsets.zero,
+                    settings: themedGlassSettings(theme),
+                    useOwnLayer: true,
                   ),
-                ),
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 340),
+                    curve: Curves.easeOutBack,
+                    left: selected * itemWidth + 6,
+                    top: 6,
+                    bottom: 6,
+                    width: itemWidth - 12,
+                    child: GlassContainer(
+                      quality: shellGlassQuality,
+                      shape: const LiquidRoundedSuperellipse(borderRadius: 26),
+                      padding: EdgeInsets.zero,
+                      settings: themedGlassSettings(
+                        theme,
+                        accent: theme.colorScheme.primaryContainer,
+                      ),
+                      useOwnLayer: true,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                  Row(
+                    children: List.generate(
+                      _tabs.length,
+                      (index) => SizedBox(
+                        width: itemWidth,
+                        height: barHeight,
+                        child: _plainNavItem(
+                          shell,
+                          index,
+                          selected,
+                          theme,
+                          l,
+                          isFullUser,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

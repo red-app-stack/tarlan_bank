@@ -40,6 +40,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get widgetsEdit => 'Изменить';
 
   @override
+  String get openNew => 'Открыть новый';
+
+  @override
   String get widgetsAdd => 'Добавить виджет';
 
   @override

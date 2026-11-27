@@ -9,6 +9,7 @@ import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/features/exchange/providers/exchange_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/utils/themes/glass_settings.dart';
+import 'package:tarlan_bank/views/shared/accounts_strip.dart';
 import 'package:tarlan_bank/views/shared/currency_rates_card.dart';
 import 'package:tarlan_bank/views/shared/glass_widget_grid.dart';
 
@@ -121,14 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 spacing: 24,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  GlassWidgetGrid(
-                    title: l.widgetsTitle,
-                    editLabel: l.widgetsEdit,
-                    addLabel: l.widgetsAdd,
-                    items: _widgets(l),
-                    availableItems: _available(l),
-                    rows: 2,
-                  ),
+                  AccountsStrip(onOpenNew: () => _openProduct('account')),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     spacing: 10,
@@ -141,7 +135,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         padding: const EdgeInsets.all(16),
                         settings: themedGlassSettings(theme),
-                        useOwnLayer: true,
+                        useOwnLayer: false,
                         quality: scrollGlassQuality,
                         child: ratesAsync.when(
                           data: (snapshot) => CurrencyRatesCard(
@@ -159,6 +153,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  GlassWidgetGrid(
+                    title: l.widgetsTitle,
+                    editLabel: l.widgetsEdit,
+                    addLabel: l.widgetsAdd,
+                    items: _widgets(l),
+                    availableItems: _available(l),
+                    rows: 2,
                   ),
                 ],
               ),

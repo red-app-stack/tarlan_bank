@@ -76,8 +76,9 @@ String getInitials(String fullName) {
 
   if (names.length < 2) return '';
 
-  String firstNameInitial =
-      names[0].isNotEmpty ? names[0][0].toUpperCase() : '';
+  String firstNameInitial = names[0].isNotEmpty
+      ? names[0][0].toUpperCase()
+      : '';
   String lastNameInitial = names[1].isNotEmpty ? names[1][0].toUpperCase() : '';
 
   return firstNameInitial + lastNameInitial;
@@ -121,6 +122,22 @@ String censorCardNumber(String cardNumber) {
   }
   return '${cardNumber.substring(0, 4)} •••• •••• ${cardNumber.substring(cardNumber.length - 4)}';
 }
+
+/// Dashboard-tile style masked number: `**** 1510`.
+String maskLast4(String number) {
+  final digits = number.replaceAll(RegExp(r'\D'), '');
+  if (digits.length < 4) return '**** $digits';
+  return '**** ${digits.substring(digits.length - 4)}';
+}
+
+/// Two-digit month / two-digit year from a Firestore card instrument.
+String formatCardExpiry(int month, int year) {
+  final mm = month.toString().padLeft(2, '0');
+  final yy = (year % 100).toString().padLeft(2, '0');
+  return '$mm/$yy';
+}
+
+String formatShortMonthYear(DateTime date) => DateFormat('MM/yy').format(date);
 
 String formatPhone(String digits) {
   digits = digits.replaceAll(RegExp(r'\D'), '');
