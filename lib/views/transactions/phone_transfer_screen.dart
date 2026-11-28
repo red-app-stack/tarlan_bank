@@ -27,6 +27,8 @@ import 'package:tarlan_bank/views/shared/amount_input.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 class PhoneTransferScreen extends ConsumerStatefulWidget {
   const PhoneTransferScreen({super.key, this.transaction});
@@ -129,7 +131,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
         all
             .where(
               (a) =>
-                  a.type == AccountType.current &&
+                  a.type == AccountType.debit &&
                   a.status == AccountStatus.active,
             )
             .toList()
@@ -269,11 +271,8 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  bottomInset + TransferActionBar.reservedHeight,
+                padding: screenPadding.copyWith(
+                  bottom: bottomInset + TransferActionBar.reservedHeight,
                 ),
                 child: RefreshIndicator(
                   edgeOffset: MediaQuery.of(context).padding.top,
@@ -379,7 +378,7 @@ class _PhoneTransferScreenState extends ConsumerState<PhoneTransferScreen> {
               ),
               IconButton(
                 icon: SvgPicture.asset(
-                  'assets/icons/ic_user.svg',
+                  AppIcons.user,
                   width: 36,
                   height: 36,
                   colorFilter: ColorFilter.mode(

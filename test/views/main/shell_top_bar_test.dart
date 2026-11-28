@@ -1,7 +1,7 @@
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show GlassContainer, LiquidOval;
+import 'package:liquid_glass_easy/liquid_glass_easy.dart'
+    show LiquidGlassBatch, LiquidGlassEngine, LiquidGlassLens;
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/generated/app_localizations.dart';
@@ -9,6 +9,7 @@ import 'package:tarlan_bank/utils/themes/app_theme.dart';
 import 'package:tarlan_bank/utils/themes/glass_settings.dart'
     show diagonalGlassLightAngle;
 import 'package:tarlan_bank/views/main/shell_top_bar.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 import 'package:tarlan_bank/views/shared/cached_user_avatar.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 
@@ -22,6 +23,8 @@ void main() {
 
   late TextEditingController controller;
 
+  // Same switch main() flips through initGlass: no shader under flutter test.
+  setUpAll(() => LiquidGlassEngine.liteGlassOnSkia = true);
   setUp(() => controller = TextEditingController());
   tearDown(() => controller.dispose());
 
@@ -29,6 +32,7 @@ void main() {
     required ThemeData theme,
     required VoidCallback onProfileTap,
     required VoidCallback onNotificationsTap,
+    bool isLoggedIn = true,
   }) {
     return MaterialApp(
       theme: theme,
@@ -39,6 +43,7 @@ void main() {
           searchController: controller,
           displayName: 'John S.',
           photoUrl: '',
+          isLoggedIn: isLoggedIn,
           onProfileTap: onProfileTap,
           onNotificationsTap: onNotificationsTap,
         ),
@@ -78,7 +83,9 @@ void main() {
       expect(field.textAlignVertical, TextAlignVertical.center);
       expect(field.decoration?.isDense, isTrue);
       final fieldCenter = tester.getCenter(find.byType(TextField)).dy;
-      final pillCenter = tester.getCenter(find.byType(GlassContainer).first).dy;
+      final pillCenter = tester
+          .getCenter(find.byType(LiquidGlassLens).first)
+          .dy;
       expect((fieldCenter - pillCenter).abs(), lessThan(1));
 
       // Zoom icon is 20px, bell 24px; the accent is not painted on the bell.
@@ -109,22 +116,20 @@ void main() {
       );
       expect(badge, findsOneWidget);
 
-      final glass = tester.widgetList<GlassContainer>(
-        find.byType(GlassContainer),
-      );
+      final glass = tester
+          .widgetList<LiquidGlassLens>(find.byType(LiquidGlassLens))
+          .toList();
       expect(glass.length, 2);
-      expect(glass.last.shape, isA<LiquidOval>());
+      // The bell is a full circle: corner radius is half the 40pt control.
+      expect(glass.last.style.shape?.cornerRadius, 20);
+      expect(glass.every((g) => g.style.color.a != 0), isTrue);
       expect(
-        glass.every((g) => g.settings != null && g.settings!.glassColor.a != 0),
+        glass.every((g) => g.style.specular?.angle == diagonalGlassLightAngle),
         isTrue,
       );
-      expect(
-        glass.every(
-          (g) =>
-              (g.settings!.lightAngle - diagonalGlassLightAngle).abs() < 0.001,
-        ),
-        isTrue,
-      );
+      expect(glass.every((g) => g.style.adaptivity == null), isTrue);
+      // Search pill and bell share one backdrop read.
+      expect(find.byType(LiquidGlassBatch), findsOneWidget);
 
       await tester.tap(find.byType(InkWell).first);
       await tester.pump();
@@ -155,5 +160,74 @@ void main() {
           (w.decoration! as BoxDecoration).color == const Color(0xFFC3D600),
     );
     expect(badge, findsOneWidget);
+  });
+
+  testWidgets('search icon uses active artwork while focused or querying', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      bar(
+        theme: AppTheme.lightTheme,
+        onProfileTap: () {},
+        onNotificationsTap: () {},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    SvgPicture searchIcon() => tester
+        .widgetList<SvgPicture>(
+          find.byWidgetPredicate((w) => w is SvgPicture && w.width == 20),
+        )
+        .single;
+    expect(
+      (searchIcon().bytesLoader as SvgAssetLoader).assetName,
+      AppIcons.search,
+    );
+
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+    expect(
+      (searchIcon().bytesLoader as SvgAssetLoader).assetName,
+      AppIcons.searchActive,
+    );
+
+    controller.text = 'kzt';
+    await tester.pumpAndSettle();
+    expect(
+      (searchIcon().bytesLoader as SvgAssetLoader).assetName,
+      AppIcons.searchActive,
+    );
+
+    controller.clear();
+    await tester.pumpAndSettle();
+    // Still focused after clearing the query.
+    expect(
+      (searchIcon().bytesLoader as SvgAssetLoader).assetName,
+      AppIcons.searchActive,
+    );
+  });
+
+  testWidgets('signed-out top bar uses the empty avatar artwork', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      bar(
+        theme: AppTheme.lightTheme,
+        isLoggedIn: false,
+        onProfileTap: () {},
+        onNotificationsTap: () {},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CachedUserAvatar), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (w) =>
+            w is SvgPicture &&
+            (w.bytesLoader as SvgAssetLoader).assetName == AppIcons.avatarEmpty,
+      ),
+      findsOneWidget,
+    );
   });
 }

@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show GlassContainer, LiquidRoundedSuperellipse;
+import 'package:liquid_glass_easy/liquid_glass_easy.dart'
+    show LiquidGlassEngine, LiquidGlassLens, LiquidGlassShape, LiquidGlassStyle;
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  testWidgets('package glass bars keep the Material Scaffold layout', (
-    tester,
-  ) async {
+  setUpAll(() => LiquidGlassEngine.liteGlassOnSkia = true);
+
+  testWidgets('glass bars keep the Material Scaffold layout', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -17,22 +17,28 @@ void main() {
             preferredSize: const Size.fromHeight(64),
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: GlassContainer(
+              child: SizedBox(
                 width: double.infinity,
-                shape: const LiquidRoundedSuperellipse(borderRadius: 24),
-                padding: EdgeInsets.zero,
-                child: const SizedBox(height: 44, child: TextField()),
+                child: LiquidGlassLens(
+                  style: const LiquidGlassStyle(
+                    shape: LiquidGlassShape.squircle(cornerRadius: 24),
+                  ),
+                  child: const SizedBox(height: 44, child: TextField()),
+                ),
               ),
             ),
           ),
           body: const Center(child: Text('Body')),
           bottomNavigationBar: Padding(
             padding: const EdgeInsets.all(8),
-            child: GlassContainer(
+            child: SizedBox(
               width: double.infinity,
-              shape: const LiquidRoundedSuperellipse(borderRadius: 24),
-              padding: EdgeInsets.zero,
-              child: const SizedBox(height: 64, child: Text('Bar')),
+              child: LiquidGlassLens(
+                style: const LiquidGlassStyle(
+                  shape: LiquidGlassShape.squircle(cornerRadius: 24),
+                ),
+                child: const SizedBox(height: 64, child: Text('Bar')),
+              ),
             ),
           ),
         ),

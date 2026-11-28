@@ -4,11 +4,11 @@ import 'package:tarlan_bank/features/accounts/data/product_type.dart';
 
 void main() {
   test('legacy tile names map to D8 account products', () {
-    expect(accountTypeFromProduct('card'), AccountType.current);
+    expect(accountTypeFromProduct('card'), AccountType.debit);
     expect(accountTypeFromProduct('deposit'), AccountType.deposit);
     expect(accountTypeFromProduct('credit'), AccountType.credit);
     expect(accountTypeFromProduct('transfer'), AccountType.credit);
-    expect(accountTypeFromProduct('CARD'), AccountType.current);
-    expect(accountTypeFromProduct('unknown'), AccountType.current);
+    expect(accountTypeFromProduct('CARD'), AccountType.debit);
+    expect(accountTypeFromProduct('unknown'), AccountType.debit);
   });
 }

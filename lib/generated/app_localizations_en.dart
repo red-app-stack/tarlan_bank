@@ -152,6 +152,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInGoogle => 'Continue with Google';
 
   @override
+  String get completeProfileTitle => 'Complete your profile';
+
+  @override
+  String get completeProfileBody =>
+      'Some details are missing from your account. Fill them in to continue.';
+
+  @override
+  String get passwordOptionalHint =>
+      'Optional — add a password to sign in with email next time.';
+
+  @override
   String get continueGuest => 'Continue as guest';
 
   @override
@@ -343,6 +354,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navAccounts => 'Accounts';
+
+  @override
+  String get debitBalance => 'Debit balance';
 
   @override
   String get navMenu => 'Menu';
@@ -547,6 +561,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountCurrent => 'Current';
+
+  @override
+  String get accountDebit => 'Debit';
 
   @override
   String get accountDeposit => 'Deposit';

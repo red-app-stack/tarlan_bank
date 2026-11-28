@@ -12,11 +12,14 @@ class Extra extends ThemeExtension<Extra> {
   final Color? primaryVariant;
   // final Color? background;
   final Color? notifications;
+
   /// Canonical accent container (#C3D600).
   final Color? accentContainer;
+
   /// Scrim gradient: transparent to opaque in the same hue.
   final Color? scrimGradientStart;
   final Color? scrimGradientEnd;
+
   /// Keep for the liquid-glass effect; not part of the designer palette.
   final Color? glassTint;
   final Color? primaryCardBg;
@@ -68,8 +71,10 @@ class Extra extends ThemeExtension<Extra> {
   });
 
   @override
-  Extra copyWith(
-      {Color? backgroundGradientStart, Color? backgroundGradientEnd}) {
+  Extra copyWith({
+    Color? backgroundGradientStart,
+    Color? backgroundGradientEnd,
+  }) {
     return Extra(
       primaryText: primaryText ?? primaryText,
       secondaryText: secondaryText ?? secondaryText,
@@ -110,16 +115,25 @@ class Extra extends ThemeExtension<Extra> {
       primaryText: primaryText ?? primaryText,
       secondaryText: secondaryText ?? secondaryText,
       tertiaryText: tertiaryText ?? tertiaryText,
-      backgroundGradientStart:
-          Color.lerp(backgroundGradientStart, other.backgroundGradientStart, t),
-      backgroundGradientEnd:
-          Color.lerp(backgroundGradientEnd, other.backgroundGradientEnd, t),
+      backgroundGradientStart: Color.lerp(
+        backgroundGradientStart,
+        other.backgroundGradientStart,
+        t,
+      ),
+      backgroundGradientEnd: Color.lerp(
+        backgroundGradientEnd,
+        other.backgroundGradientEnd,
+        t,
+      ),
       primaryVariant: Color.lerp(primaryVariant, other.primaryVariant, t),
       // background: Color.lerp(background, other.background, t),
       notifications: Color.lerp(notifications, other.notifications, t),
       accentContainer: Color.lerp(accentContainer, other.accentContainer, t),
-      scrimGradientStart:
-          Color.lerp(scrimGradientStart, other.scrimGradientStart, t),
+      scrimGradientStart: Color.lerp(
+        scrimGradientStart,
+        other.scrimGradientStart,
+        t,
+      ),
       scrimGradientEnd: Color.lerp(scrimGradientEnd, other.scrimGradientEnd, t),
       glassTint: Color.lerp(glassTint, other.glassTint, t),
       primaryCardBg: Color.lerp(primaryCardBg, other.primaryCardBg, t),

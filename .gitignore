@@ -47,5 +47,7 @@ macos/Flutter/ephemeral/flutter_export_environment.sh
 redreem.jks
 lib.rar
 .worktrees/
+# Legacy icon artwork staged out of the bundle during the icon migration
+/icons_archive/
 # Widget Preview related
 .widget_preview/

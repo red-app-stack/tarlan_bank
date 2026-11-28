@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart'
+    show LiquidGlassBatch, LiquidGlassEngine, LiquidGlassLens;
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/views/shared/glass_widget_grid.dart';
 
 void main() {
+  setUpAll(() => LiquidGlassEngine.liteGlassOnSkia = true);
+
   testWidgets('glass widget grid edits, adds and keeps its tiles tappable', (
     tester,
   ) async {
@@ -30,14 +34,17 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SingleChildScrollView(
-            child: GlassWidgetGrid(
-              title: 'Widgets',
-              editLabel: 'Edit',
-              addLabel: 'Add widget',
-              items: items,
-              availableItems: available,
-              rows: 2,
+          // Same shape as HomeScreen: one batch around the scrollable.
+          body: LiquidGlassBatch(
+            child: SingleChildScrollView(
+              child: GlassWidgetGrid(
+                title: 'Widgets',
+                editLabel: 'Edit',
+                addLabel: 'Add widget',
+                items: items,
+                availableItems: available,
+                rows: 2,
+              ),
             ),
           ),
         ),
@@ -46,6 +53,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Widgets'), findsOneWidget);
+    // Edit button + panel: the grid's whole glass.
+    expect(find.byType(LiquidGlassLens), findsNWidgets(2));
     for (var i = 0; i < 6; i++) {
       expect(find.text('Item $i'), findsOneWidget);
     }

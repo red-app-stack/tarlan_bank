@@ -23,6 +23,7 @@ import 'package:tarlan_bank/views/shared/amount_input.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 class CardTransferScreen extends ConsumerStatefulWidget {
   const CardTransferScreen({super.key, this.transaction});
@@ -122,7 +123,7 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
         all
             .where(
               (a) =>
-                  a.type == AccountType.current &&
+                  a.type == AccountType.debit &&
                   a.status == AccountStatus.active,
             )
             .toList()
@@ -259,11 +260,8 @@ class _CardTransferScreenState extends ConsumerState<CardTransferScreen> {
               child: AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,
-                padding: EdgeInsets.fromLTRB(
-                  24,
-                  12,
-                  24,
-                  bottomInset + TransferActionBar.reservedHeight,
+                padding: screenPadding.copyWith(
+                  bottom: bottomInset + TransferActionBar.reservedHeight,
                 ),
                 child: SingleChildScrollView(
                   child: Column(

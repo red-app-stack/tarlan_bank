@@ -5,6 +5,7 @@ import 'package:tarlan_bank/features/accounts/data/account_model.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 /// Account picker used by the transfer screens. Mirrors the legacy
 /// `AnimatedCardDropdown` but is wired to the remodeled Firestore [Account]
@@ -105,7 +106,7 @@ class _AccountItem extends StatelessWidget {
   final VoidCallback? onTap;
 
   String _typeLabel(AppLocalizations l) => switch (account.type) {
-    AccountType.current => l.accountCurrent,
+    AccountType.debit => l.accountDebit,
     AccountType.deposit => l.accountDeposit,
     AccountType.credit => l.accountCredit,
   };
@@ -145,7 +146,7 @@ class _AccountItem extends StatelessWidget {
             child: Row(
               children: [
                 SvgPicture.asset(
-                  'assets/icons/ic_card.svg',
+                  AppIcons.card,
                   width: 36,
                   height: 36,
                   colorFilter: ColorFilter.mode(

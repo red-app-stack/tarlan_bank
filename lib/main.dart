@@ -5,8 +5,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show LiquidGlassWidgets;
 import 'package:material_ui/material_ui.dart';
 
 import 'core/errors/app_failure.dart' show NotFoundFailure, ValidationFailure;
@@ -27,6 +25,7 @@ import 'features/auth/providers/auth_providers.dart'
 import 'features/auth/providers/email_link_provider.dart';
 import 'generated/app_localizations.dart';
 import 'utils/themes/app_theme.dart';
+import 'utils/themes/glass_settings.dart' show initGlass;
 import 'views/shared/app_snack_bar.dart' show showAppSnackBar;
 
 /// Boot is intentionally tiny: [AppServices.init] owns every service, this
@@ -35,20 +34,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await AppServices.init();
-  await LiquidGlassWidgets.initialize();
+  // liquid_glass_easy needs no root wrapper: engine switches, blur policy and
+  // shader warm-up live in initGlass (utils/themes/glass_settings.dart).
+  await initGlass();
   runApp(
-    LiquidGlassWidgets.wrap(
-      // Off: the root GlassAdaptiveScope demotes ALL glass on scroll jank,
-      // which made every surface look switched off. Quality is now explicit
-      // per widget (shellGlassQuality / scrollGlassQuality).
-      adaptiveQuality: false,
-      brightnessResolver: (context) => Theme.of(context).brightness,
-      child: ProviderScope(
-        overrides: [
-          themeSettingsProvider.overrideWithValue(AppServices.themeSettings),
-        ],
-        child: const TarlanBankApp(),
-      ),
+    ProviderScope(
+      overrides: [
+        themeSettingsProvider.overrideWithValue(AppServices.themeSettings),
+      ],
+      child: const TarlanBankApp(),
     ),
   );
 }

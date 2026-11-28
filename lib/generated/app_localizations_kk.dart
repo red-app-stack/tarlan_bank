@@ -152,6 +152,17 @@ class AppLocalizationsKk extends AppLocalizations {
   String get signInGoogle => 'Google арқылы кіру';
 
   @override
+  String get completeProfileTitle => 'Профильді толтырыңыз';
+
+  @override
+  String get completeProfileBody =>
+      'Тіркелгіңізде кейбір мәліметтер жоқ. Жалғастыру үшін оларды толтырыңыз.';
+
+  @override
+  String get passwordOptionalHint =>
+      'Міндетті емес — email арқылы кіру үшін құпия сөз қосыңыз.';
+
+  @override
   String get continueGuest => 'Қонақ ретінде жалғастыру';
 
   @override
@@ -343,6 +354,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get navAccounts => 'Шоттар';
+
+  @override
+  String get debitBalance => 'Дебеттік баланс';
 
   @override
   String get navMenu => 'Мәзір';
@@ -547,6 +561,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get accountCurrent => 'Ағымдағы';
+
+  @override
+  String get accountDebit => 'Дебеттік';
 
   @override
   String get accountDeposit => 'Депозит';

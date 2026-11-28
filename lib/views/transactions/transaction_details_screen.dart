@@ -14,6 +14,7 @@ import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/history_base.dart';
 import 'package:tarlan_bank/views/shared/service_item.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 import 'package:tarlan_bank/features/transactions/widgets/lookup_identity_row.dart';
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
@@ -157,7 +158,7 @@ class _TransactionDetailsScreenState
         appBar: buildTransferHeader(context, l.receipt),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: screenPadding,
             child: Text(
               l.noTransaction,
               textAlign: TextAlign.center,
@@ -183,7 +184,7 @@ class _TransactionDetailsScreenState
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(left: 24, right: 24, top: 12),
+            padding: screenPadding,
             child: Column(
               children: [
                 Card(

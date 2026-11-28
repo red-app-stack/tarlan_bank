@@ -382,6 +382,24 @@ abstract class AppLocalizations {
   /// **'Continue with Google'**
   String get signInGoogle;
 
+  /// No description provided for @completeProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get completeProfileTitle;
+
+  /// No description provided for @completeProfileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Some details are missing from your account. Fill them in to continue.'**
+  String get completeProfileBody;
+
+  /// No description provided for @passwordOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — add a password to sign in with email next time.'**
+  String get passwordOptionalHint;
+
   /// No description provided for @continueGuest.
   ///
   /// In en, this message translates to:
@@ -741,6 +759,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accounts'**
   String get navAccounts;
+
+  /// No description provided for @debitBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit balance'**
+  String get debitBalance;
 
   /// No description provided for @navMenu.
   ///
@@ -1131,6 +1155,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current'**
   String get accountCurrent;
+
+  /// No description provided for @accountDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get accountDebit;
 
   /// No description provided for @accountDeposit.
   ///

@@ -15,6 +15,9 @@ import '../shared/list_item.dart';
 import '../shared/shared_classes.dart';
 import '../shared/app_snack_bar.dart';
 
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
+
 /// Menu migrated to Riverpod: logout goes through AuthRepository and the
 /// guest check through currentUserProvider; no GetX controllers.
 class MenuScreen extends ConsumerWidget {
@@ -26,12 +29,12 @@ class MenuScreen extends ConsumerWidget {
     MenuSection(
       items: [
         MenuItem(
-          icon: 'assets/icons/ic_settings.svg',
+          icon: AppIcons.settings,
           title: l.securitySettings,
           routeArg: Routes.securitySettings,
         ),
         MenuItem(
-          icon: 'assets/icons/ic_accounts.svg',
+          icon: AppIcons.accounts,
           title: l.navAccounts,
           routeArg: Routes.accounts,
         ),
@@ -40,28 +43,20 @@ class MenuScreen extends ConsumerWidget {
     MenuSection(
       title: l.products,
       items: [
+        MenuItem(icon: AppIcons.card, title: l.cards, routeArg: 'card'),
         MenuItem(
-          icon: 'assets/icons/ic_card.svg',
-          title: l.cards,
-          routeArg: 'card',
-        ),
-        MenuItem(
-          icon: 'assets/icons/ic_deposit.svg',
+          icon: AppIcons.deposits,
           title: l.deposits,
           routeArg: 'deposit',
         ),
+        MenuItem(icon: AppIcons.credits, title: l.credits, routeArg: 'credit'),
         MenuItem(
-          icon: 'assets/icons/ic_credit.svg',
-          title: l.credits,
-          routeArg: 'credit',
-        ),
-        MenuItem(
-          icon: 'assets/icons/ic_installment.svg',
+          icon: AppIcons.installment,
           title: l.installment,
           routeArg: 'transfer',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_invest.svg',
+          icon: AppIcons.investments,
           title: l.investments,
           routeArg: Routes.investments,
         ),
@@ -70,14 +65,14 @@ class MenuScreen extends ConsumerWidget {
     MenuSection(
       title: l.bankSection,
       items: [
-        MenuItem(icon: 'assets/icons/ic_atm.svg', title: l.atm),
-        MenuItem(icon: 'assets/icons/ic_branch.svg', title: l.branches),
+        MenuItem(icon: AppIcons.atm, title: l.atm),
+        MenuItem(icon: AppIcons.branch, title: l.branches),
         MenuItem(
-          icon: 'assets/icons/ic_phone.svg',
+          icon: AppIcons.phone,
           title: l.callBank,
           routeArg: _callBankAction,
         ),
-        MenuItem(icon: 'assets/icons/ic_support.svg', title: l.supportTickets),
+        MenuItem(icon: AppIcons.support, title: l.supportTickets),
       ],
     ),
   ];
@@ -146,9 +141,11 @@ class MenuScreen extends ConsumerWidget {
         top: false,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24.0,
-            vertical: 56 + kToolbarHeight,
+          // MainShell supplies the 32/16 inset; only the floating top bar
+          // needs extra clearance here.
+          padding: const EdgeInsets.only(
+            top: shellTopBarExtraTop,
+            bottom: kBottomNavigationBarHeight * 2,
           ),
           child: Column(
             spacing: 24,
@@ -190,7 +187,7 @@ class MenuScreen extends ConsumerWidget {
               ),
               if (user == null)
                 ListItem.vertical(
-                  svgPath: 'assets/icons/ic_exit.svg',
+                  svgPath: AppIcons.exit,
                   iconSize: 36,
                   title: l.signIn,
                   onTap: () => navigateTo(context, Routes.login),
@@ -213,7 +210,7 @@ class MenuScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           SvgPicture.asset(
-                            'assets/icons/ic_exit.svg',
+                            AppIcons.exit,
                             width: 36,
                             height: 36,
                             colorFilter: ColorFilter.mode(

@@ -76,7 +76,7 @@ service cloud.firestore {
     }
 
     // ---- accounts/{accountNumber}: doc ID == number → UNIQUE for free. ----
-    // Products: current (spending), deposit (term savings), credit (loan).
+    // Products: debit (spending), deposit (term savings), credit (loan).
     // Credit balance = outstanding DEBT (positive), never spendable money.
     // A card is NOT an account type — instruments live in cards/{cardId}.
     match /accounts/{accountNumber} {
@@ -94,7 +94,7 @@ service cloud.firestore {
               && d.terms.annualRate is number
               && d.terms.annualRate >= 0 && d.terms.annualRate <= 1
               && d.terms.termMonths is int && d.terms.termMonths > 0))
-          && (d.type != 'current' || !('terms' in d));
+          && (d.type != 'debit' || !('terms' in d));
       }
 
       allow get: if isFullUser();                     // demo caveat #2
@@ -109,7 +109,7 @@ service cloud.firestore {
         && request.resource.data.balance is number
         && request.resource.data.balance >= 0
         && request.resource.data.currency in accountCurrencies()
-        && request.resource.data.type in ['current', 'deposit', 'credit']
+        && request.resource.data.type in ['debit', 'deposit', 'credit']
         && request.resource.data.status in ['active', 'inactive', 'closed']
         && request.resource.data.createdAt == request.time
         && validTerms();
@@ -183,7 +183,7 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // ---- cards/{cardId}: payment instruments linked to current accounts. ----
+    // ---- cards/{cardId}: payment instruments linked to debit accounts. ----
     // NO full PAN, NO CVV — key whitelist makes storing them impossible.
     match /cards/{cardId} {
       allow read: if isFullUser() && resource.data.ownerId == request.auth.uid;
@@ -225,8 +225,8 @@ service cloud.firestore {
         && resource.data.uid == request.auth.uid;
     }
 
-    // ---- phone_index/{E164}: phone → uid + primary current account. ----
-    // Written at registration (uid) and first current-account open
+    // ---- phone_index/{E164}: phone → uid + primary debit account. ----
+    // Written at registration (uid) and first debit-account open
     // (accountNumber). Open get for transfer lookup; list denied.
     // Demo caveat: knowing a phone number reveals uid + account number.
     match /phone_index/{phone} {

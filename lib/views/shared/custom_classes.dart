@@ -47,10 +47,7 @@ class MyResizableWidthContainerState extends State<MyResizableWidthContainer> {
           _width = _width.clamp(widget.minWidth, widget.maxWidth);
         });
       },
-      child: SizedBox(
-        width: _width,
-        child: widget.child,
-      ),
+      child: SizedBox(width: _width, child: widget.child),
     );
   }
 }
@@ -68,7 +65,10 @@ class SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return child;
   }
 

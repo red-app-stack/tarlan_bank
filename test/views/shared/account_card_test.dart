@@ -4,6 +4,14 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tarlan_bank/views/shared/account_card.dart';
 
 void main() {
+  test('card width follows the number of accounts', () {
+    expect(accountCardAspectRatio(1), 350 / 180);
+    expect(accountCardAspectRatio(2), 250 / 180);
+    for (final count in [0, 3, 4, 10]) {
+      expect(accountCardAspectRatio(count), 150 / 180, reason: '$count');
+    }
+  });
+
   testWidgets('account card renders details with configurable aspect ratio', (
     tester,
   ) async {

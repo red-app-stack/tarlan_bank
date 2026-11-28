@@ -14,9 +14,7 @@ class OverlayHelper {
       builder: (_) => Material(
         color: Colors.black.withValues(alpha: 0.4),
         child: Center(
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 3),
-          ),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 3)),
         ),
       ),
     );

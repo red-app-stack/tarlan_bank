@@ -435,7 +435,7 @@ PreferredSizeWidget buildHeader(BuildContext context, String label) {
     leading: IconButton(
       icon:
           // SvgPicture.asset(
-          //   'assets/icons/ic_back.svg',
+          //   AppIcons.back,
           //   width: 36,
           //   height: 36,
           //   colorFilter: ColorFilter.mode(

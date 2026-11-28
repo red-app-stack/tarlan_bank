@@ -1,7 +1,7 @@
 import 'package:tarlan_bank/features/accounts/data/account_model.dart';
 
 /// Maps the UI's legacy product names to the D8 account products.
-/// 'card' is an instrument, so it opens the `current` account (the old REST
+/// 'card' is an instrument, so it opens the `debit` account (the old REST
 /// API used 'card' as an account type); 'transfer' = installment = credit.
 AccountType accountTypeFromProduct(String product) {
   switch (product.toLowerCase()) {
@@ -11,6 +11,6 @@ AccountType accountTypeFromProduct(String product) {
     case 'transfer':
       return AccountType.credit;
     default:
-      return AccountType.current;
+      return AccountType.debit;
   }
 }

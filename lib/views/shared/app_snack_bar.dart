@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+
 import 'dart:async';
 
 void showAppSnackBar(
@@ -29,8 +30,8 @@ void showAppSnackBar(
   final endPositionOffset0 = fromTop
       ? endPositionOffset ?? 2
       : endPositionOffset == null
-          ? 0.0
-          : -endPositionOffset;
+      ? 0.0
+      : -endPositionOffset;
 
   final snackBarContent = Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,18 +47,24 @@ void showAppSnackBar(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (title != null)
-              Text(title,
-                  style: theme.textTheme.titleMedium?.copyWith(color: ttl)),
-            Text(message,
-                style: theme.textTheme.bodyMedium?.copyWith(color: txt)),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(color: ttl),
+              ),
+            Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(color: txt),
+            ),
           ],
         ),
       ),
       if (actionLabel != null && onActionPressed != null)
         TextButton(
           onPressed: onActionPressed,
-          child:
-              Text(actionLabel, style: TextStyle(color: colorScheme.primary)),
+          child: Text(
+            actionLabel,
+            style: TextStyle(color: colorScheme.primary),
+          ),
         ),
     ],
   );
@@ -125,18 +132,16 @@ class _TopBottomSnackBarState extends State<_TopBottomSnackBar>
       vsync: this,
     );
 
-    final Offset startOffset =
-        widget.fromTop ? const Offset(0.0, -1) : const Offset(0.0, 1);
+    final Offset startOffset = widget.fromTop
+        ? const Offset(0.0, -1)
+        : const Offset(0.0, 1);
 
     final Offset endOffset = Offset(0.0, widget.endPositionOffset);
 
-    _offsetAnimation = Tween<Offset>(
-      begin: startOffset,
-      end: endOffset,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.fastOutSlowIn,
-    ));
+    _offsetAnimation = Tween<Offset>(begin: startOffset, end: endOffset)
+        .animate(
+          CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+        );
 
     _controller.forward();
 
@@ -179,8 +184,9 @@ class _TopBottomSnackBarState extends State<_TopBottomSnackBar>
 
   @override
   Widget build(BuildContext context) {
-    final alignment =
-        widget.fromTop ? Alignment.topCenter : Alignment.bottomCenter;
+    final alignment = widget.fromTop
+        ? Alignment.topCenter
+        : Alignment.bottomCenter;
 
     return Positioned.fill(
       child: Align(
@@ -196,10 +202,7 @@ class _TopBottomSnackBarState extends State<_TopBottomSnackBar>
                   color: Theme.of(context).colorScheme.surfaceContainer,
                   borderRadius: BorderRadius.all(Radius.circular(30)),
                 ),
-                child: Padding(
-                  padding: widget.padding,
-                  child: widget.content,
-                ),
+                child: Padding(padding: widget.padding, child: widget.content),
               ),
             ),
           ),

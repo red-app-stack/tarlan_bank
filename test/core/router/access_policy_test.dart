@@ -103,4 +103,27 @@ void main() {
       );
     });
   });
+
+  group('post-auth completion', () {
+    test('recognised with a target query and distinct from gate screens', () {
+      expect(isPostAuthStep(Routes.completeProfile), isTrue);
+      expect(
+        isPostAuthStep(
+          Uri(
+            path: Routes.completeProfile,
+            queryParameters: {'target': Routes.home},
+          ).toString(),
+        ),
+        isTrue,
+      );
+      for (final route in [
+        Routes.codeEntering,
+        Routes.faceVerify,
+        Routes.home,
+        Routes.login,
+      ]) {
+        expect(isPostAuthStep(route), isFalse, reason: route);
+      }
+    });
+  });
 }

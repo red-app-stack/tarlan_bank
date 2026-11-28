@@ -13,14 +13,15 @@ import 'package:tarlan_bank/views/shared/widgets.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:tarlan_bank/services/chat_service.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 // ---------------------------------------------------------------------------
 // Chat icons — copied from the kitaphub chat feature.
 // ---------------------------------------------------------------------------
-const String _iconChatbot = 'assets/icons/chat/chatbot.svg';
-const String _iconChatBubble = 'assets/icons/chat/chat_bubble.svg';
-const String _iconSend = 'assets/icons/chat/send.svg';
-const String _iconRestart = 'assets/icons/chat/restart_square.svg';
+const String _iconChatbot = AppIcons.chatBot;
+const String _iconChatBubble = AppIcons.chatBubble;
+const String _iconSend = AppIcons.chatSend;
+const String _iconRestart = AppIcons.chatRestart;
 
 Widget _appIcon(String path, {double size = 24, Color? color, Key? key}) {
   return SvgPicture.asset(
@@ -414,7 +415,7 @@ class _ChatBotScreenState extends ConsumerState<ChatBotScreen>
     return FrostedAppBar(
       leading: IconButton(
         icon: SvgPicture.asset(
-          'assets/icons/ic_back.svg',
+          AppIcons.back,
           width: 36,
           height: 36,
           colorFilter: ColorFilter.mode(cs.primary, BlendMode.srcIn),

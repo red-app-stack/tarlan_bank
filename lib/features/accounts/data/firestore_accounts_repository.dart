@@ -41,6 +41,13 @@ class FirestoreAccountsRepository implements AccountsRepository {
 
   static const _currencies = ['USD', 'EUR', 'KZT'];
 
+  /// Every new full account starts with one KZT debit card holding this much.
+  static const double starterBalance = 50000;
+
+  /// Cards issued at seeding expire five years out, on the same month.
+  static ({int month, int year}) starterCardExpiry(DateTime now) =>
+      (month: now.month, year: now.year + 5);
+
   CollectionReference<Map<String, dynamic>> get _accounts =>
       _db.collection('accounts');
   CollectionReference<Map<String, dynamic>> get _cards =>
@@ -90,11 +97,15 @@ class FirestoreAccountsRepository implements AccountsRepository {
     required String ownerId,
     required AccountType type,
     required String currency,
+    double initialBalance = 0,
     DepositTerms? depositTerms,
     CreditTerms? creditTerms,
   }) async {
     if (!_currencies.contains(currency)) {
       throw ValidationFailure('Unsupported currency: $currency');
+    }
+    if (initialBalance < 0) {
+      throw const ValidationFailure('Balance cannot be negative');
     }
     if (type == AccountType.deposit && depositTerms == null) {
       throw const ValidationFailure('Deposit accounts require product terms');
@@ -102,9 +113,9 @@ class FirestoreAccountsRepository implements AccountsRepository {
     if (type == AccountType.credit && creditTerms == null) {
       throw const ValidationFailure('Credit accounts require product terms');
     }
-    if (type == AccountType.current &&
+    if (type == AccountType.debit &&
         (depositTerms != null || creditTerms != null)) {
-      throw const ValidationFailure('Current accounts carry no product terms');
+      throw const ValidationFailure('Debit accounts carry no product terms');
     }
 
     try {
@@ -117,7 +128,7 @@ class FirestoreAccountsRepository implements AccountsRepository {
           'ownerId': ownerId,
           'type': type.name,
           'currency': currency,
-          'balance': 0.0,
+          'balance': initialBalance,
           'status': AccountStatus.active.name,
           'createdAt': FieldValue.serverTimestamp(),
           if (depositTerms != null) 'terms': depositTerms.toMap(),
@@ -127,7 +138,7 @@ class FirestoreAccountsRepository implements AccountsRepository {
           await _accounts.doc(number).set(data);
           final fullName = await _ownFullName(ownerId);
           await _writeRecipientIndex(ownerId, number, fullName);
-          if (type == AccountType.current) {
+          if (type == AccountType.debit) {
             await _linkPhoneIndex(ownerId, number, fullName);
           }
           return await getAccount(number);
@@ -142,7 +153,30 @@ class FirestoreAccountsRepository implements AccountsRepository {
     }
   }
 
-  /// First current account becomes the phone-transfer target. Later current
+  @override
+  Future<Account> ensureStarterDebitAccount({required String ownerId}) async {
+    final existing = await fetchAccounts(ownerId);
+    final debit = existing.where((a) => a.type == AccountType.debit).toList();
+    if (debit.isNotEmpty) return debit.first;
+
+    final account = await createAccount(
+      ownerId: ownerId,
+      type: AccountType.debit,
+      currency: 'KZT',
+      initialBalance: starterBalance,
+    );
+    final holderName = await _ownFullName(ownerId);
+    final expiry = starterCardExpiry(DateTime.now());
+    await issueCard(
+      account: account,
+      holderName: holderName.trim().isEmpty ? 'Tarlan Bank' : holderName,
+      expiryMonth: expiry.month,
+      expiryYear: expiry.year,
+    );
+    return account;
+  }
+
+  /// First debit account becomes the phone-transfer target. Later debit
   /// accounts do not overwrite it (recipient stability).
   Future<String> _ownFullName(String ownerId) async {
     final doc = await _db.collection('users').doc(ownerId).get();
@@ -326,8 +360,8 @@ class FirestoreAccountsRepository implements AccountsRepository {
     required int expiryYear,
     String? label,
   }) async {
-    if (account.type != AccountType.current) {
-      throw const ValidationFailure('Cards link to current accounts only');
+    if (account.type != AccountType.debit) {
+      throw const ValidationFailure('Cards link to debit accounts only');
     }
     if (expiryMonth < 1 || expiryMonth > 12) {
       throw const ValidationFailure('Invalid expiry month');

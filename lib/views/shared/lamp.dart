@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 
@@ -127,10 +128,14 @@ class _LavaLampMetaBallsState extends State<LavaLampMetaBalls>
     setState(() {
       _usePhysicsMode = !_usePhysicsMode;
       if (_usePhysicsMode) {
-        v1 = Offset(random.nextDouble() * 0.01 - 0.005,
-            random.nextDouble() * 0.01 - 0.005);
-        v2 = Offset(random.nextDouble() * 0.01 - 0.005,
-            random.nextDouble() * 0.01 - 0.005);
+        v1 = Offset(
+          random.nextDouble() * 0.01 - 0.005,
+          random.nextDouble() * 0.01 - 0.005,
+        );
+        v2 = Offset(
+          random.nextDouble() * 0.01 - 0.005,
+          random.nextDouble() * 0.01 - 0.005,
+        );
       } else {
         base1Relative = p1Relative;
         base2Relative = p2Relative;

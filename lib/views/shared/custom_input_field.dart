@@ -59,9 +59,7 @@ class CustomInputField extends StatelessWidget {
         suffixText: suffix,
         suffix: suffixWidget,
         filled: filled || !enabled,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       validator: validator,
       onTap: onTap,

@@ -39,6 +39,12 @@ AccessLevel accessLevel(AsyncValue<AuthUser?> auth) {
   return user.isAnonymous ? AccessLevel.guest : AccessLevel.full;
 }
 
+/// Completion belongs immediately after sign-in/register: the PIN and face
+/// gates must not bounce it away or run before the form is filled. Both gates
+/// still run afterwards, driven by `destinationAfterAuth` on save.
+bool isPostAuthStep(String location) =>
+    Uri.tryParse(location)?.path == Routes.completeProfile;
+
 /// Returns the redirect target, or null when navigation may proceed.
 String? redirectFor({required AccessLevel level, required String location}) {
   switch (level) {

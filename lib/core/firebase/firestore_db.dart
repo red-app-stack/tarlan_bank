@@ -8,6 +8,6 @@ const String firestoreDatabaseId = 'tarlan';
 
 /// Named-database Firestore handle for the default Firebase app.
 FirebaseFirestore tarlanFirestore() => FirebaseFirestore.instanceFor(
-      app: Firebase.app(),
-      databaseId: firestoreDatabaseId,
-    );
+  app: Firebase.app(),
+  databaseId: firestoreDatabaseId,
+);

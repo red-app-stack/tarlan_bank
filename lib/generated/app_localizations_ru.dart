@@ -151,6 +151,17 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signInGoogle => 'Войти через Google';
 
   @override
+  String get completeProfileTitle => 'Заполните профиль';
+
+  @override
+  String get completeProfileBody =>
+      'В вашем аккаунте не хватает некоторых данных. Заполните их, чтобы продолжить.';
+
+  @override
+  String get passwordOptionalHint =>
+      'Необязательно — добавьте пароль, чтобы входить по email.';
+
+  @override
   String get continueGuest => 'Продолжить как гость';
 
   @override
@@ -345,6 +356,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get navAccounts => 'Счета';
+
+  @override
+  String get debitBalance => 'Дебетовый баланс';
 
   @override
   String get navMenu => 'Меню';
@@ -549,6 +563,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accountCurrent => 'Текущий';
+
+  @override
+  String get accountDebit => 'Дебет';
 
   @override
   String get accountDeposit => 'Депозит';

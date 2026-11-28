@@ -26,6 +26,7 @@ import 'package:tarlan_bank/views/shared/amount_input.dart';
 import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 class QRTransferScreen extends ConsumerStatefulWidget {
   const QRTransferScreen({super.key, this.transaction});
@@ -99,7 +100,7 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
         all
             .where(
               (a) =>
-                  a.type == AccountType.current &&
+                  a.type == AccountType.debit &&
                   a.status == AccountStatus.active,
             )
             .toList()
@@ -471,11 +472,11 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
                             barcodes?.barcodes.firstOrNull?.rawValue;
                         if (code != null) _processScannedQR(code);
                       },
-                      child: SvgPicture.asset('assets/icons/ic_gallery.svg'),
+                      child: SvgPicture.asset(AppIcons.gallery),
                     ),
                     GestureDetector(
                       onTap: scanner.toggleTorch,
-                      child: SvgPicture.asset('assets/icons/ic_flash.svg'),
+                      child: SvgPicture.asset(AppIcons.flashlight),
                     ),
                   ],
                 ),
@@ -510,7 +511,7 @@ class _QRTransferScreenState extends ConsumerState<QRTransferScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: SvgPicture.asset(
-                    'assets/icons/attention.svg',
+                    AppIcons.attention,
                     width: 24,
                     height: 24,
                     colorFilter: ColorFilter.mode(

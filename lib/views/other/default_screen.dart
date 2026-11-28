@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 class TestingDetailsScreen extends StatelessWidget {
   final String title;
@@ -41,7 +42,7 @@ class TestingDetailsScreen extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: SvgPicture.asset(
-                            'assets/icons/ic_back.svg',
+                            AppIcons.back,
                             width: 32,
                             height: 32,
                             colorFilter: ColorFilter.mode(
@@ -92,10 +93,10 @@ class TestingDetailsScreen extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         entry.value,
-                                        style:
-                                            theme.textTheme.bodyLarge?.copyWith(
-                                          color: theme.colorScheme.primary,
-                                        ),
+                                        style: theme.textTheme.bodyLarge
+                                            ?.copyWith(
+                                              color: theme.colorScheme.primary,
+                                            ),
                                       ),
                                     ),
                                   ],

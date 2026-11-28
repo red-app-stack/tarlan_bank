@@ -60,10 +60,7 @@ class ResizableWidthContainerState extends State<ResizableWidthContainer> {
                 cursor: SystemMouseCursors.resizeLeftRight,
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
-                  child: Container(
-                    width: 10,
-                    color: Colors.transparent,
-                  ),
+                  child: Container(width: 10, color: Colors.transparent),
                 ),
               ),
             ),

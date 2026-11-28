@@ -15,11 +15,7 @@ class Message {
     this.thoughts,
   });
 
-  Message copyWith({
-    String? text,
-    bool? isStreaming,
-    String? thoughts,
-  }) {
+  Message copyWith({String? text, bool? isStreaming, String? thoughts}) {
     return Message(
       id: id,
       text: text ?? this.text,

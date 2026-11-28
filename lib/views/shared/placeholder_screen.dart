@@ -2,8 +2,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 import 'custom_card.dart';
+
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 /// Small consistent screen for menu items that are not implemented yet.
 class PlaceholderScreen extends StatelessWidget {
@@ -24,7 +27,7 @@ class PlaceholderScreen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: screenPadding,
             child: CustomCard(
               label: title,
               padding: const EdgeInsets.all(28),
@@ -32,7 +35,7 @@ class PlaceholderScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SvgPicture.asset(
-                    'assets/icons/ic_settings.svg',
+                    AppIcons.settings,
                     width: 56,
                     height: 56,
                     colorFilter: ColorFilter.mode(

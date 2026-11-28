@@ -11,6 +11,8 @@ import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/shared_classes.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 class TransfersScreen extends ConsumerWidget {
   const TransfersScreen({super.key});
@@ -37,37 +39,37 @@ class TransfersScreen extends ConsumerWidget {
     MenuSection(
       items: [
         MenuItem(
-          icon: 'assets/icons/ic_phone.svg',
+          icon: AppIcons.phone,
           title: l.transferByPhone,
           description: l.transferByPhoneDesc,
           routeArg: 'phone',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_transfer.svg',
+          icon: AppIcons.transfer,
           title: l.transferBetweenOwn,
           description: l.transferBetweenOwnDesc,
           routeArg: 'self',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_geolocation.svg',
+          icon: AppIcons.geolocation,
           title: l.transferKz,
           description: l.transferKzDesc,
           routeArg: 'kz',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_worldwide.svg',
+          icon: AppIcons.worldwide,
           title: l.transferInternational,
           description: l.transferInternationalDesc,
           routeArg: 'world',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_convert.svg',
+          icon: AppIcons.convert,
           title: l.conversion,
           description: l.conversionDesc,
           routeArg: 'convert',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_qr.svg',
+          icon: AppIcons.qr,
           title: l.bankQr,
           description: l.bankQrDesc,
           routeArg: 'qr',
@@ -96,10 +98,7 @@ class TransfersScreen extends ConsumerWidget {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 56 + kToolbarHeight,
-              ),
+              padding: screenPadding,
               child: Column(
                 spacing: 24,
                 children: [
@@ -201,7 +200,7 @@ class TransfersScreen extends ConsumerWidget {
       customLeading: buildUserAvatar(theme, favorite.name),
       trailing: IconButton(
         icon: SvgPicture.asset(
-          'assets/icons/ic_other.svg',
+          AppIcons.other,
           width: iconSize,
           height: iconSize,
           colorFilter: ColorFilter.mode(

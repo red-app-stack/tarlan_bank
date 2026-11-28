@@ -5,7 +5,7 @@ import 'card_model.dart';
 /// Accounts boundary (remodeled — see MIGRATION_PLAN.md D8).
 ///
 /// One ledger collection `accounts/{number}` with product discriminator
-/// (current/deposit/credit) + per-product terms; cards are separate
+/// (debit/deposit/credit) + per-product terms; cards are separate
 /// instruments (`cards/{id}`), never an account type.
 ///
 /// Deliberately REMOVED vs the old REST interface: `deleteAccount` /
@@ -15,7 +15,7 @@ import 'card_model.dart';
 /// Methods throw a sealed [AppFailure] on error; lookups return null only
 /// for "no such recipient", never to signal failure.
 abstract interface class AccountsRepository {
-  /// Realtime accounts of one owner, sorted (current first, then deposit,
+  /// Realtime accounts of one owner, sorted (debit first, then deposit,
   /// then credit — matches the old controller's display order).
   Stream<List<Account>> watchAccounts(String ownerId);
 
@@ -25,15 +25,22 @@ abstract interface class AccountsRepository {
   Future<Account> getAccount(String number);
 
   /// Opens an account. Deposit/credit require matching product terms.
-  /// For the owner's first current account, links it into `phone_index`
-  /// so phone transfers can find it.
+  /// For the owner's first debit account, links it into `phone_index`
+  /// so phone transfers can find it. `initialBalance` is used for the seeded
+  /// starter account and defaults to zero for user-opened products.
   Future<Account> createAccount({
     required String ownerId,
     required AccountType type,
     required String currency,
+    double initialBalance = 0,
     DepositTerms? depositTerms,
     CreditTerms? creditTerms,
   });
+
+  /// Idempotent new-user seed: one active debit account in KZT with the
+  /// starting balance and one linked card. Returns the existing debit account
+  /// when the user already has one.
+  Future<Account> ensureStarterDebitAccount({required String ownerId});
 
   /// status → closed. Never deletes.
   Future<void> closeAccount(String number);
@@ -56,7 +63,7 @@ abstract interface class AccountsRepository {
   /// Realtime cards of one owner.
   Stream<List<BankCard>> watchCards(String ownerId);
 
-  /// Issues a card linked to a CURRENT account. No CVV is generated or
+  /// Issues a card linked to a debit account. No CVV is generated or
   /// stored anywhere (PCI-DSS); only last4 of the account number.
   Future<BankCard> issueCard({
     required Account account,

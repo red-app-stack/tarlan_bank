@@ -6,6 +6,7 @@ import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 import 'package:tarlan_bank/views/shared/service_item.dart';
 
 class PaymentsScreen extends ConsumerWidget {
@@ -46,10 +47,7 @@ class PaymentsScreen extends ConsumerWidget {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 56 + kToolbarHeight,
-              ),
+              padding: screenPadding,
               child: Column(
                 spacing: 24,
                 crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -12,6 +12,7 @@ import 'package:tarlan_bank/views/shared/account_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/selected_card.dart';
 import 'package:tarlan_bank/views/shared/section_header.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 /// Horizontally scrollable Accounts strip for the top of Home. Tiles are the
 /// signed-in user's real Firestore accounts, enriched with linked card
@@ -36,6 +37,7 @@ class AccountsStrip extends ConsumerWidget {
         const <Account>[];
     final cards = cardsAsync.value ?? const [];
     final loading = accountsAsync.isLoading || cardsAsync.isLoading;
+    final aspectRatio = accountCardAspectRatio(accounts.length);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -44,7 +46,7 @@ class AccountsStrip extends ConsumerWidget {
         SectionHeader(
           title: l.navAccounts,
           buttonLabel: l.openNew,
-          buttonIcon: 'assets/icons/ic_add.svg',
+          buttonIcon: AppIcons.add,
           onPressed: onOpenNew,
         ),
         SizedBox(
@@ -71,6 +73,7 @@ class AccountsStrip extends ConsumerWidget {
                     final last4 = card?.last4 ?? account.number;
 
                     return AccountCard(
+                      aspectRatio: aspectRatio,
                       imagePath: account.imagePath?.isNotEmpty == true
                           ? account.imagePath!
                           : _fallbackImage(account, card != null),
@@ -117,7 +120,7 @@ class AccountsStrip extends ConsumerWidget {
 
   static String _typeLabel(AccountType type, AppLocalizations l) =>
       switch (type) {
-        AccountType.current => l.accountCurrent,
+        AccountType.debit => l.accountDebit,
         AccountType.deposit => l.accountDeposit,
         AccountType.credit => l.accountCredit,
       };
@@ -127,7 +130,7 @@ class AccountsStrip extends ConsumerWidget {
     if (override != null && override.isNotEmpty) return override;
     if (hasCard) return 'assets/images/accent_image_4.png';
     return switch (account.type) {
-      AccountType.current => 'assets/images/accent_image_1.png',
+      AccountType.debit => 'assets/images/accent_image_1.png',
       AccountType.deposit => 'assets/images/accent_image_2.png',
       AccountType.credit => 'assets/images/accent_image_3.png',
     };
@@ -148,10 +151,8 @@ class AccountsStrip extends ConsumerWidget {
       id: int.tryParse(account.number) ?? 0,
       accountNumber: account.number,
       name: fullName,
-      cardType: account.type == AccountType.current
-          ? 'card'
-          : account.type.name,
-      type: account.type == AccountType.current
+      cardType: account.type == AccountType.debit ? 'card' : account.type.name,
+      type: account.type == AccountType.debit
           ? 'VISA ${l.multiCurrency}'
           : 'VISA ${account.type.name}',
       number: account.number,
@@ -161,7 +162,7 @@ class AccountsStrip extends ConsumerWidget {
       color: switch (account.type) {
         AccountType.credit => 'red',
         AccountType.deposit => 'gold',
-        AccountType.current => 'primary',
+        AccountType.debit => 'primary',
       },
       expiryDate: expiry,
     );

@@ -27,6 +27,23 @@ abstract interface class AuthRepository {
   /// doc on first sign-in; no phone number is available from Google.
   Future<AuthUser> signInWithGoogle();
 
+  /// True when `users/{uid}` has every required profile field filled.
+  /// Legacy/incomplete docs return false; missing docs return false.
+  Future<bool> isProfileComplete(String uid);
+
+  /// Fills or updates the profile of the current signed-in user.
+  ///
+  /// [email] is the Auth account's email (never editable here). When
+  /// [password] is provided it also links an email/password credential, so
+  /// the account can be used for email login next time. An account that
+  /// already uses that email keeps its existing password.
+  Future<void> completeProfile({
+    required String fullName,
+    required String phoneNumber,
+    required String email,
+    String? password,
+  });
+
   /// Firebase anonymous session for guests: main/menu + exchange rates +
   /// notifications only. No Firestore private data (rules deny it).
   Future<AuthUser> signInAnonymously();

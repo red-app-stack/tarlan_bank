@@ -9,8 +9,11 @@ void main() {
     for (var i = 0; i < 500; i++) {
       final number = generateAccountNumber(random);
       expect(number.length, 16);
-      expect(RegExp(r'^[1-9][0-9]{15}$').hasMatch(number), true,
-          reason: 'bad number: $number');
+      expect(
+        RegExp(r'^[1-9][0-9]{15}$').hasMatch(number),
+        true,
+        reason: 'bad number: $number',
+      );
     }
   });
 
@@ -19,7 +22,9 @@ void main() {
   });
 
   test('different seeds give different numbers', () {
-    expect(generateAccountNumber(Random(1)),
-        isNot(generateAccountNumber(Random(2))));
+    expect(
+      generateAccountNumber(Random(1)),
+      isNot(generateAccountNumber(Random(2))),
+    );
   });
 }

@@ -7,7 +7,10 @@ import 'package:tarlan_bank/core/errors/firebase_error_mapping.dart';
 import 'package:tarlan_bank/core/firebase/firestore_db.dart';
 import 'package:tarlan_bank/core/utils/phone_number.dart';
 
+import '../../accounts/data/accounts_repository.dart';
+import '../../accounts/data/firestore_accounts_repository.dart';
 import 'account_deletion_repository.dart';
+import 'profile_completeness.dart' as completeness;
 import 'reauth_method.dart';
 
 import 'auth_repository.dart';
@@ -22,11 +25,15 @@ class FirebaseAuthRepository implements AuthRepository {
     GoogleSignIn? googleSignIn,
   }) : _auth = auth ?? fb.FirebaseAuth.instance,
        _firestore = firestore ?? tarlanFirestore(),
-       _google = googleSignIn ?? GoogleSignIn.instance;
+       _google = googleSignIn ?? GoogleSignIn.instance,
+       _accounts = FirestoreAccountsRepository(
+         firestore: firestore ?? tarlanFirestore(),
+       );
 
   final fb.FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _google;
+  final AccountsRepository _accounts;
   late final AccountDeletionRepository _deletion = AccountDeletionRepository(
     _firestore,
   );
@@ -111,12 +118,11 @@ class FirebaseAuthRepository implements AuthRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       // Phone-transfer lookup index (E.164 doc ID). accountNumber is linked
-      // later, when the first current account is opened.
+      // later, when the first debit account is opened.
       await _firestore
           .collection('phone_index')
           .doc(normalizePhone(phoneNumber))
           .set({'uid': created.uid});
-      return AuthUser(uid: created.uid, email: created.email);
     } catch (e) {
       // Best-effort rollback: never leave an Auth account without its profile.
       if (created != null) {
@@ -129,6 +135,20 @@ class FirebaseAuthRepository implements AuthRepository {
       }
       throw mapFirebaseError(e);
     }
+    // Seeding happens AFTER the rollback boundary: a failed seed must not
+    // delete a live Auth account.
+    final user = created;
+    await _ensureStarter(user.uid);
+    return AuthUser(uid: user.uid, email: user.email);
+  }
+
+  /// Best-effort new-user seed. Auth/profile writes must never be blocked by
+  /// a transient ledger failure; the seeded account/card can be retried on a
+  /// later sign-in.
+  Future<void> _ensureStarter(String uid) async {
+    try {
+      await _accounts.ensureStarterDebitAccount(ownerId: uid);
+    } catch (_) {}
   }
 
   @override
@@ -179,6 +199,7 @@ class FirebaseAuthRepository implements AuthRepository {
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
+        await _ensureStarter(user.uid);
       }
       return;
     }
@@ -188,6 +209,102 @@ class FirebaseAuthRepository implements AuthRepository {
         'profilePictureUrl': url,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+    }
+  }
+
+  @override
+  Future<bool> isProfileComplete(String uid) async {
+    try {
+      final snap = await _firestore.collection('users').doc(uid).get();
+      if (!snap.exists) return false;
+      return completeness.isProfileComplete(snap.data() ?? const {});
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  @override
+  Future<void> completeProfile({
+    required String fullName,
+    required String phoneNumber,
+    required String email,
+    String? password,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || user.isAnonymous) {
+      throw const AuthFailure('Sign in before completing your profile');
+    }
+    final phone = normalizePhone(phoneNumber);
+    final name = fullName.trim();
+    final mail = email.trim();
+    try {
+      final profile = _firestore.collection('users').doc(user.uid);
+      final snap = await profile.get();
+      final oldPhone = snap.data()?['phoneNumber'];
+      final creatingProfile = !snap.exists;
+
+      final batch = _firestore.batch();
+      if (snap.exists) {
+        // Firestore rules allow only these keys on an update. Email comes
+        // from Firebase Auth and cannot be changed here.
+        batch.set(profile, {
+          'fullName': name,
+          'phoneNumber': phone,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } else {
+        batch.set(profile, {
+          'email': mail,
+          'fullName': name,
+          'phoneNumber': phone,
+          'role': 'customer',
+          'profilePictureUrl': user.photoURL ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      if (oldPhone is String &&
+          oldPhone.trim().isNotEmpty &&
+          oldPhone != phone) {
+        final previous = _tryNormalize(oldPhone);
+        if (previous != null && previous != phone) {
+          batch.delete(_firestore.collection('phone_index').doc(previous));
+        }
+      }
+      batch.set(_firestore.collection('phone_index').doc(phone), {
+        'uid': user.uid,
+      });
+      await batch.commit();
+      if (creatingProfile) await _ensureStarter(user.uid);
+      // Cosmetic mirror of the name; a stale email session may require a
+      // recent login for Auth profile edits, which must not block the save.
+      try {
+        await user.updateDisplayName(name);
+      } catch (_) {}
+
+      // Password is optional: Google users can leave it blank, or set one to
+      // sign in with the same email later. An existing email account with
+      // this address already has a password, so linking is not needed.
+      if (password != null && password.isNotEmpty) {
+        try {
+          await user.linkWithCredential(
+            fb.EmailAuthProvider.credential(email: mail, password: password),
+          );
+        } on fb.FirebaseAuthException catch (e) {
+          if (e.code != 'email-already-in-use') rethrow;
+        }
+      }
+    } catch (e) {
+      throw mapFirebaseError(e);
+    }
+  }
+
+  /// Legacy phone values may be unusable; never block profile completion.
+  String? _tryNormalize(String value) {
+    try {
+      return normalizePhone(value);
+    } on ValidationFailure {
+      return null;
     }
   }
 

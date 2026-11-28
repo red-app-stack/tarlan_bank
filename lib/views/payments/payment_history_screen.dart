@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/shared/history_base.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
 
 class PaymentHistoryScreen extends ConsumerStatefulWidget {
@@ -98,10 +99,7 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
                     MediaQuery.of(context).padding.bottom,
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 56 + kToolbarHeight,
-                ),
+                padding: screenPadding,
                 child: Column(
                   children: [
                     buildFilterCard(

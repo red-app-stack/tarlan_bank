@@ -1,5 +1,22 @@
 import 'package:flutter_svg/svg.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+
+/// Aspect ratio (width / height) for a single account: a full-width banner.
+const double singleAccountAspectRatio = 347 / 180;
+
+/// Two accounts share the strip: the banner shrinks by one step.
+const double twoAccountAspectRatio = 250 / 180;
+
+/// Three or more accounts keep the compact tile so the strip scrolls.
+const double compactAccountAspectRatio = 150 / 180;
+
+/// Tile width follows the number of accounts in the strip.
+double accountCardAspectRatio(int accountCount) => switch (accountCount) {
+  1 => singleAccountAspectRatio,
+  2 => twoAccountAspectRatio,
+  _ => compactAccountAspectRatio,
+};
 
 /// Reusable account/card tile: image background, VISA mark and bottom-aligned
 /// details. No shadow or extra effects; reuse it with a different aspect ratio
@@ -13,9 +30,9 @@ class AccountCard extends StatelessWidget {
     required this.expiry,
     this.balance,
     this.showBalance = true,
-    this.aspectRatio = 150 / 180,
+    this.aspectRatio = compactAccountAspectRatio,
     this.height = 180,
-    this.visaLogoPath = 'assets/icons/visa.svg',
+    this.visaLogoPath = AppIcons.visa,
     this.onTap,
   });
 

@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../models/account_model.dart';
 
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+
 class AnimatedCardDropdown extends StatelessWidget {
   final List<AccountModel> accounts;
   final AccountModel? selectedAccount;
@@ -165,7 +167,7 @@ class _AccountItem extends StatelessWidget {
 
   Widget _buildCardIcon(ThemeData theme) {
     return SvgPicture.asset(
-      'assets/icons/ic_card.svg',
+      AppIcons.card,
       width: 36,
       height: 36,
       colorFilter: ColorFilter.mode(theme.colorScheme.primary, BlendMode.srcIn),

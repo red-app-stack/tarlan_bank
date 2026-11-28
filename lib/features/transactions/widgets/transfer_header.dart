@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 /// Frosted header matching the legacy `buildHeader`, but navigation goes
 /// through go_router (`context.canPop()` / `context.pop()` / `context.go`).
@@ -12,7 +13,7 @@ PreferredSizeWidget buildTransferHeader(BuildContext context, String label) {
     floating: true,
     leading: IconButton(
       icon: SvgPicture.asset(
-        'assets/icons/ic_back.svg',
+        AppIcons.back,
         width: 36,
         height: 36,
         colorFilter: ColorFilter.mode(

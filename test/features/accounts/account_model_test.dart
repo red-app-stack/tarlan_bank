@@ -33,14 +33,16 @@ void main() {
       expect(back.creditTerms, isNull);
     });
 
-    test('deposit has funds, no credit line; UI restricts sources to current',
-        () {
-      // isSpendable == transfer-source eligible. Deposits are funds but the
-      // app restricts transfers to current accounts at the UI layer; the
-      // model flag only excludes credit + non-active.
-      expect(account.isSpendable, true);
-      expect(account.availableCredit, isNull);
-    });
+    test(
+      'deposit has funds, no credit line; UI restricts sources to current',
+      () {
+        // isSpendable == transfer-source eligible. Deposits are funds but the
+        // app restricts transfers to current accounts at the UI layer; the
+        // model flag only excludes credit + non-active.
+        expect(account.isSpendable, true);
+        expect(account.availableCredit, isNull);
+      },
+    );
   });
 
   group('Account — credit', () {
@@ -89,7 +91,7 @@ void main() {
       final current = Account(
         number: '1111222233334444',
         ownerId: 'uid1',
-        type: AccountType.current,
+        type: AccountType.debit,
         currency: 'KZT',
         balance: 500,
         status: AccountStatus.active,
@@ -97,7 +99,7 @@ void main() {
       expect(current.isSpendable, true);
       expect(current.toMap().containsKey('terms'), false);
       final back = Account.fromMap(current.number, current.toMap());
-      expect(back.type, AccountType.current);
+      expect(back.type, AccountType.debit);
       expect(back.createdAt, isNull); // pending serverTimestamp tolerated
     });
 
@@ -105,7 +107,7 @@ void main() {
       final closed = Account(
         number: '1111222233334444',
         ownerId: 'uid1',
-        type: AccountType.current,
+        type: AccountType.debit,
         currency: 'KZT',
         balance: 500,
         status: AccountStatus.closed,
@@ -118,7 +120,7 @@ void main() {
       final a = Account(
         number: '1111222233334444',
         ownerId: 'uid1',
-        type: AccountType.current,
+        type: AccountType.debit,
         currency: 'USD',
         balance: 1,
         status: AccountStatus.active,

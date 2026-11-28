@@ -12,6 +12,8 @@ import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/history_base.dart';
 
 import 'package:tarlan_bank/features/transactions/widgets/transfer_header.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 class TransferHistoryScreen extends ConsumerStatefulWidget {
   const TransferHistoryScreen({super.key});
@@ -91,7 +93,7 @@ class _TransferHistoryScreenState extends ConsumerState<TransferHistoryScreen> {
           slivers: [
             buildFrostedSliverHeader(context, l.transferHistory),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              padding: screenPadding.copyWith(top: 8, bottom: 0),
               sliver: SliverToBoxAdapter(
                 child: buildFilterCard(
                   context,
@@ -129,14 +131,14 @@ class _TransferHistoryScreenState extends ConsumerState<TransferHistoryScreen> {
     final today = DateFormat('d MMMM', 'ru').format(now);
 
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      padding: screenPadding.copyWith(top: 0, bottom: 24),
       sliver: entries.isEmpty
           ? SliverToBoxAdapter(
               child: Center(
                 child: Padding(
                   padding: EdgeInsets.all(size.height * 0.03),
                   child: SvgPicture.asset(
-                    'assets/icons/ic_empty_list.svg',
+                    AppIcons.emptyList,
                     height: size.width > size.height
                         ? size.height * 0.3
                         : size.width * 0.3,

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 class RightCenterFloatingButtonLocation extends FloatingActionButtonLocation {
@@ -29,7 +30,9 @@ class RightCenterFloatingButtonLocation extends FloatingActionButtonLocation {
   /// Returns the Y‑offset for a *float* FAB.  The logic is taken from
   /// Flutter’s own implementation of `centerFloat` and friends.
   double _computeFloatYOffset(
-      ScaffoldPrelayoutGeometry scaffoldGeometry, double adjustment) {
+    ScaffoldPrelayoutGeometry scaffoldGeometry,
+    double adjustment,
+  ) {
     final double contentBottom = scaffoldGeometry.contentBottom;
     final double bottomContentHeight =
         scaffoldGeometry.scaffoldSize.height - contentBottom;
@@ -71,11 +74,7 @@ class SafeOffsetFab extends StatelessWidget {
   final Widget child;
   final double offsetY;
 
-  const SafeOffsetFab({
-    super.key,
-    required this.child,
-    this.offsetY = 0.0,
-  });
+  const SafeOffsetFab({super.key, required this.child, this.offsetY = 0.0});
 
   @override
   Widget build(BuildContext context) {

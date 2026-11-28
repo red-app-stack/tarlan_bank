@@ -50,8 +50,8 @@ class Transaction {
   });
 
   static Transaction fromJson(Map<String, dynamic> json) {
-    final DateTime rawCreatedAtUTC =
-        DateTime.parse(json['created_at']).toLocal();
+    final DateTime rawCreatedAtUTC = DateTime.parse(json['created_at'])
+        .toLocal();
     final DateTime localCreatedAt = rawCreatedAtUTC;
     return Transaction(
       id: json['id'],
@@ -61,7 +61,8 @@ class Transaction {
       fromAccountType: json['from_account_type']?.toString() ?? '',
       toAccount: json['to_account_number']?.toString() ?? '',
       toAccountType: json['to_account_type']?.toString() ?? '',
-      amount: double.tryParse(json['amount']?.toString() ?? '') ??
+      amount:
+          double.tryParse(json['amount']?.toString() ?? '') ??
           0.0, // Safer parsing
       currency: json['currency']?.toString() ?? '',
       type: json['transaction_type']?.toString() ?? '',
@@ -69,7 +70,7 @@ class Transaction {
       createdAt: localCreatedAt, // Safer DateTime
       completedAt: json['completed_at'] != null
           ? DateTime.tryParse(json['completed_at'])
-              ?.toLocal() // Тоже конвертируем
+                ?.toLocal() // Тоже конвертируем
           : null,
       // These are nullable in your model definition, so just assigning is fine:
       fromUserName: json['from_user_name'],
@@ -80,9 +81,8 @@ class Transaction {
       toUserPicture: json['to_user_picture'],
       toUserRole: json['to_user_role'],
       toUserPhone: json['to_user_phone_number'],
-      formattedCreatedAt: DateFormat(
-        'dd.MM.yyyy HH:mm:ss',
-      ).format(localCreatedAt), // Используем локальное время
+      formattedCreatedAt: DateFormat('dd.MM.yyyy HH:mm:ss')
+          .format(localCreatedAt), // Используем локальное время
       message: json['message'] ?? '',
     );
   }

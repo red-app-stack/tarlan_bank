@@ -123,11 +123,7 @@ class ListItem extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (imagePath != null)
-                    Image.asset(
-                      imagePath!,
-                      width: iconSize,
-                      height: iconSize,
-                    ),
+                    Image.asset(imagePath!, width: iconSize, height: iconSize),
                   const SizedBox(height: 8),
                   Text(
                     title,
@@ -145,10 +141,7 @@ class ListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildVertical(
-    BuildContext context,
-    ThemeData theme,
-  ) {
+  Widget _buildVertical(BuildContext context, ThemeData theme) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -162,7 +155,8 @@ class ListItem extends StatelessWidget {
             splashColor: theme.colorScheme.primary.withValues(alpha: 0.08),
             highlightColor: theme.colorScheme.primary.withValues(alpha: 0.04),
             child: Padding(
-              padding: padding ??
+              padding:
+                  padding ??
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
@@ -201,20 +195,22 @@ class ListItem extends StatelessWidget {
         if (showDivider)
           Divider(
             height: 1,
-            indent: (padding ?? const EdgeInsets.symmetric(horizontal: 16))
+            indent:
+                (padding ?? const EdgeInsets.symmetric(horizontal: 16))
                     .horizontal
                     .isNaN
                 ? 16
                 : (padding ?? const EdgeInsets.symmetric(horizontal: 16))
-                        .horizontal /
-                    2,
-            endIndent: (padding ?? const EdgeInsets.symmetric(horizontal: 16))
+                          .horizontal /
+                      2,
+            endIndent:
+                (padding ?? const EdgeInsets.symmetric(horizontal: 16))
                     .horizontal
                     .isNaN
                 ? 16
                 : (padding ?? const EdgeInsets.symmetric(horizontal: 16))
-                        .horizontal /
-                    2,
+                          .horizontal /
+                      2,
             color: theme.colorScheme.secondaryContainer,
           ),
       ],
@@ -250,23 +246,17 @@ class ListItem extends StatelessWidget {
         svgPath!,
         width: iconSize,
         height: iconSize,
-        colorFilter:
-            ColorFilter.mode(theme.colorScheme.primary, BlendMode.srcIn),
+        colorFilter: ColorFilter.mode(
+          theme.colorScheme.primary,
+          BlendMode.srcIn,
+        ),
       );
     }
     if (iconData != null) {
-      return Icon(
-        iconData!,
-        size: iconSize,
-        color: theme.colorScheme.primary,
-      );
+      return Icon(iconData!, size: iconSize, color: theme.colorScheme.primary);
     }
     if (imagePath != null) {
-      return Image.asset(
-        imagePath!,
-        width: iconSize,
-        height: iconSize,
-      );
+      return Image.asset(imagePath!, width: iconSize, height: iconSize);
     }
     return const SizedBox.shrink();
   }
@@ -275,11 +265,7 @@ class ListItem extends StatelessWidget {
     if (subtitleSvgPrefix != null) {
       return Row(
         children: [
-          SvgPicture.asset(
-            subtitleSvgPrefix!,
-            width: 30,
-            height: 12,
-          ),
+          SvgPicture.asset(subtitleSvgPrefix!, width: 30, height: 12),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

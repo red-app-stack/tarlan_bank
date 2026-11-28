@@ -14,6 +14,8 @@ import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/service_item.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 const double _kWideBreakpoint = 600.0;
 const double _kCardMaxWidth = 420.0;
@@ -45,14 +47,14 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
   }
 
   Map<String, String> _settings(AppLocalizations l) => {
-    l.renameCard: 'assets/icons/ic_edit.svg',
-    l.manageSubscriptions: 'assets/icons/ic_subscriptions.svg',
-    l.orderCard: 'assets/icons/ic_card.svg',
-    l.setLimits: 'assets/icons/ic_limits.svg',
-    l.getCertificate: 'assets/icons/ic_document.svg',
-    l.blocks: 'assets/icons/ic_lock.svg',
-    'Google Pay': 'assets/icons/ic_google_pay.svg',
-    l.cardSettings: 'assets/icons/ic_settings.svg',
+    l.renameCard: AppIcons.edit,
+    l.manageSubscriptions: AppIcons.subscriptions,
+    l.orderCard: AppIcons.card,
+    l.setLimits: AppIcons.limits,
+    l.getCertificate: AppIcons.document,
+    l.blocks: AppIcons.lock,
+    'Google Pay': AppIcons.googlePay,
+    l.cardSettings: AppIcons.settings,
   };
 
   @override
@@ -89,7 +91,7 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgPicture.asset(
-            'assets/icons/ic_empty_list.svg',
+            AppIcons.emptyList,
             height: size.height * 0.18,
             colorFilter: ColorFilter.mode(
               theme.colorScheme.secondaryContainer,
@@ -110,7 +112,7 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
     AppLocalizations l,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+      padding: screenPadding,
       child: Column(
         children: [
           Expanded(
@@ -246,18 +248,9 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              ServiceItem(
-                svgPath: 'assets/icons/ic_deposit.svg',
-                label: l.topUp,
-              ),
-              ServiceItem(
-                svgPath: 'assets/icons/ic_transfer.svg',
-                label: l.transfer,
-              ),
-              ServiceItem(
-                svgPath: 'assets/icons/ic_withdraw.svg',
-                label: l.withdraw,
-              ),
+              ServiceItem(svgPath: AppIcons.deposits, label: l.topUp),
+              ServiceItem(svgPath: AppIcons.transfer, label: l.transfer),
+              ServiceItem(svgPath: AppIcons.withdraw, label: l.withdraw),
             ],
           ),
         ],
@@ -271,7 +264,7 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
       children: [
         Expanded(
           child: CustomCard(
-            startWidget: SvgPicture.asset('assets/icons/ic_time.svg'),
+            startWidget: SvgPicture.asset(AppIcons.time),
             child: Column(
               spacing: 4,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -284,7 +277,7 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
         ),
         Expanded(
           child: CustomCard(
-            startWidget: SvgPicture.asset('assets/icons/ic_document.svg'),
+            startWidget: SvgPicture.asset(AppIcons.document),
             child: Column(
               spacing: 4,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,7 +342,7 @@ class _CardDetailsScreenState extends ConsumerState<CardDetailsScreen> {
               bottom: 28,
               right: 28,
               child: SvgPicture.asset(
-                'assets/icons/visa.svg',
+                AppIcons.visa,
                 width: 50,
                 height: 16,
                 colorFilter: const ColorFilter.mode(

@@ -149,7 +149,7 @@ class _BiometricSetupScreenState extends ConsumerState<BiometricSetupScreen> {
                     child: Center(
                       child: Icon(
                         Icons.fingerprint_rounded,
-                        // SvgPicture.asset('assets/icons/ic_biometry.svg',
+                        // SvgPicture.asset(AppIcons.biometry,
                         size: 96,
                         color: _enabled
                             ? theme.colorScheme.primary

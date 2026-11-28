@@ -8,11 +8,12 @@ import 'package:tarlan_bank/features/auth/data/password_validation.dart';
 import 'package:tarlan_bank/features/auth/data/password_rule_labels.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
-import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
-import 'package:tarlan_bank/core/router/pin_gate.dart' show pinRouteFor;
+import 'package:tarlan_bank/core/router/auth_navigation.dart'
+    show destinationAfterAuth;
 import 'package:tarlan_bank/core/router/routes.dart' show Routes;
 import 'package:tarlan_bank/core/router/shell_index_provider.dart'
     show pendingAuthIntentProvider;
+import 'package:tarlan_bank/views/shared/auth_text_field.dart';
 
 import 'email_verification_dialog.dart';
 
@@ -105,13 +106,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (!mounted) return;
     var destination = target;
     if (!anonymous) {
-      final needsCreation = await ref
-          .read(pinGateProvider.notifier)
-          .prepareOnLogin(ref.read(authRepositoryProvider).currentUser);
-      if (!mounted) return;
-      if (needsCreation) {
-        destination = pinRouteFor(location: target, mode: 'create');
+      final user = ref.read(authRepositoryProvider).currentUser;
+      if (user != null && !user.isAnonymous) {
+        // Google's first sign-in writes only the fields it knows, and an app
+        // update can add a field to existing accounts. Send those users to
+        // the completion form before entering the app.
+        bool complete;
+        try {
+          complete = await ref
+              .read(authRepositoryProvider)
+              .isProfileComplete(user.uid);
+        } catch (_) {
+          complete = true; // offline must not lock a signed-in user out
+        }
+        if (!complete && mounted) {
+          context.go(
+            Uri(
+              path: Routes.completeProfile,
+              queryParameters: {'target': target},
+            ).toString(),
+          );
+          return;
+        }
       }
+      destination = await destinationAfterAuth(ref, target: target);
     }
     if (mounted) context.go(destination);
   }
@@ -350,7 +368,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       child: Text(
         failed.isEmpty
             ? l.passwordStrong
-            : failed.map((rule) => rule.label(l)).join(' • '),
+            : (" • ${failed.map((rule) => rule.label(l)).join('\n • ')}"),
         style: theme.textTheme.bodySmall?.copyWith(
           color: failed.isEmpty
               ? theme.colorScheme.primary
@@ -370,37 +388,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     void Function(String)? onChanged,
     Widget? suffix,
   }) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        onChanged: onChanged,
-        textInputAction: TextInputAction.next,
-        validator: validator,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, size: 20),
-          suffixIcon: suffix,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-          ),
-          fillColor: theme.colorScheme.surfaceContainerLowest,
-          filled: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
-      ),
+    return AuthTextField(
+      label: label,
+      controller: controller,
+      icon: icon,
+      validator: validator,
+      keyboardType: keyboardType,
+      obscure: obscure,
+      onChanged: onChanged,
+      suffix: suffix,
     );
   }
 }

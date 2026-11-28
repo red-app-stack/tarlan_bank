@@ -42,8 +42,9 @@ class _AmountNumberState extends State<AmountNumber> {
   void _measureText() {
     if (!mounted) return;
 
-    final text =
-        widget.controller.text.isNotEmpty ? widget.controller.text : '0';
+    final text = widget.controller.text.isNotEmpty
+        ? widget.controller.text
+        : '0';
     final painter = TextPainter(
       text: TextSpan(
         text: text,
@@ -79,8 +80,9 @@ class _AmountNumberState extends State<AmountNumber> {
               focusNode: widget.focusNode,
               controller: widget.controller,
               enabled: widget.enabled,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Roboto',

@@ -30,9 +30,9 @@ class AppLogger {
   }
 
   static int _levelValue(LogLevel level) => switch (level) {
-        LogLevel.debug => 500,
-        LogLevel.info => 800,
-        LogLevel.warning => 900,
-        LogLevel.error => 1000,
-      };
+    LogLevel.debug => 500,
+    LogLevel.info => 800,
+    LogLevel.warning => 900,
+    LogLevel.error => 1000,
+  };
 }

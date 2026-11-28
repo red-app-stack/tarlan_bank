@@ -96,17 +96,18 @@ class _MarqueeRowState extends State<_MarqueeRow>
   void initState() {
     super.initState();
     // Adjust duration to control scroll speed (e.g., 20-30 seconds for a smooth glide)
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 25),
-    )..addStatusListener((status) {
-        // Manual looping instead of .repeat(): lets us resume mid-cycle later
-        // without snapping back to the start (see _startAnimation below).
-        if (status == AnimationStatus.completed) {
-          _controller.value = 0;
-          if (!widget.isPaused) _controller.forward();
-        }
-      });
+    _controller =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(seconds: 25),
+        )..addStatusListener((status) {
+          // Manual looping instead of .repeat(): lets us resume mid-cycle later
+          // without snapping back to the start (see _startAnimation below).
+          if (status == AnimationStatus.completed) {
+            _controller.value = 0;
+            if (!widget.isPaused) _controller.forward();
+          }
+        });
     _startAnimation();
 
     // Measure the width after the first frame to calculate seamless loop offset
@@ -171,9 +172,7 @@ class _MarqueeRowState extends State<_MarqueeRow>
             onTap: () => widget.onTap(q),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Center(
-                child: Text(q, style: theme.textTheme.bodySmall),
-              ),
+              child: Center(child: Text(q, style: theme.textTheme.bodySmall)),
             ),
           ),
         ),
@@ -193,10 +192,7 @@ class _MarqueeRowState extends State<_MarqueeRow>
             final dx = widget.isReversed ? offset - _rowWidth : -offset;
 
             // Transform.translate is evaluated on the Render Thread (GPU accelerated)
-            return Transform.translate(
-              offset: Offset(dx, 0),
-              child: child,
-            );
+            return Transform.translate(offset: Offset(dx, 0), child: child);
           },
           child: OverflowBox(
             // Without this, the Row is clamped to the parent's bounded
@@ -210,9 +206,7 @@ class _MarqueeRowState extends State<_MarqueeRow>
             child: Row(
               key: _rowKey,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                ...itemWidgets,
-              ],
+              children: [...itemWidgets],
             ),
           ),
         ),

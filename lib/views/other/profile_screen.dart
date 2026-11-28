@@ -14,6 +14,8 @@ import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/shared_classes.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 /// Profile overview from `users/{uid}`.
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -69,7 +71,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: l.auMyNotifications,
         items: [
           MenuItem(
-            icon: 'assets/icons/ic_transactions.svg',
+            icon: AppIcons.transactions,
             title: l.auAccountOperations,
             description: _description(
               l,
@@ -79,7 +81,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             routeArg: Routes.transfersHistory,
           ),
           MenuItem(
-            icon: 'assets/icons/ic_transfers.svg',
+            icon: AppIcons.transfers,
             title: l.navTransfers,
             description: _description(
               l,
@@ -89,7 +91,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             routeArg: Routes.transfersHistory,
           ),
           MenuItem(
-            icon: 'assets/icons/ic_payments.svg',
+            icon: AppIcons.payments,
             title: l.navPayments,
             description: _description(
               l,
@@ -99,7 +101,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             routeArg: Routes.paymentsHistory,
           ),
           MenuItem(
-            icon: 'assets/icons/ic_security.svg',
+            icon: AppIcons.security,
             title: l.securitySettings,
             description: l.auSecurityTip,
           ),
@@ -108,23 +110,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       MenuSection(
         title: l.auSettingsTitle,
         items: [
+          MenuItem(icon: AppIcons.notifications, title: l.auNotificationsTitle),
+          MenuItem(icon: AppIcons.language, title: l.auAppLanguage),
           MenuItem(
-            icon: 'assets/icons/ic_notifications.svg',
-            title: l.auNotificationsTitle,
-          ),
-          MenuItem(
-            icon: 'assets/icons/ic_language.svg',
-            title: l.auAppLanguage,
-          ),
-          MenuItem(
-            icon: 'assets/icons/ic_smartphone.svg',
+            icon: AppIcons.smartphone,
             title: phone.isEmpty ? l.phone : phone,
             description: l.auTrustedPhone,
           ),
-          MenuItem(
-            icon: 'assets/icons/ic_phone.svg',
-            title: l.auPhoneTransfers,
-          ),
+          MenuItem(icon: AppIcons.phone, title: l.auPhoneTransfers),
         ],
       ),
     ];
@@ -162,10 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 56 + kToolbarHeight,
-              ),
+              padding: screenPadding,
               child: Column(
                 spacing: 16,
                 children: [

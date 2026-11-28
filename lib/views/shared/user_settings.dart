@@ -14,18 +14,18 @@ class UserSettings {
   });
 
   Map<String, dynamic> toJson() => {
-        'themeMode': themeMode.index,
-        'useBiometrics': useBiometrics,
-        'screenProtection': screenProtection,
-        'biometricOperations': biometricOperations,
-      };
+    'themeMode': themeMode.index,
+    'useBiometrics': useBiometrics,
+    'screenProtection': screenProtection,
+    'biometricOperations': biometricOperations,
+  };
 
   factory UserSettings.fromJson(Map<String, dynamic> json) => UserSettings(
-        themeMode: ThemeMode.values[json['themeMode']],
-        useBiometrics: json['useBiometrics'],
-        screenProtection: json['screenProtection'],
-        biometricOperations: json['biometricOperations'],
-      );
+    themeMode: ThemeMode.values[json['themeMode']],
+    useBiometrics: json['useBiometrics'],
+    screenProtection: json['screenProtection'],
+    biometricOperations: json['biometricOperations'],
+  );
 
   UserSettings copyWith({
     ThemeMode? themeMode,
@@ -42,9 +42,9 @@ class UserSettings {
   }
 
   factory UserSettings.defaults() => UserSettings(
-        themeMode: ThemeMode.system,
-        useBiometrics: false,
-        screenProtection: true,
-        biometricOperations: true,
-      );
+    themeMode: ThemeMode.system,
+    useBiometrics: false,
+    screenProtection: true,
+    biometricOperations: true,
+  );
 }

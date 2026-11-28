@@ -20,6 +20,7 @@ import 'package:tarlan_bank/features/auth/providers/pin_gate_provider.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/auth/biometric_setup_screen.dart';
 import 'package:tarlan_bank/views/auth/code_entering_screen.dart';
+import 'package:tarlan_bank/views/auth/complete_profile_screen.dart';
 import 'package:tarlan_bank/views/auth/face_verification_screen.dart';
 import 'package:tarlan_bank/views/auth/reauth_screen.dart';
 import 'package:tarlan_bank/views/auth/login_screen.dart';
@@ -124,6 +125,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (exit != null) return exit;
       }
 
+      // Profile completion is a direct continuation of sign-in: let it open
+      // before the device PIN and liveness gates. Those still run after the
+      // form is saved (see destinationAfterAuth).
+      if (authLevel == AccessLevel.full && isPostAuthStep(location)) {
+        return null;
+      }
+
       // PIN comes FIRST: create it on a new device or confirm it on a new
       // login. Only then does the face check run, so the two gates cannot
       // bounce between /codeEntering and /faceVerify forever.
@@ -187,6 +195,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.login,
         pageBuilder: (_, state) =>
             _fadePage(key: state.pageKey, child: const LoginPage()),
+      ),
+      GoRoute(
+        path: Routes.completeProfile,
+        pageBuilder: (_, state) =>
+            _fadePage(key: state.pageKey, child: const CompleteProfileScreen()),
       ),
       GoRoute(
         path: Routes.verifyLink,

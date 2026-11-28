@@ -8,7 +8,7 @@ void main() {
     final account = Account(
       number: '1234567890123456',
       ownerId: 'uid1',
-      type: AccountType.current,
+      type: AccountType.debit,
       currency: 'KZT',
       balance: 1000,
       status: AccountStatus.active,
@@ -28,7 +28,7 @@ void main() {
   test('legacy account maps default to fallback image and visible balance', () {
     final account = Account.fromMap('1234567890123456', {
       'ownerId': 'uid1',
-      'type': 'current',
+      'type': 'debit',
       'currency': 'KZT',
       'balance': 0,
       'status': 'active',

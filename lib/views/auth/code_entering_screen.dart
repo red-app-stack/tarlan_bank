@@ -26,6 +26,8 @@ import 'package:tarlan_bank/views/shared/user_settings.dart';
 
 import '../shared/widgets.dart';
 
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+
 /// Access-code gate. All dependencies arrive through Riverpod providers and
 /// navigation uses go_router. The router supplies [createCode], [resetCode]
 /// and [targetRoute] as query parameters; all are safely defaulted.
@@ -225,7 +227,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
         tag: 'ic_back',
         child: IconButton(
           icon: SvgPicture.asset(
-            'assets/icons/ic_back.svg',
+            AppIcons.back,
             width: 32,
             height: 32,
             colorFilter: ColorFilter.mode(
@@ -548,7 +550,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
                     padding: const EdgeInsets.all(4),
                     child: Icon(
                       Icons.fingerprint_rounded,
-                      // SvgPicture.asset('assets/icons/ic_biometry.svg',
+                      // SvgPicture.asset(AppIcons.biometry,
                       size: 48,
                       color: theme.colorScheme.primary,
                     ),
@@ -595,7 +597,7 @@ class CodeEnteringScreenState extends ConsumerState<CodeEnteringScreen>
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: SvgPicture.asset(
-                'assets/icons/ic_clear.svg',
+                AppIcons.clear,
                 width: 32,
                 height: 32,
                 colorFilter: ColorFilter.mode(

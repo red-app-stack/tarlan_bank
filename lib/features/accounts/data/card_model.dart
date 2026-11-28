@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum CardStatus { active, blocked, expired }
 
-/// A payment instrument linked to a current account (`cards/{cardId}`).
+/// A payment instrument linked to a debit account (`cards/{cardId}`).
 ///
 /// Fixes the old model's mistakes:
 ///  - a card is NOT an account type; many cards may link to one account.
@@ -42,16 +42,16 @@ class BankCard {
   bool get isUsable => status == CardStatus.active;
 
   Map<String, dynamic> toMap() => {
-        'accountId': accountId,
-        'ownerId': ownerId,
-        'last4': last4,
-        'expiryMonth': expiryMonth,
-        'expiryYear': expiryYear,
-        'holderName': holderName,
-        'status': status.name,
-        if (label != null) 'label': label,
-        if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
-      };
+    'accountId': accountId,
+    'ownerId': ownerId,
+    'last4': last4,
+    'expiryMonth': expiryMonth,
+    'expiryYear': expiryYear,
+    'holderName': holderName,
+    'status': status.name,
+    if (label != null) 'label': label,
+    if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+  };
 
   factory BankCard.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();

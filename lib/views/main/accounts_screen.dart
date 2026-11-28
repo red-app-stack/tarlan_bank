@@ -18,6 +18,8 @@ import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/selected_card.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
@@ -65,14 +67,14 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
     String locale,
     AppLocalizations l,
   ) {
-    final isCurrent = account.type == AccountType.current;
-    final typeKey = isCurrent ? 'card' : account.type.name;
+    final isDebit = account.type == AccountType.debit;
+    final typeKey = isDebit ? 'card' : account.type.name;
     return BankCard(
       id: int.tryParse(account.number) ?? 0,
       accountNumber: account.number,
       name: fullName,
       cardType: typeKey,
-      type: isCurrent ? 'VISA ${l.multiCurrency}' : 'VISA ${account.type.name}',
+      type: isDebit ? 'VISA ${l.multiCurrency}' : 'VISA ${account.type.name}',
       number: account.number,
       tengeBalance: account.currency == 'KZT'
           ? formatCurrency(account.balance, 'KZT', locale)
@@ -86,7 +88,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       color: switch (account.type) {
         AccountType.credit => 'red',
         AccountType.deposit => 'gold',
-        AccountType.current => 'primary',
+        AccountType.debit => 'primary',
       },
     );
   }
@@ -121,10 +123,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 56 + kToolbarHeight,
-                  ),
+                  padding: screenPadding,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 16,
@@ -152,7 +151,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                               l,
                             );
                             switch (account.type) {
-                              case AccountType.current:
+                              case AccountType.debit:
                                 cards.add(card);
                               case AccountType.deposit:
                                 deposits.add(card);
@@ -174,7 +173,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                 size: size,
                                 type: 'card',
                                 child: ListItem.vertical(
-                                  svgPath: 'assets/icons/ic_add.svg',
+                                  svgPath: AppIcons.add,
                                   title: l.openNewCard,
                                   onTap: () => _openProduct('card'),
                                 ),
@@ -186,7 +185,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                 size: size,
                                 type: 'credit',
                                 child: ListItem.vertical(
-                                  svgPath: 'assets/icons/ic_add.svg',
+                                  svgPath: AppIcons.add,
                                   title: l.creditCash,
                                   subtitle: l.creditCashSubtitle,
                                   onTap: () => _openProduct('credit'),
@@ -199,7 +198,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                                 size: size,
                                 type: 'deposit',
                                 child: ListItem.vertical(
-                                  svgPath: 'assets/icons/ic_add.svg',
+                                  svgPath: AppIcons.add,
                                   title: l.openProduct(l.createDeposit),
                                   subtitle: l.openDepositSubtitle,
                                   onTap: () => _openProduct('deposit'),
@@ -237,7 +236,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
           child: Column(
             children: [
               SvgPicture.asset(
-                'assets/icons/ic_empty_list.svg',
+                AppIcons.emptyList,
                 height: size.height * 0.18,
                 colorFilter: ColorFilter.mode(
                   theme.colorScheme.secondaryContainer,
@@ -324,7 +323,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
               bottom: 28,
               right: 28,
               child: SvgPicture.asset(
-                'assets/icons/visa.svg',
+                AppIcons.visa,
                 width: 50,
                 height: 16,
                 colorFilter: const ColorFilter.mode(
@@ -416,7 +415,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
               bottom: 28,
               right: 28,
               child: SvgPicture.asset(
-                'assets/icons/visa.svg',
+                AppIcons.visa,
                 width: 50,
                 height: 16,
                 colorFilter: const ColorFilter.mode(

@@ -1,12 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter_svg/svg.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show GlassContainer, LiquidRoundedSuperellipse;
+import 'package:liquid_glass_easy/liquid_glass_easy.dart'
+    show LiquidGlassLens, LiquidGlassShape;
 import 'package:material_ui/material_ui.dart';
 
 import '../../utils/themes/glass_settings.dart';
-import 'section_header.dart';
+
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 /// One tile in a [GlassWidgetGrid]. No glass of its own: it is a plain button
 /// living inside the shared glass surface.
@@ -27,6 +28,10 @@ class GlassGridItem {
 /// Reusable preset: an outside title + edit button, then one liquid-glass
 /// surface holding a 3-wide grid. Edit mode swaps tiles by drag-and-drop and
 /// reveals a "+" tile that opens the add-widget dialog.
+///
+/// Its two lenses (edit button, panel) sit side by side and never overlap, so
+/// the page can put them in one `LiquidGlassBatch` (see HomeScreen): the whole
+/// page then shares a single read of the backdrop.
 class GlassWidgetGrid extends StatefulWidget {
   const GlassWidgetGrid({
     super.key,
@@ -119,6 +124,51 @@ class _GlassWidgetGridState extends State<GlassWidgetGrid> {
                 },
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editButton(ThemeData theme, Color accent) {
+    return SizedBox(
+      width: 92,
+      height: 36,
+      child: LiquidGlassLens(
+        style: themedGlassStyle(
+          theme,
+          shape: const LiquidGlassShape.continuousRoundedRectangle(
+            cornerRadius: 18,
+          ),
+          accent: theme.colorScheme.secondaryContainer,
+          blur: scrollGlassBlur,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => setState(() => _editing = !_editing),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  AppIcons.edit,
+                  width: 18,
+                  height: 18,
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.onSecondaryContainer,
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  widget.editLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -223,67 +273,72 @@ class _GlassWidgetGridState extends State<GlassWidgetGrid> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 10,
       children: [
-        SectionHeader(
-          title: widget.title,
-          buttonLabel: widget.editLabel,
-          buttonIcon: 'assets/icons/ic_edit.svg',
-          onPressed: () => setState(() => _editing = !_editing),
+        Row(
+          children: [
+            Text(widget.title, style: theme.textTheme.bodyMedium),
+            const Spacer(),
+            _editButton(theme, accent),
+          ],
         ),
-        GlassContainer(
+        SizedBox(
           width: double.infinity,
           height: height,
-          shape: const LiquidRoundedSuperellipse(borderRadius: 28),
-          padding: const EdgeInsets.all(12),
-          settings: themedGlassSettings(theme, accent: accent, accentMix: 0.18),
-          useOwnLayer: true,
-          quality: scrollGlassQuality,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final width =
-                  (constraints.maxWidth -
-                      24 -
-                      (widget.crossAxisCount - 1) * 8) /
-                  widget.crossAxisCount;
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (var i = 0; i < visible.length; i++)
-                    _tile(visible[i], i, width, theme, accent),
-                  if (_editing)
-                    SizedBox(
-                      width: width,
-                      height: widget.itemHeight,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _openAddDialog,
-                          borderRadius: BorderRadius.circular(20),
-                          splashFactory: InkRipple.splashFactory,
-                          splashColor: accent.withValues(alpha: 0.38),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add,
-                                size: 32,
-                                color: theme.colorScheme.onPrimaryContainer,
+          child: LiquidGlassLens(
+            style: themedGlassStyle(
+              theme,
+              shape: const LiquidGlassShape.squircle(cornerRadius: 28),
+              accent: accent,
+              blur: scrollGlassBlur,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final width =
+                      (constraints.maxWidth - (widget.crossAxisCount - 1) * 8) /
+                      widget.crossAxisCount;
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (var i = 0; i < visible.length; i++)
+                        _tile(visible[i], i, width, theme, accent),
+                      if (_editing)
+                        SizedBox(
+                          width: width,
+                          height: widget.itemHeight,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _openAddDialog,
+                              borderRadius: BorderRadius.circular(20),
+                              splashFactory: InkRipple.splashFactory,
+                              splashColor: accent.withValues(alpha: 0.38),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add,
+                                    size: 32,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.addLabel,
+                                    maxLines: 2,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                widget.addLabel,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                ],
-              );
-            },
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ],

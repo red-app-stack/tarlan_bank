@@ -1,7 +1,12 @@
-import 'dart:math' as math;
-
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show GlassQuality, LiquidGlassSettings;
+import 'package:liquid_glass_easy/liquid_glass_easy.dart'
+    show
+        LiquidGlassBlurMethod,
+        LiquidGlassConfiguration,
+        LiquidGlassEngine,
+        LiquidGlassLight,
+        LiquidGlassShaders,
+        LiquidGlassShape,
+        LiquidGlassStyle;
 import 'package:material_ui/material_ui.dart';
 
 import 'theme_extension.dart';
@@ -9,32 +14,74 @@ import 'theme_extension.dart';
 /// Fallback keep the notification accent in sync with AppColorsLight/Dark.
 const Color fallbackNotificationColor = Color(0xFFC3D600);
 
-/// 45° light axis (upper-left). The ios27 presets default to pi/2 (top) in
-/// light and -pi/2 (bottom) in dark, which is why the rim only reads as a
-/// top/bottom band; this rotates rimShade/rimLight and the specular with it.
-const double diagonalGlassLightAngle = 0.75 * math.pi;
+/// The light axis, in DEGREES (liquid_glass_easy's unit): 45° runs from the
+/// upper-left rim to the lower-right rim, so the specular and the glow both
+/// read diagonally instead of as a top/bottom band.
+const double diagonalGlassLightAngle = 45;
 
-/// Main-shell chrome stays full premium. Scrollable body glass uses the
-/// single-pass shader so a scroll frame never trips the 16-shape pipeline or
-/// the global adaptive quality ceiling and blanks out every glass surface.
-const GlassQuality shellGlassQuality = GlassQuality.premium;
-const GlassQuality scrollGlassQuality = GlassQuality.standard;
+/// Blur for floating chrome (top bar, bottom nav). It sits over content that
+/// scrolls underneath, so it needs a little frost to stay legible. The guide
+/// asks for 2-3; the style's tint carries the rest of the frost.
+const double shellGlassBlur = 2.5;
 
-/// Glass tint for a surface, mixed from the theme's configurable base tint and
-/// a semantic accent. Passing [accent] lets one control (e.g. notifications)
-/// borrow its own colour while all other glass keeps the primary accent.
-LiquidGlassSettings themedGlassSettings(
+/// Blur for glass that lives in the page body, inside the page's
+/// `LiquidGlassBatch`. Only the mesh sits behind it, and a mesh is already
+/// low-frequency, so a blur would change nothing you can see. Zero is the
+/// cheapest setup in the efficiency guide: one shared read, no blur pass.
+const double scrollGlassBlur = 0;
+
+/// Light, clear bend at the rim: 1.0 is no bending, 1.02 a clear lens edge.
+const double glassRefractionIndex = 1.04;
+
+/// How far in from the outline the bend reaches, in logical pixels.
+const double glassRefractionWidth = 16;
+
+/// One-time glass setup, called from `main()` before `runApp`.
+///
+/// * Skia and the web ship lite glass (frost, tint, lit rim: no shader, no
+///   capture, no `LiquidGlassView` to maintain). Impeller, the default on
+///   current Android and iOS, runs the full refracting lens.
+/// * Blur runs inside the lens shader, in a batch and out of one, so a blurred
+///   glass costs no backdrop pass of its own and a batch keeps its single read.
+/// * The shaders compile before the first frame, so the first glass on screen
+///   is already glass.
+Future<void> initGlass() async {
+  LiquidGlassEngine.liteGlassOnSkia = true;
+  LiquidGlassConfiguration.batchBlurMethod = LiquidGlassBlurMethod.shader;
+  LiquidGlassConfiguration.blurMethod = LiquidGlassBlurMethod.shader;
+  try {
+    await LiquidGlassShaders.ensureLoaded();
+  } catch (error) {
+    // A failed warm-up must not block boot: the first lens retries the load
+    // and draws lite glass until it lands.
+    debugPrint('Glass shader warm-up failed: $error');
+  }
+}
+
+/// The glass look for a surface: [shape] and a fixed tint taken from the
+/// theme's `primaryContainer` (or [accent]), lit along
+/// [diagonalGlassLightAngle].
+///
+/// The tint is a plain colour and `adaptivity` is deliberately left off. With
+/// adaptivity on, the glass re-samples the pixels behind it and flips its tint
+/// as the background changes, which is exactly what must not happen to glass
+/// that scrolls over the uneven mesh. Pass [blur] explicitly: [shellGlassBlur]
+/// for chrome (the default), [scrollGlassBlur] for body glass.
+LiquidGlassStyle themedGlassStyle(
   ThemeData theme, {
+  required LiquidGlassShape shape,
   Color? accent,
-  double accentMix = 0.02,
-  double? alpha,
+  double blur = shellGlassBlur,
 }) {
-  final isDark = theme.brightness == Brightness.dark;
-  final base = accent ?? theme.colorScheme.primaryContainer;
-  final preset = isDark
-      ? LiquidGlassSettings.ios27Dark
-      : LiquidGlassSettings.ios27Light;
-  return preset.copyWith(glassColor: base, lightAngle: diagonalGlassLightAngle);
+  return LiquidGlassStyle(
+    shape: shape,
+    color: accent ?? theme.colorScheme.primaryContainer,
+    blur: blur,
+    refractionIndex: glassRefractionIndex,
+    refractionWidth: glassRefractionWidth,
+    specular: const LiquidGlassLight.specular(angle: diagonalGlassLightAngle),
+    glow: const LiquidGlassLight.glow(angle: diagonalGlassLightAngle),
+  );
 }
 
 /// The notification accent, read from the active theme with a safe fallback.

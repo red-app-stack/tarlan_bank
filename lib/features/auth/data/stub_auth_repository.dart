@@ -52,6 +52,21 @@ class StubAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<bool> isProfileComplete(String uid) async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
+  Future<void> completeProfile({
+    required String fullName,
+    required String phoneNumber,
+    required String email,
+    String? password,
+  }) async {
+    throw const AuthFailure('Auth backend not configured yet');
+  }
+
+  @override
   Future<AuthUser> signInAnonymously() async {
     throw const AuthFailure('Auth backend not configured yet');
   }

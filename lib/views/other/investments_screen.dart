@@ -8,6 +8,8 @@ import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/service_item.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 class ItemData {
   const ItemData({
@@ -62,9 +64,9 @@ class InvestmentsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l = AppLocalizations.of(context);
     final portfolio = [
-      ServiceItemData('assets/icons/ic_deposit.svg', l.topUp, 'deposit'),
-      ServiceItemData('assets/icons/ic_transfer.svg', l.transfer, 'transfer'),
-      ServiceItemData('assets/icons/ic_convert.svg', l.conversion, 'convert'),
+      ServiceItemData(AppIcons.deposits, l.topUp, 'deposit'),
+      ServiceItemData(AppIcons.transfer, l.transfer, 'transfer'),
+      ServiceItemData(AppIcons.convert, l.conversion, 'convert'),
     ];
 
     return Scaffold(
@@ -76,10 +78,7 @@ class InvestmentsScreen extends ConsumerWidget {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 12,
-              ),
+              padding: screenPadding,
               child: Column(
                 spacing: 24,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -121,9 +120,7 @@ class InvestmentsScreen extends ConsumerWidget {
                       Expanded(
                         child: CustomCard(
                           label: l.statistics,
-                          startWidget: SvgPicture.asset(
-                            'assets/icons/ic_time.svg',
-                          ),
+                          startWidget: SvgPicture.asset(AppIcons.time),
                           labelStyle: theme.textTheme.titleMedium,
                         ),
                       ),
@@ -131,9 +128,7 @@ class InvestmentsScreen extends ConsumerWidget {
                       Expanded(
                         child: CustomCard(
                           label: l.operations,
-                          startWidget: SvgPicture.asset(
-                            'assets/icons/ic_document.svg',
-                          ),
+                          startWidget: SvgPicture.asset(AppIcons.document),
                           labelStyle: theme.textTheme.titleMedium,
                         ),
                       ),
@@ -168,7 +163,7 @@ class InvestmentsScreen extends ConsumerWidget {
                               prefixIcon: Padding(
                                 padding: const EdgeInsets.all(14.0),
                                 child: SvgPicture.asset(
-                                  'assets/icons/ic_search.svg',
+                                  AppIcons.search,
                                   width: 20,
                                   height: 20,
                                   colorFilter: ColorFilter.mode(

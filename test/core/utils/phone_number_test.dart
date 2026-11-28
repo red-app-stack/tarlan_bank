@@ -14,8 +14,10 @@ void main() {
 
     test('other international numbers pass through normalized', () {
       expect(normalizePhone('+1 (555) 123-4567'), '+15551234567');
-      expect(normalizePhone('00441234567890'.replaceFirst('00', '')),
-          '+441234567890');
+      expect(
+        normalizePhone('00441234567890'.replaceFirst('00', '')),
+        '+441234567890',
+      );
     });
   });
 
@@ -23,10 +25,14 @@ void main() {
     test('too short / too long / empty throw ValidationFailure', () {
       expect(() => normalizePhone('12345'), throwsA(isA<ValidationFailure>()));
       expect(() => normalizePhone(''), throwsA(isA<ValidationFailure>()));
-      expect(() => normalizePhone('1234567890123456'),
-          throwsA(isA<ValidationFailure>()));
-      expect(() => normalizePhone('abcdefghij'),
-          throwsA(isA<ValidationFailure>()));
+      expect(
+        () => normalizePhone('1234567890123456'),
+        throwsA(isA<ValidationFailure>()),
+      );
+      expect(
+        () => normalizePhone('abcdefghij'),
+        throwsA(isA<ValidationFailure>()),
+      );
     });
   });
 }

@@ -11,6 +11,7 @@ import 'package:tarlan_bank/features/transactions/providers/transactions_provide
 import 'package:tarlan_bank/generated/app_localizations.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/formatters.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 /// Stable internal period keys (labels are localized by the UI).
 const String periodWeek = 'week';
@@ -251,7 +252,7 @@ Widget buildEmptyState(ThemeData theme, Size size, String message) {
       children: [
         SizedBox(height: size.height * 0.15),
         SvgPicture.asset(
-          'assets/icons/ic_empty_list.svg',
+          AppIcons.emptyList,
           height: size.width > size.height
               ? size.height * 0.3
               : size.width * 0.3,
@@ -297,11 +298,7 @@ Widget buildFilterCard(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(periodDetail, style: Theme.of(context).textTheme.titleMedium),
-            SvgPicture.asset(
-              'assets/icons/ic_filter.svg',
-              width: 32,
-              height: 32,
-            ),
+            SvgPicture.asset(AppIcons.filter, width: 32, height: 32),
           ],
         ),
       ),
@@ -341,7 +338,7 @@ void showFilterBottomSheet(
                 icon: Transform.rotate(
                   angle: -90 * 3.14159 / 180,
                   child: SvgPicture.asset(
-                    'assets/icons/ic_back.svg',
+                    AppIcons.back,
                     width: 32,
                     height: 32,
                     colorFilter: ColorFilter.mode(

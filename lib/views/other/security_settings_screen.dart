@@ -26,6 +26,8 @@ import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/list_item.dart';
 import 'package:tarlan_bank/views/shared/shared_classes.dart';
 import 'package:tarlan_bank/views/shared/user_settings.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 /// Security preferences. Every service is read from a Riverpod provider and
 /// navigation/dialogs use go_router + showDialog, no GetX service locator.
@@ -47,9 +49,9 @@ class _SecuritySettingsScreenState
   bool _deleting = false;
 
   final Map<String, bool> switchStates = {
-    'assets/icons/ic_fingerprint.svg': false,
-    'assets/icons/ic_screen_protect.svg': true,
-    'assets/icons/ic_face.svg': false,
+    AppIcons.fingerprint: false,
+    AppIcons.screenProtect: true,
+    AppIcons.face: false,
   };
 
   @override
@@ -62,11 +64,9 @@ class _SecuritySettingsScreenState
     final settings = await _secureStore.loadSettings();
     if (settings != null && mounted) {
       setState(() {
-        switchStates['assets/icons/ic_fingerprint.svg'] =
-            settings.useBiometrics;
-        switchStates['assets/icons/ic_screen_protect.svg'] =
-            settings.screenProtection;
-        switchStates['assets/icons/ic_face.svg'] = settings.biometricOperations;
+        switchStates[AppIcons.fingerprint] = settings.useBiometrics;
+        switchStates[AppIcons.screenProtect] = settings.screenProtection;
+        switchStates[AppIcons.face] = settings.biometricOperations;
       });
     }
     _canCheckBiometrics = await _auth.canCheckBiometrics;
@@ -75,13 +75,12 @@ class _SecuritySettingsScreenState
   Future<void> _saveSecuritySettings() async {
     final settings = UserSettings(
       themeMode: ref.read(themeModeProvider),
-      useBiometrics: switchStates['assets/icons/ic_fingerprint.svg'] ?? false,
-      screenProtection:
-          switchStates['assets/icons/ic_screen_protect.svg'] ?? false,
-      biometricOperations: switchStates['assets/icons/ic_face.svg'] ?? false,
+      useBiometrics: switchStates[AppIcons.fingerprint] ?? false,
+      screenProtection: switchStates[AppIcons.screenProtect] ?? false,
+      biometricOperations: switchStates[AppIcons.face] ?? false,
     );
 
-    if (switchStates['assets/icons/ic_screen_protect.svg'] ?? true) {
+    if (switchStates[AppIcons.screenProtect] ?? true) {
       await ScreenProtect.enable();
     } else {
       await ScreenProtect.disable();
@@ -272,18 +271,18 @@ class _SecuritySettingsScreenState
       title: null,
       items: [
         MenuItem(
-          icon: 'assets/icons/ic_lock.svg',
+          icon: AppIcons.lock,
           title: l.auChangePassword,
           routeArg: Routes.changePassword,
           requiresAuth: true,
         ),
         MenuItem(
-          icon: 'assets/icons/ic_accounts.svg',
+          icon: AppIcons.accounts,
           title: l.auLinkedAccounts,
           routeArg: Routes.linkedAccounts,
         ),
         MenuItem(
-          icon: 'assets/icons/ic_access_code.svg',
+          icon: AppIcons.accessCode,
           title: l.auChangeAccessCode,
           routeArg:
               '${Routes.codeEntering}?mode=create&target='
@@ -291,19 +290,19 @@ class _SecuritySettingsScreenState
           requiresAuth: true,
         ),
         MenuItem(
-          icon: 'assets/icons/ic_fingerprint.svg',
+          icon: AppIcons.fingerprint,
           title: l.auAuthorizationTitle,
           description: l.auBiometricLoginDesc,
           endElement: 'switch',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_screen_protect.svg',
+          icon: AppIcons.screenProtect,
           title: l.auScreenProtectionTitle,
           description: l.auScreenProtectionDesc,
           endElement: 'switch',
         ),
         MenuItem(
-          icon: 'assets/icons/ic_face.svg',
+          icon: AppIcons.face,
           title: l.auBiometricOperationsTitle,
           description: l.auBiometricOperationsDesc,
           endElement: 'switch',
@@ -321,7 +320,7 @@ class _SecuritySettingsScreenState
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: screenPadding,
           child: Column(
             spacing: 24,
             children: [

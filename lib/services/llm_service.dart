@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:tarlan_bank/services/dio_manager.dart';
 import 'package:dio/dio.dart';
 
@@ -18,7 +19,8 @@ class LLMService {
       throw Exception('Ошибка загрузки моделей: ${response.statusCode}');
     } catch (e) {
       throw Exception(
-          'Не удалось подключиться к серверу. Техническая ошибка: $e');
+        'Не удалось подключиться к серверу. Техническая ошибка: $e',
+      );
     }
   }
 

@@ -7,7 +7,7 @@ import 'package:tarlan_bank/features/transactions/data/transfer_validation.dart'
 Account _account({
   String number = '1111222233334444',
   String ownerId = 'uid1',
-  AccountType type = AccountType.current,
+  AccountType type = AccountType.debit,
   String currency = 'KZT',
   double balance = 1000,
   AccountStatus status = AccountStatus.active,

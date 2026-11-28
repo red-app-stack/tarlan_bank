@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Financial account products. `current` is the spending account (the old
+/// Financial account products. `debit` is the spending account (the old
 /// system mislabeled it 'card' — a card is an instrument, see [BankCard]).
-enum AccountType { current, deposit, credit }
+enum AccountType { debit, deposit, credit }
 
 enum AccountStatus { active, inactive, closed }
 
@@ -73,9 +73,9 @@ class CreditTerms {
 /// A financial account in the single Firestore ledger (`accounts/{number}`).
 ///
 /// Balance semantics by product:
-///  - current/deposit: funds owned, >= 0.
+///  - debit/deposit: funds owned, >= 0.
 ///  - credit: outstanding debt, >= 0. Available = creditLimit - balance.
-///    Repayment (current -> credit transfer) decreases BOTH balances.
+///    Repayment (debit -> credit transfer) decreases BOTH balances.
 class Account {
   const Account({
     required this.number,

@@ -76,22 +76,21 @@ class ServiceItem extends StatelessWidget {
                         ),
                       )
                     : icon != null
-                        ? icon!
-                        : iconData != null
-                            ? Icon(
-                                iconData!,
-                                size: iconSize,
-                                color: theme.colorScheme.primary,
-                              )
-                            : imagePath != null
-                                ? Image.asset(
-                                    imagePath!,
-                                    width: iconSize,
-                                    height: iconSize,
-                                    fit:
-                                        BoxFit.contain, // ✅ prevents stretching
-                                  )
-                                : const SizedBox.shrink(),
+                    ? icon!
+                    : iconData != null
+                    ? Icon(
+                        iconData!,
+                        size: iconSize,
+                        color: theme.colorScheme.primary,
+                      )
+                    : imagePath != null
+                    ? Image.asset(
+                        imagePath!,
+                        width: iconSize,
+                        height: iconSize,
+                        fit: BoxFit.contain, // ✅ prevents stretching
+                      )
+                    : const SizedBox.shrink(),
               ),
               if (label != null) ...[
                 const SizedBox(height: 6),

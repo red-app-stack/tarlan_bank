@@ -34,6 +34,7 @@ class Routes {
   // static const home = '/home';
 
   static const login = '/login';
+  static const completeProfile = '/completeProfile';
 
   /// Firebase re-confirmation for sensitive actions (e.g. account deletion).
   static const reauth = '/reauth';
@@ -77,10 +78,7 @@ bool isShellOverlayPush(Object? extra) =>
 
 /// Shell chrome is shown only on the branch roots that use the split top bar.
 /// The QR tab renders its own transfer header.
-const branchRootLocations = {
-  Routes.home,
-  Routes.menu,
-};
+const branchRootLocations = {Routes.home, Routes.menu};
 
 bool showShellTopBarFor(String location) =>
     branchRootLocations.contains(location);

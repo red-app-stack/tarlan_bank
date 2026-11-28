@@ -16,6 +16,7 @@ import 'package:tarlan_bank/views/shared/app_snack_bar.dart';
 import 'package:tarlan_bank/views/shared/widgets.dart';
 import 'package:tarlan_bank/views/shared/custom_card.dart';
 import 'package:tarlan_bank/views/shared/custom_input_field.dart';
+import 'package:tarlan_bank/views/shared/screen_padding.dart';
 
 /// Account creation form backed by Riverpod providers.
 class CreateAccountScreen extends ConsumerStatefulWidget {
@@ -185,7 +186,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: screenPadding,
             child: Form(
               key: _formKey,
               child: Column(

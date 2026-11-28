@@ -80,7 +80,7 @@ TransferPlan planTransfer({
     if (!from.isSpendable) {
       // Credit balance is debt — drawing a loan is a disbursement, not a
       // transfer (D8). Deposit sources are allowed by the model; the UI
-      // restricts sources to current accounts.
+      // restricts sources to debit accounts.
       throw const ValidationFailure(
         'Credit accounts cannot be a transfer source',
       );
@@ -105,7 +105,7 @@ TransferPlan planTransfer({
       );
     }
     if (to.type == AccountType.credit) {
-      // current -> credit is a REPAYMENT: it decreases the outstanding debt.
+      // debit -> credit is a REPAYMENT: it decreases the outstanding debt.
       // Overpaying would push balance (debt) below zero — rules forbid it.
       if (rounded > to.balance) {
         throw const ValidationFailure('Repayment exceeds the outstanding debt');

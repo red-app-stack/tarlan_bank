@@ -1,8 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
-    show GlassContainer, GlassTab, GlassTabBar, LiquidRoundedSuperellipse;
+import 'package:liquid_glass_easy/liquid_glass_easy.dart'
+    show
+        LiquidGlassLens,
+        LiquidGlassPillMode,
+        LiquidGlassShape,
+        LiquidGlassTabBar,
+        LiquidGlassTabBarItem,
+        LiquidGlassTabItemStyle,
+        LiquidGlassTabPillStyle;
 import 'package:material_ui/material_ui.dart';
 
 import 'package:tarlan_bank/core/router/routes.dart'
@@ -11,21 +18,25 @@ import 'package:tarlan_bank/core/router/auth_intent.dart';
 import 'package:tarlan_bank/core/router/shell_index_provider.dart';
 import 'package:tarlan_bank/features/auth/providers/auth_providers.dart';
 import 'package:tarlan_bank/generated/app_localizations.dart';
+import 'package:tarlan_bank/views/shared/app_icons.dart';
 
 import '../../utils/themes/glass_settings.dart';
 import '../shared/formatters.dart';
 import '../shared/mesh_background.dart';
+import '../shared/screen_padding.dart';
 import 'shell_top_bar.dart';
 
 class _Tab {
   final String path;
   final String icon;
+  final String activeIcon;
   final String Function(AppLocalizations) label;
   final bool requiresAuth;
 
   const _Tab({
     required this.path,
     required this.icon,
+    required this.activeIcon,
     required this.label,
     this.requiresAuth = false,
   });
@@ -33,19 +44,41 @@ class _Tab {
 
 /// Order MUST match StatefulShellBranch order in app_router.dart.
 const _tabs = [
-  _Tab(path: Routes.home, icon: 'assets/icons/home.svg', label: lHome),
+  _Tab(
+    path: Routes.home,
+    icon: AppIcons.home,
+    activeIcon: AppIcons.homeActive,
+    label: lHome,
+  ),
   _Tab(
     path: Routes.qr,
-    icon: 'assets/icons/ic_qr.svg',
+    icon: AppIcons.qr,
+    activeIcon: AppIcons.qrActive,
     label: lQr,
     requiresAuth: true,
   ),
-  _Tab(path: Routes.menu, icon: 'assets/icons/menu.svg', label: lServices),
+  _Tab(
+    path: Routes.menu,
+    icon: AppIcons.menu,
+    activeIcon: AppIcons.menuActive,
+    label: lServices,
+  ),
 ];
+
+/// Full-capsule outline of the 64pt bottom bar.
+const LiquidGlassShape _navBarShape =
+    LiquidGlassShape.continuousRoundedRectangle(cornerRadius: 64);
+
+/// The sliding selection capsule sits 6pt inside the bar.
+const LiquidGlassShape _navCapsuleShape =
+    LiquidGlassShape.continuousRoundedRectangle(cornerRadius: 26);
 
 String lQr(AppLocalizations l) => l.bankQr;
 String lHome(AppLocalizations l) => l.home;
 String lServices(AppLocalizations l) => l.navServices;
+
+String _tabIcon(int index, bool selected) =>
+    selected ? _tabs[index].activeIcon : _tabs[index].icon;
 
 typedef _BottomNavBuilder = Widget Function(
   _MainShellState shell,
@@ -58,7 +91,7 @@ typedef _BottomNavBuilder = Widget Function(
 /// ONE-LINE SWITCH — swap this function name to compare stored variants:
 /// `_buildRoundGlassNav` (old per-item round box),
 /// `_buildGlassSelectionNav` (glass pill behind the selected tab), or
-/// `_buildPackageGlassNav` (package GlassTabBar.bottom).
+/// `_buildPackageGlassNav` (package LiquidGlassTabBar).
 _BottomNavBuilder get _bottomNavVariant => _buildGlassSelectionNav;
 
 /// All stored variants, kept so any of them can be switched in above.
@@ -119,6 +152,31 @@ class _MainShellState extends ConsumerState<MainShell> {
         ref.read(pendingOverlayRouteProvider.notifier).clear();
       });
     }
+    // Existing accounts can be missing fields after an app update. Check
+    // once per shell lifetime (cold start, or returning from login) so they
+    // cannot use the app with an incomplete profile.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final user = ref.read(currentUserProvider);
+      if (user == null || user.isAnonymous) return;
+      bool complete;
+      try {
+        complete = await ref
+            .read(authRepositoryProvider)
+            .isProfileComplete(user.uid);
+      } catch (_) {
+        return; // offline / rules hiccup: never lock the user out
+      }
+      if (!mounted || complete || !ref.read(isFullUserProvider)) return;
+      final location = GoRouterState.of(context).uri.toString();
+      if (location.startsWith(Routes.completeProfile)) return;
+      context.go(
+        Uri(
+          path: Routes.completeProfile,
+          queryParameters: {'target': location},
+        ).toString(),
+      );
+    });
   }
 
   @override
@@ -194,12 +252,8 @@ class _MainShellState extends ConsumerState<MainShell> {
           highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
           onTap: () => _onTap(index, isFullUser),
           child: SizedBox(
-            child: GlassContainer(
-              quality: .minimal,
-              shape: const LiquidRoundedSuperellipse(borderRadius: 64),
-              padding: EdgeInsets.zero,
-              settings: themedGlassSettings(theme),
-              useOwnLayer: true,
+            child: LiquidGlassLens(
+              style: themedGlassStyle(theme, shape: _navBarShape),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 320),
                 curve: isSelected ? Curves.easeOutBack : Curves.easeInOutCubic,
@@ -227,7 +281,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           SvgPicture.asset(
-                            _tabs[index].icon,
+                            _tabIcon(index, isSelected),
                             width: 24,
                             height: 24,
                             colorFilter: ColorFilter.mode(
@@ -286,9 +340,11 @@ class _MainShellState extends ConsumerState<MainShell> {
     return MeshBackground(
       // Constant seed: changing it on tab taps re-rasterises the backdrop and
       // makes every glass surface look like it changes colour under a finger.
-      seed: 0,
+      seed: 999999,
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        // The nav owns its own bottom slot, so branch content only needs the
+        // shared 16px inset — no hidden-content clearance behind the bar.
         extendBody: true,
         extendBodyBehindAppBar: true,
         appBar: showTopBar
@@ -296,6 +352,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 searchController: _searchController,
                 displayName: displayName,
                 photoUrl: profile?.photoUrl ?? '',
+                isLoggedIn: isFullUser,
                 onProfileTap: () => _pushOverlay(Routes.profile),
                 // The profile screen owns the notification settings section.
                 onNotificationsTap: () => _pushOverlay(Routes.profile),
@@ -304,11 +361,37 @@ class _MainShellState extends ConsumerState<MainShell> {
         body: SafeArea(
           top: false,
           bottom: false,
-          child: widget.navigationShell,
+          // The shell owns the 32/16 inset for every branch. SizedBox.expand
+          // restores tight constraints: the router's branch Stack needs them
+          // or it collapses to zero and every tab renders empty.
+          child: ShellBranchViewport(child: widget.navigationShell),
         ),
         bottomNavigationBar: SafeArea(
           top: false,
-          child: _bottomNavVariant(this, theme, l, isFullUser, selected),
+          // Align in a Scaffold.bottomNavigationBar expands to the full loose
+          // height and steals all space from the body. A full-width Row
+          // centers horizontally while keeping the bar's own 64+16 height.
+          child: SizedBox(
+            width: double.infinity,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: screenSideMargin / 2),
+                  child: SizedBox(
+                    width: bottomNavWidth(MediaQuery.sizeOf(context).width),
+                    child: _bottomNavVariant(
+                      this,
+                      theme,
+                      l,
+                      isFullUser,
+                      selected,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -323,20 +406,18 @@ Widget _buildRoundGlassNav(
   bool isFullUser,
   int selected,
 ) {
-  return GlassContainer(
-    quality: .minimal,
+  return SizedBox(
     width: double.infinity,
-    shape: const LiquidRoundedSuperellipse(borderRadius: 64),
-    padding: EdgeInsets.zero,
-    settings: themedGlassSettings(theme),
-    useOwnLayer: true,
-    child: SizedBox(
-      height: 64,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(
-          _tabs.length,
-          (index) => shell._navItem(index, selected, theme, l, isFullUser),
+    child: LiquidGlassLens(
+      style: themedGlassStyle(theme, shape: _navBarShape),
+      child: SizedBox(
+        height: 64,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: List.generate(
+            _tabs.length,
+            (index) => shell._navItem(index, selected, theme, l, isFullUser),
+          ),
         ),
       ),
     ),
@@ -373,7 +454,7 @@ Widget _plainNavItem(
           spacing: 2,
           children: [
             SvgPicture.asset(
-              _tabs[index].icon,
+              _tabIcon(index, isSelected),
               width: 22,
               height: 22,
               colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
@@ -391,6 +472,9 @@ Widget _plainNavItem(
 
 /// Variant 2 — one 64pt glass bar with a second glass capsule sliding behind
 /// the selected tab instead of a round box around every tab.
+///
+/// The capsule is glass on glass, so it is deliberately not in a batch: it
+/// takes a read of its own and refracts the bar under it.
 Widget _buildGlassSelectionNav(
   _MainShellState shell,
   ThemeData theme,
@@ -398,81 +482,21 @@ Widget _buildGlassSelectionNav(
   bool isFullUser,
   int selected,
 ) {
-  return Builder(
-    builder: (context) {
-      const barHeight = 64.0;
-      final barWidth = MediaQuery.sizeOf(context).width - (32 * 2);
-      final itemWidth = barWidth / _tabs.length;
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: barWidth,
-              height: barHeight,
-              child: Stack(
-                // The sliding capsule may overshoot the bar into the 32pt empty
-                // margins on each side; do not clip it at the bar boundary.
-                clipBehavior: Clip.none,
-                alignment: Alignment.centerLeft,
-                children: [
-                  GlassContainer(
-                    quality: shellGlassQuality,
-                    width: double.infinity,
-                    height: barHeight,
-                    shape: const LiquidRoundedSuperellipse(borderRadius: 64),
-                    padding: EdgeInsets.zero,
-                    settings: themedGlassSettings(theme),
-                    useOwnLayer: true,
-                  ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 340),
-                    curve: Curves.easeOutBack,
-                    left: selected * itemWidth + 6,
-                    top: 6,
-                    bottom: 6,
-                    width: itemWidth - 12,
-                    child: GlassContainer(
-                      quality: shellGlassQuality,
-                      shape: const LiquidRoundedSuperellipse(borderRadius: 26),
-                      padding: EdgeInsets.zero,
-                      settings: themedGlassSettings(
-                        theme,
-                        accent: theme.colorScheme.primaryContainer,
-                      ),
-                      useOwnLayer: true,
-                      child: const SizedBox.expand(),
-                    ),
-                  ),
-                  Row(
-                    children: List.generate(
-                      _tabs.length,
-                      (index) => SizedBox(
-                        width: itemWidth,
-                        height: barHeight,
-                        child: _plainNavItem(
-                          shell,
-                          index,
-                          selected,
-                          theme,
-                          l,
-                          isFullUser,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
+  return GlassSelectionBar(
+    selected: selected,
+    itemCount: _tabs.length,
+    theme: theme,
+    itemBuilder: (index) =>
+        _plainNavItem(shell, index, selected, theme, l, isFullUser),
   );
 }
 
-/// Variant 3 — package `GlassTabBar.bottom` (native-style jelly indicator).
+/// Variant 3 — package `LiquidGlassTabBar`, in its plain-capsule mode.
+///
+/// The bar's moving glass pill is a full-screen overlay that places itself, so
+/// it cannot live in a `bottomNavigationBar` slot; `LiquidGlassPillMode.none`
+/// is the form the caller places, with a soft sliding highlight. The style is
+/// passed in full so the bar does not depend on `Theme.of` for light/dark.
 Widget _buildPackageGlassNav(
   _MainShellState shell,
   ThemeData theme,
@@ -480,27 +504,126 @@ Widget _buildPackageGlassNav(
   bool isFullUser,
   int selected,
 ) {
-  return GlassTabBar.bottom(
-    tabs: [
-      for (var i = 0; i < _tabs.length; i++)
-        GlassTab(
-          icon: SvgPicture.asset(_tabs[i].icon, width: 24, height: 24),
-          label: _tabs[i].label(l),
-        ),
-    ],
-    selectedIndex: selected,
-    onTabSelected: (index) => shell._onTap(index, isFullUser),
-    barHeight: 64,
-    settings: themedGlassSettings(theme),
-    indicatorColor: theme.colorScheme.primaryContainer,
-    indicatorSettings: themedGlassSettings(
-      theme,
-      accent: theme.colorScheme.primaryContainer,
+  return LayoutBuilder(
+    builder: (context, constraints) => LiquidGlassTabBar(
+      items: [
+        for (var i = 0; i < _tabs.length; i++)
+          LiquidGlassTabBarItem(
+            label: _tabs[i].label(l),
+            iconBuilder: (context, glyph) => SvgPicture.asset(
+              _tabIcon(i, i == selected),
+              width: glyph.size,
+              height: glyph.size,
+              colorFilter: ColorFilter.mode(glyph.color, BlendMode.srcIn),
+            ),
+          ),
+      ],
+      selectedIndex: selected,
+      onChanged: (index) => shell._onTap(index, isFullUser),
+      width: constraints.maxWidth,
+      height: 64,
+      margin: EdgeInsets.zero,
+      style: themedGlassStyle(theme, shape: _navBarShape),
+      itemStyle: LiquidGlassTabItemStyle(
+        selectedColor: theme.colorScheme.onPrimaryContainer,
+        unselectedColor: theme.colorScheme.onSurfaceVariant,
+      ),
+      pillStyle: LiquidGlassTabPillStyle(
+        mode: LiquidGlassPillMode.none,
+        color: theme.colorScheme.primaryContainer,
+        animated: true,
+      ),
     ),
-    selectedIconColor: theme.colorScheme.onPrimaryContainer,
-    selectedLabelColor: theme.colorScheme.onPrimaryContainer,
-    unselectedIconColor: theme.colorScheme.onSurfaceVariant,
-    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-    quality: shellGlassQuality,
   );
+}
+
+/// The router's branch container is a `Stack` with non-positioned navigators.
+/// `Padding` alone gives it loose constraints, so it collapses to zero size
+/// and every tab renders blank. `SizedBox.expand` restores tight constraints
+/// after the shared 32/16 inset has been applied.
+class ShellBranchViewport extends StatelessWidget {
+  const ShellBranchViewport({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: screenPadding,
+    child: SizedBox.expand(child: child),
+  );
+}
+
+/// Glass bar + sliding capsule. The two lenses are siblings inside an
+/// unclipped Stack: a glass lens clips its children, so a capsule nested in
+/// the bar glass disappears at the edge tabs. `Curves.easeOutBack` overshoot
+/// is allowed to hover into the shell's 32px side margins.
+class GlassSelectionBar extends StatelessWidget {
+  const GlassSelectionBar({
+    super.key,
+    required this.selected,
+    required this.itemCount,
+    required this.theme,
+    required this.itemBuilder,
+  });
+
+  final int selected;
+  final int itemCount;
+  final ThemeData theme;
+  final Widget Function(int index) itemBuilder;
+
+  static const double barHeight = 64;
+  static const double inset = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth / itemCount;
+        return SizedBox(
+          width: double.infinity,
+          height: barHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.centerLeft,
+            children: [
+              Positioned.fill(
+                child: LiquidGlassLens(
+                  style: themedGlassStyle(theme, shape: _navBarShape),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 340),
+                curve: Curves.easeOutBack,
+                left: selected * itemWidth + inset,
+                top: inset,
+                bottom: inset,
+                width: itemWidth - inset * 2,
+                child: LiquidGlassLens(
+                  // Tint only: the bar under it is already frosted.
+                  style: themedGlassStyle(
+                    theme,
+                    shape: _navCapsuleShape,
+                    accent: theme.colorScheme.primaryContainer,
+                    blur: 0,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  itemCount,
+                  (index) => SizedBox(
+                    width: itemWidth,
+                    height: barHeight,
+                    child: itemBuilder(index),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
